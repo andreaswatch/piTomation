@@ -14,7 +14,10 @@ def import_plugins():
             plugin += "." + l
         path = str.join(".", path.parts[1:-1]) + "." + path.parts[-1].replace(".py","")
 
-        importlib.import_module(path)
+        if len(path.split('.')) < 4:
+            '''only import the top level plugin directory'''
+            importlib.import_module(path)
+
 import_plugins()
 
 app = piTomation.App()
