@@ -12,7 +12,7 @@ from modules.app.base.CallStack import CallStack
 from modules.app.base.Configuration import *
 from modules.app.base.Instances import *
 
-VERSION = "2021.10.26"
+VERSION = "2021.11.09"
 CONF_YAML = "yaml"
 CONF_JSON = "json"
 CONF = CONF_YAML

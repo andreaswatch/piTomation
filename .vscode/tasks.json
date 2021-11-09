@@ -1,0 +1,48 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "docs",
+            "type": "shell",
+            "dependsOn":["mkdocs"],
+            "options": {
+                "cwd": "docs"
+            },
+            "command": "mv src/* .",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "mkdocs",
+            "type": "shell",
+            "options": {
+                "cwd": "src"
+            },
+            "dependsOn":["rmdocs"],
+            "command": "pdoc --html . --force --output-dir ../docs",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "rmdocs",
+            "type": "shell",
+            "options": {
+                "cwd": "docs"
+            },
+            "command": "Remove-Item '*' -Recurse",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },        
+    ]
+}
