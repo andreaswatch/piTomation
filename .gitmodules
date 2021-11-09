@@ -1,0 +1,3 @@
+[submodule "src/plugins/dfplayer/SimpleDFPlayerMini_for_RaspberryPi"]
+	path = src/plugins/dfplayer/SimpleDFPlayerMini_for_RaspberryPi
+	url = https://github.com/andreaswatch/SimpleDFPlayerMini-for-RaspberryPi
