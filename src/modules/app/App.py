@@ -2,8 +2,6 @@ from typing import Union
 import importlib
 import os
 import sys
-from marshmallow_dataclass import class_schema
-import pydantic
 from pydantic.error_wrappers import ValidationError
 import yaml
 import json
@@ -12,7 +10,7 @@ from modules.app.base.CallStack import CallStack
 from modules.app.base.Configuration import *
 from modules.app.base.Instances import *
 
-VERSION = "2021.11.09"
+VERSION = "2021.11.12"
 CONF_YAML = "yaml"
 CONF_JSON = "json"
 CONF = CONF_YAML
@@ -22,32 +20,53 @@ class App(BaseApp, Logging, Debuggable):
     def __init__(self) -> None:
         super().__init__()
 
-        self.read_configuration()
+        init_renderer()
+
+        self.__read_configuration()
 
         self.device = Device(self, self.configuration.device)
-        self.platforms = self.init_platforms()
-        self.actions = self.init_actions()
-        self.sensors = self.init_sensors()
+        self.platforms = self.__init_platforms()
+        self.actions = self.__init_actions()
+        self.sensors = self.__init_sensors()
 
         self.log_debug("Initialization done")
 
+        call_stack = CallStack().with_stack(self.get_full_stack())
+
         for platfrom in self.platforms:
-            platfrom.start()
+            platfrom.start(call_stack)
+
+        for action in self.actions:
+            action.start(call_stack)        
+
+        for sensor in self.sensors:
+            sensor.start(call_stack)                  
 
         self.log_debug("Platforms started")
 
-        call_stack = CallStack(from_list=self.get_full_stack())
         for startupAction in self.device.startup_actions:
             startupAction.invoke(call_stack)
 
 
-    def read_configuration(self):
-        if socket.gethostname() == "DESKTOP-7CS476B":  # todo: remove
-            config_filename = os.getcwd() + "/src/" + socket.gethostname() + "." + CONF
-        else:
-            config_filename = os.getcwd() + "/" + socket.gethostname() + "." + CONF
+    def get_id(self, id: str):
+        '''get a configured component(action/sensor/script +app&device) by id'''
 
+        if id == "device":
+            return self.device
+
+        if id == "app":
+            return self
+
+        return super().get_id(id)
+
+
+    def __read_configuration(self):
+        '''Read the configuration file'''
+        '''If the filename is not given in cli args, try to find the config file by the device's hostname.'''
+
+        config_filename = ""
         if len(sys.argv) == 1:
+            config_filename = os.getcwd() + "/" + socket.gethostname() + "." + CONF
             print("No configuration file given, use " + config_filename)
         else:
             config_filename = sys.argv[-1]
@@ -64,8 +83,7 @@ class App(BaseApp, Logging, Debuggable):
 
             from marshmallow_dataclass import class_schema
             from modules.app.AppConfiguration import AppConfiguration
-            #typeofactions = type(AppConfiguration())
-            #print(typeofactions)
+
             try:
                 result = AppConfiguration.parse_obj(raw)
                 self.configuration = result
@@ -78,8 +96,7 @@ class App(BaseApp, Logging, Debuggable):
             exit()
 
 
-
-    def init_platforms(self):
+    def __init_platforms(self):
         result: list[BasePlatform] = []
         if self.configuration.platforms is not None:
             for platform_conf in self.configuration.platforms:
@@ -91,7 +108,8 @@ class App(BaseApp, Logging, Debuggable):
                 result.append(ctor(self, platform_conf))
         return result
 
-    def init_actions(self):
+
+    def __init_actions(self):
         result: list[BaseAction] = []
         if self.configuration.actions is not None:
             for action_conf in self.configuration.actions:
@@ -107,7 +125,8 @@ class App(BaseApp, Logging, Debuggable):
                 result.append(ctor(platform, action_conf))
         return result        
 
-    def init_sensors(self):
+
+    def __init_sensors(self):
         result: list[BaseScript] = []
         if self.configuration.sensors is not None:
             for sensor_conf in self.configuration.sensors:
