@@ -1,0 +1,87 @@
+device:
+  name: RaspberryPi
+  version: 1.0
+
+platforms:
+  - platform: plugins.mqtt
+    id: mqtt
+    variables:
+      base_topic: "home/{{id(device).configuration.name}}"
+    host: home
+    port: 1883
+    availability:
+      topic: "{{id(mqtt).variables.base_topic}}/availability"
+      payload_on: on
+      payload_off: off
+    on_connected:
+      - actions:
+        - action: print
+          values:
+            payload: "on_connected: {{id(mqtt).variables.base_topic}}"
+    on_disconnected:
+      - actions:
+        - action: print
+          values:
+            payload: bye    
+    on_message:
+      - actions:
+        - action: print    
+          values:
+            payload: "on_message"
+
+  - platform: plugins.gpio
+    id: gpio
+    factory: rpigpio
+
+  - platform: plugins.console
+    id: console
+
+  - platform: plugins.dfplayer
+    id: dfplayer
+    tx_pin: GPIO5
+
+actions:
+  - id: print
+    platform: console
+    type: PrintAction
+
+  - id: player
+    platform: dfplayer
+#    variables: 
+#      command: play
+
+
+sensors:
+  - id: play
+    platform: mqtt
+    topic: "{{id(mqtt).variables.base_topic}}/play"
+    on_message:
+      - actions:
+        - action: print
+          values:
+            payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
+        - action: player
+          values:
+            command: play 
+
+
+  - id: something
+    platform: mqtt
+    topic: "{{id(mqtt).variables.base_topic}}/x"
+    on_message:
+      - conditions:
+          - actual: "{{id(mqtt).is_connected}}"
+            comperator: equals
+            expected: True
+        actions:
+        - action: print
+          values:
+            payload: "I got a message and {{id(mqtt).is_connected}} == true"      
+
+      - actions:
+        - action: print
+          values:
+            payload: "Got message on topic '{{topic}}', with payload '{{payload}}'"
+
+
+        

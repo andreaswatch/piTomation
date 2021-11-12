@@ -5,10 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Ringo",
+            "name": "Python: piTomation",
             "type": "python",
             "request": "launch",
             "program": "src/__main__.py",
+            "args": [ "src/raspberrypi.yaml" ],
             "console": "integratedTerminal"
         }
     ]

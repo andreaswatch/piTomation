@@ -10,6 +10,7 @@ class PrintActionConfiguration(ActionConfiguration):
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v
+        
 
 class PrintAction(BaseAction):
     '''prints the given payload to the console'''
@@ -19,10 +20,8 @@ class PrintAction(BaseAction):
 
     def invoke(self, call_stack: CallStack):
 
-        message = call_stack.get("payload")
+        message = call_stack.get("{{payload}}")
 
-        print(message)
-
-        super().invoke(call_stack.with_(self))
+        print("PRINT: " + str(message))
 
         super().invoke(call_stack)

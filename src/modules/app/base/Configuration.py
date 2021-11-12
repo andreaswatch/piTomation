@@ -33,8 +33,6 @@ def WithPlugins(t: type):
 
 
 
-
-
 @configuration
 class Configuration(BaseModel):
     '''Base class for all configuration classes'''
@@ -49,6 +47,11 @@ class IdConfiguration(Configuration):
 
     id: str
     '''Own reference'''
+
+@configuration
+class VariablesConfiguration(Configuration):
+    variables: Optional[dict]
+    '''Variables, exposed as id(xy).variables.name'''
 
 
 @configuration
@@ -75,12 +78,6 @@ class ActionTriggerConfiguration(Configuration):
     '''optional list of values to pass'''
 
 
-class VariableConfiguration(Configuration):
-
-    variables: Optional[dict[str, str]] = {}
-    '''custom variables'''   
-
-
 @configuration
 class AutomationConfiguration(Configuration):
     '''An Automation consists of optional conditions and a list of actions to execute'''
@@ -93,14 +90,13 @@ class AutomationConfiguration(Configuration):
 
 
 @configuration
-class StackableConfiguration(IdConfiguration):
+class StackableConfiguration(IdConfiguration, VariablesConfiguration):
 
     on_init: Optional[list[AutomationConfiguration]] = []
     '''Actions to execute after init is done'''
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
     '''Actions to execute before this platform is disposed'''
- 
 
 
 @configuration
@@ -121,6 +117,7 @@ class ScriptConfiguration(StackableConfiguration):
     type: Optional[str]
     '''The class type of this script'''
 
+
 @configuration
 class ActionConfiguration(ScriptConfiguration):
     '''Base clss for all script configuration classes'''
@@ -137,9 +134,8 @@ class SensorConfiguration(ScriptConfiguration):
     '''List of Automations to execute after the sensor's state has changed'''    
 
 
-
 @configuration
-class DeviceConfiguration(Configuration):
+class DeviceConfiguration(VariablesConfiguration):
     name: str
     '''Name of the device.'''
 

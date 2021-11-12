@@ -20,7 +20,7 @@ class LogAction(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_(self))
+        super().invoke(call_stack.with_element(self))
 
         message = call_stack.get("payload")
         self.platform.add_log(message)

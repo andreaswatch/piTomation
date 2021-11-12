@@ -52,7 +52,7 @@ class HassEntityAutomation(Stackable, Disposeable):
             + "/config"
 
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         from plugins.mqtt.Platform import Platform as mqtt_platform
         self.mqtt: mqtt_platform = self.platform.communication
 

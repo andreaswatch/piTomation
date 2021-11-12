@@ -20,7 +20,7 @@ class Action(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        call_stack = call_stack.with_(self)
+        call_stack = call_stack.with_element(self)
 
         state = {
             "topic": str(call_stack.get("topic")),

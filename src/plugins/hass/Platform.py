@@ -16,14 +16,14 @@ class Platform(BasePlatform):
         for export in config.exports:
             self.exports.append(HassEntityAutomation(self, export))
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         self.communication = self.app.get_id(self.configuration.connection)
 
-        super().start()
+        super().start(call_stack)
 
         for entity in self.exports:
             e = entity  # type: HassEntityAutomation
-            e.start()
+            e.start(call_stack)
 
     def GetDevice(self, device: Device):
         return {

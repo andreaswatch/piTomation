@@ -50,7 +50,7 @@ class Platform(BasePlatform):
         self.has_been_updated = True
 
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         def loop():
             OUT.set_scope('result')
             while True:
@@ -66,6 +66,6 @@ class Platform(BasePlatform):
         
         loop_thread = threading.Thread(target=loop)
         loop_thread.start()
-        super().start()
+        super().start(call_stack)
         self.has_started = True
 

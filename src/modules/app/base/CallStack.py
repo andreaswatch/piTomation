@@ -1,15 +1,16 @@
-from typing import Any, Optional, Union
+from typing import Any, List, Optional, Union
 import chevron
 
-from modules.app.base.Configuration import PlatformConfiguration, ScriptConfiguration
 
 def init_renderer():
-    def __get_string(key: str, scopes: list[Any], warn: bool = False):
+    def __get_string(key: str, scopes, warn: bool = False):
         for scope in scopes:
             if hasattr(scope, "get_variable_value"):
                 value = scope.get_variable_value(key)
                 if value is not None:
-                    return value
+                    sub_scopes = CallStack().with_stack(scopes)
+                    sub_scopes.pop(0)
+                    return chevron.render(value, scopes=sub_scopes)
 
         if key.startswith("id("):
             end = key.index(')')
@@ -19,7 +20,8 @@ def init_renderer():
                 if hasattr(scope, "get_app"):
                     act = scope.get_app().get_id(id)
                     break
-            rest = key[end+1:]
+
+            rest = key[end+2:]
             path = rest.split('.')
             return_act = False
             for path_element in path:
@@ -29,7 +31,16 @@ def init_renderer():
                 if hasattr(act, path_element):
                     return_act = True
                     act = getattr(act, path_element)
+                elif type(act) is dict and path_element in act:
+                    return_act = True
+                    act = act[path_element]
+                else:
+                    print((type(act).__name__))
+                    #return_act = False
+                    break
             if return_act:
+                if type(act) is str:
+                    return scopes.get(act)
                 return act
 
         result = "{{" + key + "}}"
@@ -38,26 +49,36 @@ def init_renderer():
 
     chevron.renderer._get_key = __get_string
 
-init_renderer()
 
 
-class CallStack:
-    def __init__(self, item: Any = None, from_list: Union[None, list[Any]] = None) -> None:
-        if from_list is None:
-            self.__stack = []
-        else:
-            self.__stack = list(from_list)
+class VariableProvider():
+    def __init__(self) -> None:
+        self.variables = {}
+        
+    def get_variable_value(self, key: str):
+        key = str(key).lower()
+        if key in self.variables:
+            return self.variables[key]
+
+    def __repr__(self):
+        return self.variables
+
+
+class CallStack(List):
+    def __init__(self) -> None:
         pass
-        if item is not None:
-            self.__stack.append(item)
+
 
     def get_stack(self):
-        stack = list(self.__stack)
+        stack = list(self)
         stack.reverse()
         return stack
 
-    def with_(self, item):
-        return CallStack(from_list=self.__stack, item=item)
+
+    def with_element(self, element):
+        self.insert(0, element)
+        return self
+
 
     def with_key(self, key: str, value):
         key = str(key).lower()
@@ -70,31 +91,34 @@ class CallStack:
             def __repr__(self):
                 return key + "=" + value
 
-        return CallStack(from_list=self.__stack, item=keyProvider())
+        self.insert(0, keyProvider())
 
-    def with_keys(self, dict):
-        class dictKeyProvider():
-            def get_variable_value(self, key: str):
-                key = str(key).lower()
-                if key in dict:
-                    return dict[key]
+        return self
 
-            def __repr__(self):
-                return dict
 
-        return CallStack(from_list=self.__stack, item=dictKeyProvider())
+    def with_keys(self, keys: dict):
+        v = VariableProvider()
+        v.variables = keys
+
+        self.insert(0, v)
+
+        return self
+
+
+    def with_stack(self, stack):
+        i = 0
+        for item in stack:
+            self.insert(i, item)
+            i+=1
+        return self
+                
 
     def get(self, getKey):
-        def Render(renderText: str):
-            if not type(renderText) is str:
-                return renderText
-            result = chevron.render(renderText, scopes=self.get_stack())
+        def _render(input: str):
+            if not type(input) is str:
+                return input
+
+            result = chevron.render(input, scopes=self)
             return result
 
-        for item in self.get_stack():
-            if hasattr(item, "get_variable_value"):
-                value = item.get_variable_value(getKey)
-                if type(value) == str:
-                    return Render(value)
-
-        return Render(getKey)
+        return _render(getKey)

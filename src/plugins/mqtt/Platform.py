@@ -11,6 +11,8 @@ from modules.app.base.Configuration import *
 from modules.app.base.Instances import *
 
 class Availability(BaseModel):
+    '''Availability topic and last will'''
+
     topic: str
     '''configured topic for the mqtt client's last will and we also send a message on connect'''
 
@@ -23,9 +25,8 @@ class Availability(BaseModel):
 
 @configuration
 class MqttPlatformConfiguration(PlatformConfiguration):
+    '''Configuration settings for the MQTT platform'''
 
-    platform: str
-    
     @validator('platform')
     def check_platform_module(cls, v):
         if "plugins.mqtt" not in v:
@@ -42,6 +43,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     '''seconds to keep the server connection'''
 
     availability: Optional[Availability]
+    '''Availability topic and last will'''
 
     on_connected: Optional[list[AutomationConfiguration]] = []
     '''Actions to execute when the connection to the host is established''' 
@@ -54,40 +56,50 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 
 
 class Platform(BasePlatform):
+    '''MQTT Platform'''
+
     def __init__(self, parent: Stackable, config: MqttPlatformConfiguration) -> None:
         super().__init__(parent, config)
         self.app = parent.get_app()
         self.configuration = config
+
         self.callbacks = []
 
-        self.is_connected = False
+    def start(self, call_stack: CallStack):
+        def render(var):
+            '''this is only to avoid typing errors'''
+            return str(call_stack.get(var))
 
-        self.client = mqtt.Client(self.app.id + "_" + self.app.device.configuration.name)
+        app_id = str(self.app.get_variable_value("id"))
+
+        self.client = mqtt.Client(app_id + "_" + render(self.app.get_id("device").configuration.name))
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()
-
-
-        if self.configuration.availability:
-            av = self.configuration.availability
-            self.client.will_set(av.topic, av.payload_off)
-            self.client.subscribe(av.topic)
 
         self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
 
         if self.configuration.availability:
             av = self.configuration.availability
-            self.publish(av.topic, av.payload_on)
+
+            av_topic = render(av.topic)
+            av_payload_on = render(av.payload_on)
+            av_payload_off = render(av.payload_off)
+
+            self.client.will_set(av_topic, av_payload_off)
+            self.client.subscribe(av_topic)
+
+            av = self.configuration.availability
+            self.publish(av_topic, av_payload_on)
 
 
-    def start(self):
         def loop():
-            self.client.loop_forever()
+            self.client.loop_start()
 
         loop_thread = threading.Thread(target=loop)
         loop_thread.start()
 
-        super().start()
+        super().start(call_stack)
 
 
     def dispose(self):
@@ -95,25 +107,21 @@ class Platform(BasePlatform):
         return super().dispose()
 
 
-    def get_variable_value(self, text: str):
-        t = str(text).lower()
-        if t == "connected":
-            return self.is_connected
-
-        return super().get_variable_value(text)
-
-
     def __init_on_message(self):
         self.on_message_automations = []
-        for automation in self.configuration.on_message:
-            self.on_message_automations.append(Automation(self, automation))
+        if self.configuration.on_message:
+            for automation in self.configuration.on_message:
+                self.on_message_automations.append(Automation(self, automation))
 
         def method(client, userdata, msg):
             payload = msg.payload.decode("utf-8")
 
-            call_stack = CallStack(from_list=self.get_full_stack()) \
-                .with_key("payload", payload) \
-                .with_key("topic", msg.topic)
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
+                .with_keys({
+                    "payload": payload,
+                    "topic": msg.topic
+                })
 
             for callback in self.callbacks:
                 if callback["topic"] == msg.topic:
@@ -126,13 +134,13 @@ class Platform(BasePlatform):
 
     def __init_on_disconnect(self):
         self.on_disconnect_actions = []
-        for automation in self.configuration.on_disconnected:
-            self.on_disconnect_actions.append(Automation(self, automation))
+        if self.configuration.on_disconnected:
+            for automation in self.configuration.on_disconnected:
+                self.on_disconnect_actions.append(Automation(self, automation))
 
         def method(client, userdata, flags):
-            self.is_connected = False
-
-            call_stack = CallStack(from_list=self.get_full_stack()) \
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
                 .with_key("flags", flags)
 
             for automation in self.on_disconnect_actions:
@@ -142,13 +150,13 @@ class Platform(BasePlatform):
 
     def __init_on_connect(self):
         self.on_connected_actions = []
-        for automationConfig in self.configuration.on_connected:
-            self.on_connected_actions.append(Automation(self, automationConfig))
+        if self.configuration.on_connected:
+            for automationConfig in self.configuration.on_connected:
+                self.on_connected_actions.append(Automation(self, automationConfig))
 
         def method(client, userdata, flags, rc):
-            self.is_connected = True
-
-            call_stack = CallStack(from_list=self.get_full_stack()) \
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
                 .with_key("return_code", rc)
 
             for automation in self.on_connected_actions:
@@ -158,7 +166,9 @@ class Platform(BasePlatform):
 
 
     def subscribe(self, topic: str, callback=None):
-        self.callbacks.append({"topic": topic, "callback": callback})
+        if callback is not None:
+            self.callbacks.append({"topic": topic, "callback": callback})
+
         self.client.subscribe(topic)
 
 

@@ -23,5 +23,5 @@ class DelayAction(BaseAction):
         message = float(call_stack.get("payload"))
         time.sleep(message)
 
-        super().invoke(call_stack.with_(self))
+        super().invoke(call_stack.with_element(self))
 

@@ -29,7 +29,10 @@ class Action(BaseAction):
 
     def invoke(self, call_stack: CallStack):
 
-        command_name = call_stack.get("command")
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)
+
+        command_name = call_stack.get("{{command}}")
 
         if type(command_name) is str:
             if hasattr(self.player, command_name):

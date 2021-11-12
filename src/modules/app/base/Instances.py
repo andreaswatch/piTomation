@@ -1,18 +1,31 @@
+from ctypes import ArgumentError
 from typing import Optional
-from modules.app.base.CallStack import CallStack
+
+from modules.app.base.CallStack import *
 from modules.app.base.Configuration import *
 
 
 class Base:
     """Base class for everything"""
+
     def __init__(self, config: Configuration) -> None:
-        self.configuration = config  
+        self.configuration = config
 
     def __str__(self):
         return type(self).__name__
 
     def __repr__(self):
         return type(self).__name__
+
+
+class VariableProvider:
+    def __init__(self, config: VariablesConfiguration) -> None:
+        self.variables = config.variables
+
+    def get_variable_value(self, variable_id):
+        if self.variables is not None:
+            if variable_id in self.variables:
+                return self.variables[variable_id]
 
 
 class Logging():
@@ -22,10 +35,9 @@ class Logging():
         """Log an error to the console"""
         print("[ERROR] " + message)
 
-
     def log_warning(self, message):
         """Log a warning to the console"""
-        print("[WARN] " + message) 
+        print("[WARN] " + message)
 
 
 class Debuggable():
@@ -39,11 +51,12 @@ class Debuggable():
 
         if hasattr(self.configuration, "debug"):
             if self.configuration.debug:
-                print("[DEBUG] " + message)        
+                print("[DEBUG] " + message)
 
 
 class Identifyable():
     """Base class for classes with an Identifier (id)"""
+
     def __init__(self, config: IdConfiguration) -> None:
         self.configuration = config
 
@@ -51,7 +64,7 @@ class Identifyable():
         return super().__str__() + ": " + self.configuration.id
 
     def __repr__(self):
-        return super().__str__() + ": " + self.configuration.id            
+        return super().__str__() + ": " + self.configuration.id
 
 
 class Disposeable():
@@ -62,20 +75,6 @@ class Disposeable():
         self.is_disposed = True
 
 
-class VariableProvider():
-    def __init__(self, config: VariableConfiguration) -> None:
-        self.configuration = config
-
-        self.variables = {}
-
-
-    def get_variable_value(self, name: str) -> Optional[str]:
-        name = str(name).lower()
-        if hasattr(self.configuration, "variables"):
-            if self.configuration.variables is not None:
-                return self.configuration.variables.get(name)
-
-
 class Stackable():
     def __init__(self, parent) -> None:
 
@@ -84,8 +83,7 @@ class Stackable():
             return
 
         self.parent = parent
-        self.call_stack = CallStack(from_list=self.get_full_stack())
-
+        self.call_stack = CallStack().with_stack(self.get_full_stack())
 
     def get_full_stack(self):
         scopes = self.get_parents()
@@ -93,13 +91,11 @@ class Stackable():
         scopes.reverse()
         return scopes
 
-
     def get_app(self) -> 'BaseApp':
         app = self
         while (hasattr(app, "parent") and app.parent is not None):
             app = app.parent
-        return app #types: BaseApp
-
+        return app  # types: BaseApp
 
     def get_parents(self) -> list['Stackable']:
         parents = []
@@ -108,12 +104,14 @@ class Stackable():
             parent = parent.parent
             parents.insert(0, parent)
         return parents
-    
 
-class Device(VariableProvider, Stackable):
+
+class Device(Stackable, VariableProvider):
     def __init__(self, parent, config: DeviceConfiguration) -> None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        VariableProvider.__init__(self, config)
         self.configuration = config
+        self.variables = config.variables
 
         self.startup_actions = []
         if self.configuration.on_init is not None:
@@ -121,26 +119,31 @@ class Device(VariableProvider, Stackable):
                 self.startup_actions.append(ActionTrigger(self, action))
 
 
-class BaseApp(VariableProvider, Stackable, Disposeable):
+class BaseApp(Stackable, Disposeable, VariableProvider):
     def __init__(self) -> None:
-        super().__init__(VariableConfiguration())
-        
-        self.id = "piTomation"
-        self.is_disposed = False
+        Stackable.__init__(self, None)
+        Disposeable.__init__(self)
+        VariableProvider.__init__(self, VariablesConfiguration())
+
+        self.variables = {
+            "id": "piTomation"
+        }
 
         self.device: Device
         self.platforms: list[BasePlatform]
         self.actions: list[BaseAction]
         self.sensors: list[BaseScript]
 
-        self.variables["name"] = "piTomation"
 
     def get_platform(self, id: str):
+        '''get a configured platform by id'''
         for platform in self.platforms:
             if platform.configuration.id == id:
                 return platform
 
-    def get_id(self, id: str) -> Union['BaseAction', 'BaseScript', 'BasePlatform', None]:
+
+    def get_id(self, id: str) -> Identifyable:
+        '''get a configured component(action/sensor/script) by id'''
         for action in self.actions:
             if action.configuration.id == id:
                 return action
@@ -153,10 +156,12 @@ class BaseApp(VariableProvider, Stackable, Disposeable):
             if platform.configuration.id == id:
                 return platform
 
-        return None
+        raise ArgumentError("Id " + id + " not found")
 
 
     def dispose(self):
+        '''dispose all components'''
+
         for action in self.actions:
             action.dispose()
 
@@ -169,10 +174,18 @@ class BaseApp(VariableProvider, Stackable, Disposeable):
         super().dispose()
 
 
-class BaseScript(Stackable, Identifyable, Disposeable):
+class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
     def __init__(self, parent: Stackable, config: ScriptConfiguration) -> None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        Identifyable.__init__(self, config)
+        Disposeable.__init__(self)
+        VariableProvider.__init__(self, config)
         self.configuration = config
+
+    def start(self, call_stack: CallStack):
+        '''is called when the configuration is loaded completely.
+        Here is where we initialize and load stuff'''
+        pass        
 
     def _create_automations(self, conf: Optional[list[AutomationConfiguration]]):
         '''Creates automations for all given AutomationConfiguration's'''
@@ -182,16 +195,18 @@ class BaseScript(Stackable, Identifyable, Disposeable):
         if conf is not None:
             for action_conf in conf:
                 automations.append(Automation(self, action_conf))
-            
-        return automations          
-        
+
+        return automations
+
 
 class BaseSensor(BaseScript):
     def __init__(self, parent: Stackable, config: SensorConfiguration) -> None:
         super().__init__(parent, config)
         self.configuration = config
+        self.variables = config.variables
 
-        self.on_state_changed_automations = self._create_automations(config.on_state_changed)
+        self.on_state_changed_automations = self._create_automations(
+            config.on_state_changed)
 
     def on_state_changed(self, call_stack: CallStack):
         '''must get called whenever the local state has changed'''
@@ -204,21 +219,27 @@ class BaseAction(BaseScript):
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_invoked_automations = self._create_automations(config.on_invoked)
+        self.on_invoked_automations = self._create_automations(
+            config.on_invoked)
 
     def invoke(self, call_stack: CallStack):
         '''must get called whenever the action has been invoked'''
         for automation in self.on_invoked_automations:
-            automation.invoke(call_stack)
-        
+            automation.invoke(call_stack)            
 
 
-class BasePlatform(Stackable, Identifyable, Disposeable, VariableProvider):
+class BasePlatform(Stackable, Identifyable, Disposeable):
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -> None:
-        super().__init__(parent)
-        self.configuration = config
+        Stackable.__init__(self, parent)
+        Identifyable.__init__(self, config)
+        Disposeable.__init__(self)
 
-    def start(self):
+        self.configuration = config
+        self.variables = config.variables
+
+    def start(self, call_stack: CallStack):
+        '''is called when the configuration is loaded completely.
+        Here is where we initialize and load stuff'''
         pass
 
 
@@ -233,11 +254,10 @@ class Automation(Stackable):
             for condition in self.configuration.conditions:
                 self.__conditions.append(Condition(self, condition))
 
-        self.__actions = []
+        self._actions = []
         if self.configuration.actions is not None:
             for action in self.configuration.actions:
-                self.__actions.append(ActionTrigger(self, action))
-
+                self._actions.append(ActionTrigger(self, action))
 
     def check_conditions(self, call_stack: CallStack):
         for condition in self.__conditions:
@@ -245,14 +265,13 @@ class Automation(Stackable):
                 return False
         return True
 
-
     def invoke(self, call_stack: CallStack):
-        call_stack = call_stack.with_(self)
+        call_stack = call_stack.with_element(self)
 
         if not self.check_conditions(call_stack):
             return
 
-        for action in self.__actions:
+        for action in self._actions:
             action.invoke(call_stack)
 
 
@@ -288,21 +307,9 @@ class Condition(Stackable):
 
 class ActionTrigger(Stackable, Logging):
     def __init__(self, parent: Stackable, config: ActionTriggerConfiguration) -> None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        Logging.__init__(self)
         self.configuration = config
-
-    def render(self, call_stack: CallStack, values: Union[None,dict]):
-        if values is None:
-            return 
-        values = dict(values)
-
-        for item in values.keys():
-            if type(values[item]) is dict:
-                self.render(call_stack, item)
-            else:
-                values[item] = call_stack.get(values[item])
-
-        return values
 
 
     def invoke(self, call_stack: CallStack):
@@ -313,9 +320,9 @@ class ActionTrigger(Stackable, Logging):
             self.log_error("Id '" + self.configuration.action + "' not found")
             return
 
-        rendered = self.render(call_stack, self.configuration.values)
+        call_stack = call_stack.with_element(self) 
 
-        call_stack = call_stack.with_(self) \
-            .with_keys(rendered)
+        if self.configuration.values:
+            call_stack = call_stack.with_keys(self.configuration.values)
 
         id.invoke(call_stack)

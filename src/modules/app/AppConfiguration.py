@@ -10,9 +10,6 @@ class AppConfiguration(BaseModel):
     device: DeviceConfiguration
     """Device configuration"""
 
-    variables: dict[str, str] = {}
-    """Custom variables"""
-
     platforms: Optional[list[WithPlugins(PlatformConfiguration)]]
     """List of platforms"""
 

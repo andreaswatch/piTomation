@@ -24,11 +24,13 @@ class Sensor(BaseSensor):
 
     def __init__(self, parent: Platform, config: MqttSensorConfiguration) -> None:
         super().__init__(parent, config)
+        self.configuration = config
 
         self.on_message_automations = self._create_automations(config.on_message)
 
-        parent.subscribe(config.topic, self.on_message)
-
+    def start(self, call_stack: CallStack):
+        topic = call_stack.get(self.configuration.topic)
+        self.parent.subscribe(topic, self.on_message)
 
     def on_message(self, call_stack: CallStack):
         for automation in self.on_message_automations:
