@@ -1,6 +1,7 @@
 # piTomation
 
 piTomation is a system to control your Raspberry Pi and similar devices by simple yet powerful configuration files and control them remotely.
+https://andreaswatch.github.io/piTomation/
 
 ## Example 1
 Prints 'hello' to the console when the mqtt plugin connects.
