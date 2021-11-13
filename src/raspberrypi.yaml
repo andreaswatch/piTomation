@@ -40,6 +40,15 @@ platforms:
     id: dfplayer
     tx_pin: GPIO5
 
+  - platform: plugins.hass
+    id: hass
+    connection: mqtt
+    exports:
+      - id: player
+        type: sensor
+        on_event: play
+        off_event: play
+
 actions:
   - id: print
     platform: console
