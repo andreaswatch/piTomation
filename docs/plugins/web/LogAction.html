@@ -33,6 +33,8 @@ from modules.base.Instances import *
 
 @configuration
 class LogActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Log a message to the web app. Pass the text in {{payload}}.&#39;&#39;&#39;
+
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;web&#34;
@@ -48,10 +50,15 @@ class LogAction(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_element(self))
+        
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)       
 
-        message = call_stack.get(&#34;payload&#34;)
-        self.platform.add_log(message)</code></pre>
+        message = call_stack.get(&#34;{{payload}}&#34;)
+        
+        self.platform.add_log(message)
+
+        super().invoke(call_stack)</code></pre>
 </details>
 </section>
 <section>
@@ -81,10 +88,15 @@ class LogAction(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_element(self))
+        
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)       
 
-        message = call_stack.get(&#34;payload&#34;)
-        self.platform.add_log(message)</code></pre>
+        message = call_stack.get(&#34;{{payload}}&#34;)
+        
+        self.platform.add_log(message)
+
+        super().invoke(call_stack)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -99,7 +111,7 @@ class LogAction(BaseAction):
 <dl>
 <dt id="src.plugins.web.LogAction.LogAction.Platform"><code class="name">var <span class="ident">Platform</span></code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>WebApp Platform based on pywebio.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -114,10 +126,15 @@ class LogAction(BaseAction):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
-    super().invoke(call_stack.with_element(self))
+    
+    if self.configuration.variables is not None:
+        call_stack.with_keys(self.configuration.variables)       
 
-    message = call_stack.get(&#34;payload&#34;)
-    self.platform.add_log(message)</code></pre>
+    message = call_stack.get(&#34;{{payload}}&#34;)
+    
+    self.platform.add_log(message)
+
+    super().invoke(call_stack)</code></pre>
 </details>
 </dd>
 </dl>
@@ -127,7 +144,7 @@ class LogAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Log a message to the web app. Pass the text in {{payload}}.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -136,6 +153,8 @@ class LogAction(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class LogActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Log a message to the web app. Pass the text in {{payload}}.&#39;&#39;&#39;
+
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;web&#34;

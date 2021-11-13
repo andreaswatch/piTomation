@@ -35,32 +35,40 @@ from modules.base.Instances import *
 
 @configuration
 class RgbLedConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;GPIO PIN name for the red led. e.g. GPIO22&#39;&#39;&#39;
+    &#39;&#39;&#39;Action to control the color of a RGB Led, use {{topic}} to invoke
+    actions like on, off or toggle.
+    To change the color, call:
+    values:
+      topic: set_color
+      payload: green
+    &#39;&#39;&#39;
+
     pin_red: str
+    &#39;&#39;&#39;GPIO PIN name for the red led. e.g. GPIO22&#39;&#39;&#39;
 
-    &#39;&#39;&#39;GPIO PIN name for the green led. e.g. GPIO22&#39;&#39;&#39;
     pin_green: str
+    &#39;&#39;&#39;GPIO PIN name for the green led. e.g. GPIO22&#39;&#39;&#39;
 
-    &#39;&#39;&#39;GPIO PIN name for the blue led. e.g. GPIO22&#39;&#39;&#39;
     pin_blue: str
+    &#39;&#39;&#39;GPIO PIN name for the blue led. e.g. GPIO22&#39;&#39;&#39;
 
-    &#39;&#39;&#39;list actions to to execute when the LED is turned on&#39;&#39;&#39;
     on_high: list[AutomationConfiguration] = []
-
     &#39;&#39;&#39;list actions to to execute when the LED is turned on&#39;&#39;&#39;
+
     on_low: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;list actions to to execute when the LED is turned on&#39;&#39;&#39;
 
-    &#39;&#39;&#39;list actions to to execute when the LED&#39;s color has changed&#39;&#39;&#39;
     on_color_changed: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;list actions to to execute when the LED&#39;s color has changed&#39;&#39;&#39;
 
-    &#39;&#39;&#39;True=normal, False=inverted&#39;&#39;&#39;
     active_high: bool = True
+    &#39;&#39;&#39;True=normal, False=inverted&#39;&#39;&#39;
 
-    &#39;&#39;&#39;Initial Color (see colorzero)&#39;&#39;&#39;
     initial_color: str = &#34;black&#34;
+    &#39;&#39;&#39;Initial Color (see colorzero)&#39;&#39;&#39;
 
-    &#39;&#39;&#39;enable PWM for the led&#39;&#39;&#39;
     pwm: bool = False
+    &#39;&#39;&#39;enable PWM for the led&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -71,6 +79,8 @@ class RgbLedConfiguration(ActionConfiguration):
 
 
 class RgbLed(BaseAction, Debuggable):
+    &#39;&#39;&#39;Control the state of a RGB led&#39;&#39;&#39;
+
     def __init__(self, platform: Platform, config: RgbLedConfiguration) -&gt; None:
         super().__init__(platform, config)
         self.GPIO = platform.GPIO
@@ -145,12 +155,14 @@ class RgbLed(BaseAction, Debuggable):
 <span>(</span><span>platform: plugins.gpio.Platform.Platform, config: <a title="src.plugins.gpio.RgbLed.RgbLedConfiguration" href="#src.plugins.gpio.RgbLed.RgbLedConfiguration">RgbLedConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Control the state of a RGB led</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RgbLed(BaseAction, Debuggable):
+    &#39;&#39;&#39;Control the state of a RGB led&#39;&#39;&#39;
+
     def __init__(self, platform: Platform, config: RgbLedConfiguration) -&gt; None:
         super().__init__(platform, config)
         self.GPIO = platform.GPIO
@@ -279,7 +291,12 @@ class RgbLed(BaseAction, Debuggable):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>GPIO PIN name for the red led. e.g. GPIO22</p>
+<div class="desc"><p>Action to control the color of a RGB Led, use {{topic}} to invoke
+actions like on, off or toggle.
+To change the color, call:
+values:
+topic: set_color
+payload: green</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -288,32 +305,40 @@ class RgbLed(BaseAction, Debuggable):
 </summary>
 <pre><code class="python">@configuration
 class RgbLedConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;GPIO PIN name for the red led. e.g. GPIO22&#39;&#39;&#39;
+    &#39;&#39;&#39;Action to control the color of a RGB Led, use {{topic}} to invoke
+    actions like on, off or toggle.
+    To change the color, call:
+    values:
+      topic: set_color
+      payload: green
+    &#39;&#39;&#39;
+
     pin_red: str
+    &#39;&#39;&#39;GPIO PIN name for the red led. e.g. GPIO22&#39;&#39;&#39;
 
-    &#39;&#39;&#39;GPIO PIN name for the green led. e.g. GPIO22&#39;&#39;&#39;
     pin_green: str
+    &#39;&#39;&#39;GPIO PIN name for the green led. e.g. GPIO22&#39;&#39;&#39;
 
-    &#39;&#39;&#39;GPIO PIN name for the blue led. e.g. GPIO22&#39;&#39;&#39;
     pin_blue: str
+    &#39;&#39;&#39;GPIO PIN name for the blue led. e.g. GPIO22&#39;&#39;&#39;
 
-    &#39;&#39;&#39;list actions to to execute when the LED is turned on&#39;&#39;&#39;
     on_high: list[AutomationConfiguration] = []
-
     &#39;&#39;&#39;list actions to to execute when the LED is turned on&#39;&#39;&#39;
+
     on_low: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;list actions to to execute when the LED is turned on&#39;&#39;&#39;
 
-    &#39;&#39;&#39;list actions to to execute when the LED&#39;s color has changed&#39;&#39;&#39;
     on_color_changed: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;list actions to to execute when the LED&#39;s color has changed&#39;&#39;&#39;
 
-    &#39;&#39;&#39;True=normal, False=inverted&#39;&#39;&#39;
     active_high: bool = True
+    &#39;&#39;&#39;True=normal, False=inverted&#39;&#39;&#39;
 
-    &#39;&#39;&#39;Initial Color (see colorzero)&#39;&#39;&#39;
     initial_color: str = &#34;black&#34;
+    &#39;&#39;&#39;Initial Color (see colorzero)&#39;&#39;&#39;
 
-    &#39;&#39;&#39;enable PWM for the led&#39;&#39;&#39;
     pwm: bool = False
+    &#39;&#39;&#39;enable PWM for the led&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -337,15 +362,15 @@ class RgbLedConfiguration(ActionConfiguration):
 <dl>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.active_high"><code class="name">var <span class="ident">active_high</span> : bool</code></dt>
 <dd>
-<div class="desc"><p>Initial Color (see colorzero)</p></div>
+<div class="desc"><p>True=normal, False=inverted</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.initial_color"><code class="name">var <span class="ident">initial_color</span> : str</code></dt>
 <dd>
-<div class="desc"><p>enable PWM for the led</p></div>
+<div class="desc"><p>Initial Color (see colorzero)</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.on_color_changed"><code class="name">var <span class="ident">on_color_changed</span> : list</code></dt>
 <dd>
-<div class="desc"><p>True=normal, False=inverted</p></div>
+<div class="desc"><p>list actions to to execute when the LED's color has changed</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.on_high"><code class="name">var <span class="ident">on_high</span> : list</code></dt>
 <dd>
@@ -353,23 +378,23 @@ class RgbLedConfiguration(ActionConfiguration):
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.on_low"><code class="name">var <span class="ident">on_low</span> : list</code></dt>
 <dd>
-<div class="desc"><p>list actions to to execute when the LED's color has changed</p></div>
+<div class="desc"><p>list actions to to execute when the LED is turned on</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.pin_blue"><code class="name">var <span class="ident">pin_blue</span> : str</code></dt>
 <dd>
-<div class="desc"><p>list actions to to execute when the LED is turned on</p></div>
+<div class="desc"><p>GPIO PIN name for the blue led. e.g. GPIO22</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.pin_green"><code class="name">var <span class="ident">pin_green</span> : str</code></dt>
 <dd>
-<div class="desc"><p>GPIO PIN name for the blue led. e.g. GPIO22</p></div>
+<div class="desc"><p>GPIO PIN name for the green led. e.g. GPIO22</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.pin_red"><code class="name">var <span class="ident">pin_red</span> : str</code></dt>
 <dd>
-<div class="desc"><p>GPIO PIN name for the green led. e.g. GPIO22</p></div>
+<div class="desc"><p>GPIO PIN name for the red led. e.g. GPIO22</p></div>
 </dd>
 <dt id="src.plugins.gpio.RgbLed.RgbLedConfiguration.pwm"><code class="name">var <span class="ident">pwm</span> : bool</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>enable PWM for the led</p></div>
 </dd>
 </dl>
 <h3>Static methods</h3>

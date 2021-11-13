@@ -36,6 +36,8 @@ from dataclasses import dataclass
 
 @configuration
 class ButtonSensorConfiguration(SensorConfiguration):
+    &#39;&#39;&#39;Sensor to read the GPIO state of a typical button.&#39;&#39;&#39;
+
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
 
@@ -69,6 +71,8 @@ class ButtonSensorConfiguration(SensorConfiguration):
 
 
 class ButtonSensor(BaseSensor, Debuggable):
+    &#39;&#39;&#39;Read the state of a GPIO pin&#39;&#39;&#39;
+    
     def __init__(self, parent: Platform, config: ButtonSensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.GPIO = parent.GPIO
@@ -125,12 +129,14 @@ class ButtonSensor(BaseSensor, Debuggable):
 <span>(</span><span>parent: plugins.gpio.Platform.Platform, config: <a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration">ButtonSensorConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Read the state of a GPIO pin</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ButtonSensor(BaseSensor, Debuggable):
+    &#39;&#39;&#39;Read the state of a GPIO pin&#39;&#39;&#39;
+    
     def __init__(self, parent: Platform, config: ButtonSensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.GPIO = parent.GPIO
@@ -188,7 +194,7 @@ class ButtonSensor(BaseSensor, Debuggable):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all sensor configuration classes</p>
+<div class="desc"><p>Sensor to read the GPIO state of a typical button.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -197,6 +203,8 @@ class ButtonSensor(BaseSensor, Debuggable):
 </summary>
 <pre><code class="python">@configuration
 class ButtonSensorConfiguration(SensorConfiguration):
+    &#39;&#39;&#39;Sensor to read the GPIO state of a typical button.&#39;&#39;&#39;
+
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
 

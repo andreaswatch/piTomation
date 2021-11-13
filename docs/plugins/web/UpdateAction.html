@@ -31,6 +31,8 @@ from modules.base.Configuration import *
 
 @configuration
 class UpdateActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;web&#34;
@@ -39,6 +41,8 @@ class UpdateActionConfiguration(ActionConfiguration):
         return v    
 
 class UpdateAction(BaseAction):
+    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+
     from plugins.web.Platform import Platform
 
     def __init__(self, parent: Platform, config: UpdateActionConfiguration) -&gt; None:
@@ -68,12 +72,14 @@ class UpdateAction(BaseAction):
 <span>(</span><span>parent: plugins.web.Platform.Platform, config: <a title="src.plugins.web.UpdateAction.UpdateActionConfiguration" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration">UpdateActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Writes a given {{payload}} into the table row {{topic}}.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UpdateAction(BaseAction):
+    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+
     from plugins.web.Platform import Platform
 
     def __init__(self, parent: Platform, config: UpdateActionConfiguration) -&gt; None:
@@ -101,7 +107,7 @@ class UpdateAction(BaseAction):
 <dl>
 <dt id="src.plugins.web.UpdateAction.UpdateAction.Platform"><code class="name">var <span class="ident">Platform</span></code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>WebApp Platform based on pywebio.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -131,7 +137,7 @@ class UpdateAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Writes a given {{payload}} into the table row {{topic}}.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -140,6 +146,8 @@ class UpdateAction(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class UpdateActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;web&#34;

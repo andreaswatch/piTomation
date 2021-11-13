@@ -33,6 +33,8 @@ from plugins.system.Platform import *
 
 @configuration
 class DelayActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Alows to sleep for a given duration. Pass the amount of seconds in {{payload}}.&#39;&#39;&#39;
+
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;system&#34;
@@ -41,13 +43,13 @@ class DelayActionConfiguration(ActionConfiguration):
         return v    
 
 class DelayAction(BaseAction):
-
+    &#39;&#39;&#39;Executees python&#39;s time.sleep({{payload}})&#39;&#39;&#39;
     def __init__(self, parent: Platform, config: DelayActionConfiguration) -&gt; None:
         super().__init__(parent, config)
 
     def invoke(self, call_stack: CallStack):
 
-        message = float(call_stack.get(&#34;payload&#34;))
+        message = float(call_stack.get(&#34;{{payload}}&#34;))
         time.sleep(message)
 
         super().invoke(call_stack.with_element(self))</code></pre>
@@ -67,19 +69,19 @@ class DelayAction(BaseAction):
 <span>(</span><span>parent: plugins.system.Platform.Platform, config: <a title="src.plugins.system.DelayAction.DelayActionConfiguration" href="#src.plugins.system.DelayAction.DelayActionConfiguration">DelayActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Executees python's time.sleep({{payload}})</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DelayAction(BaseAction):
-
+    &#39;&#39;&#39;Executees python&#39;s time.sleep({{payload}})&#39;&#39;&#39;
     def __init__(self, parent: Platform, config: DelayActionConfiguration) -&gt; None:
         super().__init__(parent, config)
 
     def invoke(self, call_stack: CallStack):
 
-        message = float(call_stack.get(&#34;payload&#34;))
+        message = float(call_stack.get(&#34;{{payload}}&#34;))
         time.sleep(message)
 
         super().invoke(call_stack.with_element(self))</code></pre>
@@ -106,7 +108,7 @@ class DelayAction(BaseAction):
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
 
-    message = float(call_stack.get(&#34;payload&#34;))
+    message = float(call_stack.get(&#34;{{payload}}&#34;))
     time.sleep(message)
 
     super().invoke(call_stack.with_element(self))</code></pre>
@@ -119,7 +121,7 @@ class DelayAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Alows to sleep for a given duration. Pass the amount of seconds in {{payload}}.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -128,6 +130,8 @@ class DelayAction(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class DelayActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Alows to sleep for a given duration. Pass the amount of seconds in {{payload}}.&#39;&#39;&#39;
+
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;system&#34;

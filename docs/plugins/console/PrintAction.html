@@ -31,6 +31,8 @@ from modules.base.Instances import *
 
 @configuration
 class PrintActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Invoke this Action to output text to the local Console.
+    The text is received from {{payload}}.&#39;&#39;&#39;
     
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -41,12 +43,15 @@ class PrintActionConfiguration(ActionConfiguration):
         
 
 class PrintAction(BaseAction):
-    &#39;&#39;&#39;prints the given payload to the console&#39;&#39;&#39;
+    &#39;&#39;&#39;Prints the given {{payload}} to the System Console.&#39;&#39;&#39;
     
     def __init__(self, parent: Stackable, config: PrintActionConfiguration) -&gt; None:
         super().__init__(parent, config)
 
     def invoke(self, call_stack: CallStack):
+
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)        
 
         message = call_stack.get(&#34;{{payload}}&#34;)
 
@@ -69,18 +74,21 @@ class PrintAction(BaseAction):
 <span>(</span><span>parent: modules.base.Instances.Stackable, config: <a title="src.plugins.console.PrintAction.PrintActionConfiguration" href="#src.plugins.console.PrintAction.PrintActionConfiguration">PrintActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>prints the given payload to the console</p></div>
+<div class="desc"><p>Prints the given {{payload}} to the System Console.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PrintAction(BaseAction):
-    &#39;&#39;&#39;prints the given payload to the console&#39;&#39;&#39;
+    &#39;&#39;&#39;Prints the given {{payload}} to the System Console.&#39;&#39;&#39;
     
     def __init__(self, parent: Stackable, config: PrintActionConfiguration) -&gt; None:
         super().__init__(parent, config)
 
     def invoke(self, call_stack: CallStack):
+
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)        
 
         message = call_stack.get(&#34;{{payload}}&#34;)
 
@@ -110,6 +118,9 @@ class PrintAction(BaseAction):
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
 
+    if self.configuration.variables is not None:
+        call_stack.with_keys(self.configuration.variables)        
+
     message = call_stack.get(&#34;{{payload}}&#34;)
 
     print(&#34;PRINT: &#34; + str(message))
@@ -124,7 +135,8 @@ class PrintAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Invoke this Action to output text to the local Console.
+The text is received from {{payload}}.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -133,6 +145,8 @@ class PrintAction(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class PrintActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Invoke this Action to output text to the local Console.
+    The text is received from {{payload}}.&#39;&#39;&#39;
     
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):

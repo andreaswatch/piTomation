@@ -33,6 +33,13 @@ from plugins.gpio.Platform import Platform
 
 @configuration
 class BinaryActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Action that allows to update the state of a GPIO pin. 
+    Available commands: turn_on, turn_off &amp; toggle.
+    Use {{topic}} for the command, like:
+    values:
+      topic: toggle
+    &#39;&#39;&#39;
+
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
 
@@ -57,6 +64,7 @@ class BinaryActionConfiguration(ActionConfiguration):
 
 
 class BinaryAction(BaseAction):
+    &#39;&#39;&#39;Update the state of a GPIO pin&#39;&#39;&#39;
 
     def __init__(self, parent: Platform, config: BinaryActionConfiguration) -&gt; None:
         super().__init__(parent, config)
@@ -117,12 +125,13 @@ class BinaryAction(BaseAction):
 <span>(</span><span>parent: plugins.gpio.Platform.Platform, config: <a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration">BinaryActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Update the state of a GPIO pin</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BinaryAction(BaseAction):
+    &#39;&#39;&#39;Update the state of a GPIO pin&#39;&#39;&#39;
 
     def __init__(self, parent: Platform, config: BinaryActionConfiguration) -&gt; None:
         super().__init__(parent, config)
@@ -224,7 +233,11 @@ class BinaryAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Action that allows to update the state of a GPIO pin.
+Available commands: turn_on, turn_off &amp; toggle.
+Use {{topic}} for the command, like:
+values:
+topic: toggle</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -233,6 +246,13 @@ class BinaryAction(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class BinaryActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Action that allows to update the state of a GPIO pin. 
+    Available commands: turn_on, turn_off &amp; toggle.
+    Use {{topic}} for the command, like:
+    values:
+      topic: toggle
+    &#39;&#39;&#39;
+
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
 
