@@ -27,11 +27,11 @@ platforms:
       - actions:
         - action: print    
           values:
-            payload: "on_message"
+            payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
 
   - platform: plugins.gpio
     id: gpio
-    factory: rpigpio
+    factory: pigpio
 
   - platform: plugins.console
     id: console
@@ -61,6 +61,27 @@ actions:
 
 
 sensors:
+  - id: button1
+    platform: gpio
+    pin: GPIO6
+    type: ButtonSensor
+    on_press:
+      - actions:
+        - action: print
+          values: 
+            payload: GPIO6 high
+    on_release:
+      - actions:
+        - action: print
+          values: 
+            payload: GPIO6 low
+    on_hold:
+      - actions:
+        - action: print
+          values: 
+            payload: GPIO6 hold
+
+
   - id: play
     platform: mqtt
     topic: "{{id(mqtt).variables.base_topic}}/play"
