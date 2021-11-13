@@ -8,6 +8,8 @@ from dataclasses import dataclass
 
 @configuration
 class ButtonSensorConfiguration(SensorConfiguration):
+    '''Sensor to read the GPIO state of a typical button.'''
+
     pin: str
     '''GPIO PIN name. e.g. GPIO22'''
 
@@ -41,6 +43,8 @@ class ButtonSensorConfiguration(SensorConfiguration):
 
 
 class ButtonSensor(BaseSensor, Debuggable):
+    '''Read the state of a GPIO pin'''
+    
     def __init__(self, parent: Platform, config: ButtonSensorConfiguration) -> None:
         super().__init__(parent, config)
         self.GPIO = parent.GPIO

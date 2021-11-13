@@ -9,8 +9,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 class WebPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    '''WebApp Platform based on pywebio.'''
 
     @validator('platform')
     def check_platform_module(cls, v):
@@ -19,6 +18,8 @@ class WebPlatformConfiguration(PlatformConfiguration):
         return v
 
 class Platform(BasePlatform):
+    '''WebApp Platform based on pywebio.'''
+
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -> None:
         super().__init__(parent, config)
         

@@ -4,8 +4,10 @@ from pydantic.class_validators import validator
 from modules.base.Configuration import *
 from modules.base.Instances import *
 
-@configuration
+#@configuration
 class HassEntityConfiguration(BaseModel):
+    '''Exposes an action or sensor to HomeAssistant.'''
+
     id: str
     '''script id to export'''
 
@@ -18,6 +20,8 @@ class HassEntityConfiguration(BaseModel):
 
 @configuration
 class HassTriggerEntityConfiguration(HassEntityConfiguration):
+    '''Exposes an action or sensor to HomeAssistant as a trigger entity.'''
+
     event: str
     '''event to listen for the state'''
 
@@ -30,6 +34,8 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 
 @configuration
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
+    '''Exposes an action or sensor to HomeAssistant as a binary sensor entity.'''
+
     on_event: str
     '''event to listen for ON'''
 
@@ -48,6 +54,7 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 
 @configuration
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
+    '''Exposes an action or sensor to HomeAssistant as an action entity.'''
 
     on_command: str     
     '''command to execute when Homeassistant triggers ON'''
@@ -67,8 +74,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 
 @configuration
 class HassPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    '''Allows to export actions and sensors to HomeAssistant entities.'''
 
     @validator('platform')
     def check_platform_module(cls, v):

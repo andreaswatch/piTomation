@@ -2,7 +2,6 @@ import json
 from sys import platform
 import threading
 from typing import Optional
-from marshmallow.validate import Equal
 import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
 from pydantic.main import BaseModel
@@ -11,7 +10,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 class Availability(BaseModel):
-    '''Availability topic and last will'''
+    '''Availability topic and last will.'''
 
     topic: str
     '''configured topic for the mqtt client's last will and we also send a message on connect'''
@@ -25,7 +24,7 @@ class Availability(BaseModel):
 
 @configuration
 class MqttPlatformConfiguration(PlatformConfiguration):
-    '''Configuration settings for the MQTT platform'''
+    '''Configuration settings for the MQTT platform.'''
 
     @validator('platform')
     def check_platform_module(cls, v):

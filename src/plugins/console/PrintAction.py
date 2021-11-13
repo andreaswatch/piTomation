@@ -3,6 +3,8 @@ from modules.base.Instances import *
 
 @configuration
 class PrintActionConfiguration(ActionConfiguration):
+    '''Invoke this Action to output text to the local Console.
+    The text is received from {{payload}}.'''
     
     @validator('platform')
     def check_platform_module(cls, v):
@@ -13,12 +15,15 @@ class PrintActionConfiguration(ActionConfiguration):
         
 
 class PrintAction(BaseAction):
-    '''prints the given payload to the console'''
+    '''Prints the given {{payload}} to the System Console.'''
     
     def __init__(self, parent: Stackable, config: PrintActionConfiguration) -> None:
         super().__init__(parent, config)
 
     def invoke(self, call_stack: CallStack):
+
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)        
 
         message = call_stack.get("{{payload}}")
 

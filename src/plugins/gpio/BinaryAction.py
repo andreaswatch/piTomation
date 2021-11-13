@@ -5,6 +5,13 @@ from plugins.gpio.Platform import Platform
 
 @configuration
 class BinaryActionConfiguration(ActionConfiguration):
+    '''Action that allows to update the state of a GPIO pin. 
+    Available commands: turn_on, turn_off & toggle.
+    Use {{topic}} for the command, like:
+    values:
+      topic: toggle
+    '''
+
     pin: str
     '''GPIO PIN name. e.g. GPIO22'''
 
@@ -29,6 +36,7 @@ class BinaryActionConfiguration(ActionConfiguration):
 
 
 class BinaryAction(BaseAction):
+    '''Update the state of a GPIO pin'''
 
     def __init__(self, parent: Platform, config: BinaryActionConfiguration) -> None:
         super().__init__(parent, config)

@@ -3,6 +3,9 @@ from modules.base.Instances import *
 
 @configuration
 class DFPlayerPlatformConfiguration(PlatformConfiguration):
+    '''This platform opens a serial console through the tx_pin to the DFPlayer.
+    Use the Action to invoke commands like 'play'. 
+    '''
 
     @validator('platform')
     def check_platform_module(cls, v):

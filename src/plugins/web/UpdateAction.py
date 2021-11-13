@@ -3,6 +3,8 @@ from modules.base.Configuration import *
 
 @configuration
 class UpdateActionConfiguration(ActionConfiguration):
+    '''Writes a given {{payload}} into the table row {{topic}}.'''
+
     @validator('platform')
     def check_platform_module(cls, v):
         platform_name = "web"
@@ -11,6 +13,8 @@ class UpdateActionConfiguration(ActionConfiguration):
         return v    
 
 class UpdateAction(BaseAction):
+    '''Writes a given {{payload}} into the table row {{topic}}.'''
+
     from plugins.web.Platform import Platform
 
     def __init__(self, parent: Platform, config: UpdateActionConfiguration) -> None:

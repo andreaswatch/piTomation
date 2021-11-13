@@ -11,6 +11,7 @@ class HassType(Enum):
 
 
 class HassEntityAutomation(Stackable, Disposeable, Logging):
+    '''Connection between our actions and scripts and HomeAssistants different entity types.'''
 
     def __init__(self, parent: Stackable, config: HassEntityConfiguration) -> None:
         from plugins.hass.Platform import Platform

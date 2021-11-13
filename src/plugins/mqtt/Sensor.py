@@ -20,6 +20,7 @@ class MqttSensorConfiguration(SensorConfiguration):
 
 
 class Sensor(BaseSensor):
+    '''Allows to listen to a given MQTT topic.'''
     from plugins.mqtt.Platform import Platform
 
     def __init__(self, parent: Platform, config: MqttSensorConfiguration) -> None:

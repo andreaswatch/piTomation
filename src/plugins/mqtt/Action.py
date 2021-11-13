@@ -5,6 +5,7 @@ from modules.base.Instances import *
 
 @configuration
 class MqttActionConfiguration(ActionConfiguration):
+    '''Mqtt action to send a message through the mqtt client.'''
     @validator('platform')
     def check_platform_module(cls, v):
         platform_name = "mqtt"
@@ -13,6 +14,7 @@ class MqttActionConfiguration(ActionConfiguration):
         return v    
 
 class Action(BaseAction):
+    '''Mqtt action to send a message through the mqtt client.'''
     from plugins.mqtt.Platform import Platform as MqttPlatform
 
     def __init__(self, parent: MqttPlatform, config: MqttActionConfiguration) -> None:

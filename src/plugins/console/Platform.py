@@ -5,8 +5,7 @@ from modules.base.Instances import *
 
 @configuration
 class ConsolePlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    '''Allows to output text to the Console, no configuration needed'''
 
     @validator('platform')
     def check_platform_module(cls, v):

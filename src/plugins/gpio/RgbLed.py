@@ -7,32 +7,40 @@ from modules.base.Instances import *
 
 @configuration
 class RgbLedConfiguration(ActionConfiguration):
-    '''GPIO PIN name for the red led. e.g. GPIO22'''
+    '''Action to control the color of a RGB Led, use {{topic}} to invoke
+    actions like on, off or toggle.
+    To change the color, call:
+    values:
+      topic: set_color
+      payload: green
+    '''
+
     pin_red: str
+    '''GPIO PIN name for the red led. e.g. GPIO22'''
 
-    '''GPIO PIN name for the green led. e.g. GPIO22'''
     pin_green: str
+    '''GPIO PIN name for the green led. e.g. GPIO22'''
 
-    '''GPIO PIN name for the blue led. e.g. GPIO22'''
     pin_blue: str
+    '''GPIO PIN name for the blue led. e.g. GPIO22'''
 
-    '''list actions to to execute when the LED is turned on'''
     on_high: list[AutomationConfiguration] = []
-
     '''list actions to to execute when the LED is turned on'''
+
     on_low: list[AutomationConfiguration] = []
+    '''list actions to to execute when the LED is turned on'''
 
-    '''list actions to to execute when the LED's color has changed'''
     on_color_changed: list[AutomationConfiguration] = []
+    '''list actions to to execute when the LED's color has changed'''
 
-    '''True=normal, False=inverted'''
     active_high: bool = True
+    '''True=normal, False=inverted'''
 
-    '''Initial Color (see colorzero)'''
     initial_color: str = "black"
+    '''Initial Color (see colorzero)'''
 
-    '''enable PWM for the led'''
     pwm: bool = False
+    '''enable PWM for the led'''
 
     @validator('platform')
     def check_platform_module(cls, v):
@@ -43,6 +51,8 @@ class RgbLedConfiguration(ActionConfiguration):
 
 
 class RgbLed(BaseAction, Debuggable):
+    '''Control the state of a RGB led'''
+
     def __init__(self, platform: Platform, config: RgbLedConfiguration) -> None:
         super().__init__(platform, config)
         self.GPIO = platform.GPIO

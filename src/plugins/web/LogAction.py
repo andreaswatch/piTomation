@@ -5,6 +5,8 @@ from modules.base.Instances import *
 
 @configuration
 class LogActionConfiguration(ActionConfiguration):
+    '''Log a message to the web app. Pass the text in {{payload}}.'''
+
     @validator('platform')
     def check_platform_module(cls, v):
         platform_name = "web"
@@ -20,7 +22,12 @@ class LogAction(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_element(self))
+        
+        if self.configuration.variables is not None:
+            call_stack.with_keys(self.configuration.variables)       
 
-        message = call_stack.get("payload")
+        message = call_stack.get("{{payload}}")
+        
         self.platform.add_log(message)
+
+        super().invoke(call_stack)

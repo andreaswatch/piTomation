@@ -6,6 +6,8 @@ from modules.base.Instances import *
 
 @configuration
 class GpioPlatform(PlatformConfiguration):
+    '''The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
+    Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.'''
 
     platform: str
 
@@ -20,6 +22,8 @@ class GpioPlatform(PlatformConfiguration):
 
 
 class Platform(BasePlatform):
+    '''GPIO platform'''
+    
     def __init__(self, parent: Stackable, config: GpioPlatform) -> None:
         super().__init__(parent, config)
         self.configuration = config

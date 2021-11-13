@@ -5,6 +5,8 @@ from plugins.hass.Configurations import *
 
 
 class Platform(BasePlatform):
+    '''Exports actions and sensors to HomeAssistant entities.'''
+
     def __init__(self, parent: Stackable, config: HassPlatformConfiguration) -> None:
         super().__init__(parent, config)
         self.configuration = config

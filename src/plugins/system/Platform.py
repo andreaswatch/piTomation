@@ -7,8 +7,7 @@ from modules.base.Instances import *
 
 @configuration
 class SystemPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    '''Configuration settings for the System platform.'''
     
     @validator('platform')
     def check_platform_module(cls, v):
@@ -17,6 +16,7 @@ class SystemPlatformConfiguration(PlatformConfiguration):
         return v
 
 class Platform(BasePlatform):
+    '''System platform'''
 
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -> None:
         super().__init__(parent, config)
