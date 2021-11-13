@@ -27,8 +27,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import pydantic
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 from pydantic import BaseModel
 
 @configuration
@@ -37,9 +37,6 @@ class AppConfiguration(BaseModel):
 
     device: DeviceConfiguration
     &#34;&#34;&#34;Device configuration&#34;&#34;&#34;
-
-    variables: dict[str, str] = {}
-    &#34;&#34;&#34;Custom variables&#34;&#34;&#34;
 
     platforms: Optional[list[WithPlugins(PlatformConfiguration)]]
     &#34;&#34;&#34;List of platforms&#34;&#34;&#34;
@@ -79,9 +76,6 @@ class AppConfiguration(BaseModel):
     device: DeviceConfiguration
     &#34;&#34;&#34;Device configuration&#34;&#34;&#34;
 
-    variables: dict[str, str] = {}
-    &#34;&#34;&#34;Custom variables&#34;&#34;&#34;
-
     platforms: Optional[list[WithPlugins(PlatformConfiguration)]]
     &#34;&#34;&#34;List of platforms&#34;&#34;&#34;
 
@@ -102,7 +96,7 @@ class AppConfiguration(BaseModel):
 <dd>
 <div class="desc"><p>List of actions (=outputs)</p></div>
 </dd>
-<dt id="src.modules.app.AppConfiguration.AppConfiguration.device"><code class="name">var <span class="ident">device</span> : modules.app.base.Configuration.DeviceConfiguration</code></dt>
+<dt id="src.modules.app.AppConfiguration.AppConfiguration.device"><code class="name">var <span class="ident">device</span> : modules.base.Configuration.DeviceConfiguration</code></dt>
 <dd>
 <div class="desc"><p>Device configuration</p></div>
 </dd>
@@ -113,10 +107,6 @@ class AppConfiguration(BaseModel):
 <dt id="src.modules.app.AppConfiguration.AppConfiguration.sensors"><code class="name">var <span class="ident">sensors</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>List of sensors (=inputs)</p></div>
-</dd>
-<dt id="src.modules.app.AppConfiguration.AppConfiguration.variables"><code class="name">var <span class="ident">variables</span> : dict</code></dt>
-<dd>
-<div class="desc"><p>Custom variables</p></div>
 </dd>
 </dl>
 </dd>
@@ -143,7 +133,6 @@ class AppConfiguration(BaseModel):
 <li><code><a title="src.modules.app.AppConfiguration.AppConfiguration.device" href="#src.modules.app.AppConfiguration.AppConfiguration.device">device</a></code></li>
 <li><code><a title="src.modules.app.AppConfiguration.AppConfiguration.platforms" href="#src.modules.app.AppConfiguration.AppConfiguration.platforms">platforms</a></code></li>
 <li><code><a title="src.modules.app.AppConfiguration.AppConfiguration.sensors" href="#src.modules.app.AppConfiguration.AppConfiguration.sensors">sensors</a></code></li>
-<li><code><a title="src.modules.app.AppConfiguration.AppConfiguration.variables" href="#src.modules.app.AppConfiguration.AppConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>

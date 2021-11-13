@@ -29,8 +29,8 @@
 <pre><code class="python">from sys import platform
 
 from pydantic.class_validators import validator
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 @configuration
 class HassEntityConfiguration(BaseModel):
@@ -40,11 +40,20 @@ class HassEntityConfiguration(BaseModel):
     name: Optional[str]
     &#39;&#39;&#39;friendly name in Homeassistant&#39;&#39;&#39;
 
+    type: str
+    &#39;&#39;&#39;Homeassistant type&#39;&#39;&#39; 
+
 
 @configuration
 class HassTriggerEntityConfiguration(HassEntityConfiguration):
     event: str
     &#39;&#39;&#39;event to listen for the state&#39;&#39;&#39;
+
+    @validator(&#39;type&#39;)
+    def check_platform_module(cls, v):
+        if &#34;trigger&#34; not in v:
+            raise ValueError(&#34;wrong type: trigger, is: &#34; + v)
+        return v      
 
 
 @configuration
@@ -58,6 +67,12 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     state_topic: Optional[str]
     &#39;&#39;&#39;where Homeassistant can get the state&#39;&#39;&#39;    
 
+    @validator(&#39;type&#39;)
+    def check_platform_module(cls, v):
+        if &#34;sensor&#34; not in v:
+            raise ValueError(&#34;wrong type: sensor, is: &#34; + v)
+        return v          
+
 
 @configuration
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
@@ -70,6 +85,12 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 
     command_topic: Optional[str]
     &#39;&#39;&#39;where Homeassistant can publish the state&#39;&#39;&#39;
+
+    @validator(&#39;type&#39;)
+    def check_platform_module(cls, v):
+        if &#34;action&#34; not in v:
+            raise ValueError(&#34;wrong type: action, is: &#34; + v)
+        return v          
 
 
 @configuration
@@ -126,7 +147,13 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     &#39;&#39;&#39;command to execute when Homeassistant triggers OFF&#39;&#39;&#39;
 
     command_topic: Optional[str]
-    &#39;&#39;&#39;where Homeassistant can publish the state&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;where Homeassistant can publish the state&#39;&#39;&#39;
+
+    @validator(&#39;type&#39;)
+    def check_platform_module(cls, v):
+        if &#34;action&#34; not in v:
+            raise ValueError(&#34;wrong type: action, is: &#34; + v)
+        return v          </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -150,6 +177,25 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 <div class="desc"><p>command to execute when Homeassistant triggers ON</p></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.check_platform_module"><code class="name flex">
+<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;type&#39;)
+def check_platform_module(cls, v):
+    if &#34;action&#34; not in v:
+        raise ValueError(&#34;wrong type: action, is: &#34; + v)
+    return v          </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></b></code>:
@@ -159,6 +205,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event">off_event</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event">on_event</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
+<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 </ul>
@@ -183,7 +230,13 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;event to listen for OFF&#39;&#39;&#39;
 
     state_topic: Optional[str]
-    &#39;&#39;&#39;where Homeassistant can get the state&#39;&#39;&#39;    </code></pre>
+    &#39;&#39;&#39;where Homeassistant can get the state&#39;&#39;&#39;    
+
+    @validator(&#39;type&#39;)
+    def check_platform_module(cls, v):
+        if &#34;sensor&#34; not in v:
+            raise ValueError(&#34;wrong type: sensor, is: &#34; + v)
+        return v          </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -210,12 +263,32 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 <div class="desc"><p>where Homeassistant can get the state</p></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_platform_module"><code class="name flex">
+<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;type&#39;)
+def check_platform_module(cls, v):
+    if &#34;sensor&#34; not in v:
+        raise ValueError(&#34;wrong type: sensor, is: &#34; + v)
+    return v          </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></b></code>:
 <ul class="hlist">
 <li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 </ul>
@@ -237,7 +310,10 @@ class HassEntityConfiguration(BaseModel):
     &#39;&#39;&#39;script id to export&#39;&#39;&#39;
 
     name: Optional[str]
-    &#39;&#39;&#39;friendly name in Homeassistant&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;friendly name in Homeassistant&#39;&#39;&#39;
+
+    type: str
+    &#39;&#39;&#39;Homeassistant type&#39;&#39;&#39; </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -258,6 +334,10 @@ class HassEntityConfiguration(BaseModel):
 <dt id="src.plugins.hass.Configurations.HassEntityConfiguration.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>friendly name in Homeassistant</p></div>
+</dd>
+<dt id="src.plugins.hass.Configurations.HassEntityConfiguration.type"><code class="name">var <span class="ident">type</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Homeassistant type</p></div>
 </dd>
 </dl>
 </dd>
@@ -298,10 +378,11 @@ class HassPlatformConfiguration(PlatformConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.PlatformConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.PlatformConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
@@ -362,7 +443,13 @@ def check_platform_module(cls, v):
 <pre><code class="python">@configuration
 class HassTriggerEntityConfiguration(HassEntityConfiguration):
     event: str
-    &#39;&#39;&#39;event to listen for the state&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;event to listen for the state&#39;&#39;&#39;
+
+    @validator(&#39;type&#39;)
+    def check_platform_module(cls, v):
+        if &#34;trigger&#34; not in v:
+            raise ValueError(&#34;wrong type: trigger, is: &#34; + v)
+        return v      </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -377,12 +464,32 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 <div class="desc"><p>event to listen for the state</p></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.plugins.hass.Configurations.HassTriggerEntityConfiguration.check_platform_module"><code class="name flex">
+<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;type&#39;)
+def check_platform_module(cls, v):
+    if &#34;trigger&#34; not in v:
+        raise ValueError(&#34;wrong type: trigger, is: &#34; + v)
+    return v      </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></b></code>:
 <ul class="hlist">
 <li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 </ul>
@@ -406,6 +513,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 <li>
 <h4><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration">HassActionEntityConfiguration</a></code></h4>
 <ul class="">
+<li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.check_platform_module" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.command_topic" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.command_topic">command_topic</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command">off_command</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command">on_command</a></code></li>
@@ -414,6 +522,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 <li>
 <h4><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></code></h4>
 <ul class="">
+<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_platform_module" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event">off_event</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event">on_event</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
@@ -424,6 +533,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 <ul class="">
 <li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 <li>
@@ -440,6 +550,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 <li>
 <h4><code><a title="src.plugins.hass.Configurations.HassTriggerEntityConfiguration" href="#src.plugins.hass.Configurations.HassTriggerEntityConfiguration">HassTriggerEntityConfiguration</a></code></h4>
 <ul class="">
+<li><code><a title="src.plugins.hass.Configurations.HassTriggerEntityConfiguration.check_platform_module" href="#src.plugins.hass.Configurations.HassTriggerEntityConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassTriggerEntityConfiguration.event" href="#src.plugins.hass.Configurations.HassTriggerEntityConfiguration.event">event</a></code></li>
 </ul>
 </li>

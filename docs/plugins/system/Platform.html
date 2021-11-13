@@ -29,8 +29,8 @@
 <pre><code class="python">from sys import platform
 
 from pydantic.class_validators import validator
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 @configuration
 class SystemPlatformConfiguration(PlatformConfiguration):
@@ -64,7 +64,7 @@ class Platform(BasePlatform):
 <dl>
 <dt id="src.plugins.system.Platform.Platform"><code class="flex name class">
 <span>class <span class="ident">Platform</span></span>
-<span>(</span><span>parent: modules.app.base.Instances.Stackable, config: modules.app.base.Configuration.PlatformConfiguration)</span>
+<span>(</span><span>parent: modules.base.Instances.Stackable, config: modules.base.Configuration.PlatformConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -79,11 +79,10 @@ class Platform(BasePlatform):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BasePlatform</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Identifyable</li>
-<li>modules.app.base.Instances.Disposeable</li>
-<li>modules.app.base.Instances.VariableProvider</li>
+<li>modules.base.Instances.BasePlatform</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Identifyable</li>
+<li>modules.base.Instances.Disposeable</li>
 </ul>
 </dd>
 <dt id="src.plugins.system.Platform.SystemPlatformConfiguration"><code class="flex name class">
@@ -111,10 +110,11 @@ class SystemPlatformConfiguration(PlatformConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.PlatformConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.PlatformConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>

@@ -35,10 +35,12 @@ import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
 from pydantic.main import BaseModel
 
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 class Availability(BaseModel):
+    &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
+
     topic: str
     &#39;&#39;&#39;configured topic for the mqtt client&#39;s last will and we also send a message on connect&#39;&#39;&#39;
 
@@ -51,9 +53,8 @@ class Availability(BaseModel):
 
 @configuration
 class MqttPlatformConfiguration(PlatformConfiguration):
+    &#39;&#39;&#39;Configuration settings for the MQTT platform&#39;&#39;&#39;
 
-    platform: str
-    
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         if &#34;plugins.mqtt&#34; not in v:
@@ -70,6 +71,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;seconds to keep the server connection&#39;&#39;&#39;
 
     availability: Optional[Availability]
+    &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
 
     on_connected: Optional[list[AutomationConfiguration]] = []
     &#39;&#39;&#39;Actions to execute when the connection to the host is established&#39;&#39;&#39; 
@@ -82,40 +84,50 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 
 
 class Platform(BasePlatform):
+    &#39;&#39;&#39;MQTT Platform&#39;&#39;&#39;
+
     def __init__(self, parent: Stackable, config: MqttPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.app = parent.get_app()
         self.configuration = config
+
         self.callbacks = []
 
-        self.is_connected = False
+    def start(self, call_stack: CallStack):
+        def render(var):
+            &#39;&#39;&#39;this is only to avoid typing errors&#39;&#39;&#39;
+            return str(call_stack.get(var))
 
-        self.client = mqtt.Client(self.app.id + &#34;_&#34; + self.app.device.configuration.name)
+        app_id = str(self.app.get_variable_value(&#34;id&#34;))
+
+        self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name))
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()
-
-
-        if self.configuration.availability:
-            av = self.configuration.availability
-            self.client.will_set(av.topic, av.payload_off)
-            self.client.subscribe(av.topic)
 
         self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
 
         if self.configuration.availability:
             av = self.configuration.availability
-            self.publish(av.topic, av.payload_on)
+
+            av_topic = render(av.topic)
+            av_payload_on = render(av.payload_on)
+            av_payload_off = render(av.payload_off)
+
+            self.client.will_set(av_topic, av_payload_off)
+            self.client.subscribe(av_topic)
+
+            av = self.configuration.availability
+            self.publish(av_topic, av_payload_on)
 
 
-    def start(self):
         def loop():
-            self.client.loop_forever()
+            self.client.loop_start()
 
         loop_thread = threading.Thread(target=loop)
         loop_thread.start()
 
-        super().start()
+        super().start(call_stack)
 
 
     def dispose(self):
@@ -123,25 +135,21 @@ class Platform(BasePlatform):
         return super().dispose()
 
 
-    def get_variable_value(self, text: str):
-        t = str(text).lower()
-        if t == &#34;connected&#34;:
-            return self.is_connected
-
-        return super().get_variable_value(text)
-
-
     def __init_on_message(self):
         self.on_message_automations = []
-        for automation in self.configuration.on_message:
-            self.on_message_automations.append(Automation(self, automation))
+        if self.configuration.on_message:
+            for automation in self.configuration.on_message:
+                self.on_message_automations.append(Automation(self, automation))
 
         def method(client, userdata, msg):
             payload = msg.payload.decode(&#34;utf-8&#34;)
 
-            call_stack = CallStack(from_list=self.get_full_stack()) \
-                .with_key(&#34;payload&#34;, payload) \
-                .with_key(&#34;topic&#34;, msg.topic)
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
+                .with_keys({
+                    &#34;payload&#34;: payload,
+                    &#34;topic&#34;: msg.topic
+                })
 
             for callback in self.callbacks:
                 if callback[&#34;topic&#34;] == msg.topic:
@@ -154,13 +162,13 @@ class Platform(BasePlatform):
 
     def __init_on_disconnect(self):
         self.on_disconnect_actions = []
-        for automation in self.configuration.on_disconnected:
-            self.on_disconnect_actions.append(Automation(self, automation))
+        if self.configuration.on_disconnected:
+            for automation in self.configuration.on_disconnected:
+                self.on_disconnect_actions.append(Automation(self, automation))
 
         def method(client, userdata, flags):
-            self.is_connected = False
-
-            call_stack = CallStack(from_list=self.get_full_stack()) \
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
                 .with_key(&#34;flags&#34;, flags)
 
             for automation in self.on_disconnect_actions:
@@ -170,13 +178,13 @@ class Platform(BasePlatform):
 
     def __init_on_connect(self):
         self.on_connected_actions = []
-        for automationConfig in self.configuration.on_connected:
-            self.on_connected_actions.append(Automation(self, automationConfig))
+        if self.configuration.on_connected:
+            for automationConfig in self.configuration.on_connected:
+                self.on_connected_actions.append(Automation(self, automationConfig))
 
         def method(client, userdata, flags, rc):
-            self.is_connected = True
-
-            call_stack = CallStack(from_list=self.get_full_stack()) \
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
                 .with_key(&#34;return_code&#34;, rc)
 
             for automation in self.on_connected_actions:
@@ -186,7 +194,9 @@ class Platform(BasePlatform):
 
 
     def subscribe(self, topic: str, callback=None):
-        self.callbacks.append({&#34;topic&#34;: topic, &#34;callback&#34;: callback})
+        if callback is not None:
+            self.callbacks.append({&#34;topic&#34;: topic, &#34;callback&#34;: callback})
+
         self.client.subscribe(topic)
 
 
@@ -211,13 +221,16 @@ class Platform(BasePlatform):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<div class="desc"><p>Availability topic and last will</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Availability(BaseModel):
+    &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
+
     topic: str
     &#39;&#39;&#39;configured topic for the mqtt client&#39;s last will and we also send a message on connect&#39;&#39;&#39;
 
@@ -253,7 +266,7 @@ class Platform(BasePlatform):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all platform configuration classes</p>
+<div class="desc"><p>Configuration settings for the MQTT platform</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -262,9 +275,8 @@ class Platform(BasePlatform):
 </summary>
 <pre><code class="python">@configuration
 class MqttPlatformConfiguration(PlatformConfiguration):
+    &#39;&#39;&#39;Configuration settings for the MQTT platform&#39;&#39;&#39;
 
-    platform: str
-    
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         if &#34;plugins.mqtt&#34; not in v:
@@ -281,6 +293,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;seconds to keep the server connection&#39;&#39;&#39;
 
     availability: Optional[Availability]
+    &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
 
     on_connected: Optional[list[AutomationConfiguration]] = []
     &#39;&#39;&#39;Actions to execute when the connection to the host is established&#39;&#39;&#39; 
@@ -293,10 +306,11 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.PlatformConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.PlatformConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
@@ -304,7 +318,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 <dl>
 <dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.availability"><code class="name">var <span class="ident">availability</span> : Optional[<a title="src.plugins.mqtt.Platform.Availability" href="#src.plugins.mqtt.Platform.Availability">Availability</a>]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Availability topic and last will</p></div>
 </dd>
 <dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
 <dd>
@@ -325,10 +339,6 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 <dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_message"><code class="name">var <span class="ident">on_message</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>Actions to execute when a MQTT message is received</p></div>
-</dd>
-<dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
 </dd>
 <dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.port"><code class="name">var <span class="ident">port</span> : int</code></dt>
 <dd>
@@ -357,49 +367,59 @@ def check_platform_module(cls, v):
 </dd>
 <dt id="src.plugins.mqtt.Platform.Platform"><code class="flex name class">
 <span>class <span class="ident">Platform</span></span>
-<span>(</span><span>parent: modules.app.base.Instances.Stackable, config: <a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration">MqttPlatformConfiguration</a>)</span>
+<span>(</span><span>parent: modules.base.Instances.Stackable, config: <a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration">MqttPlatformConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>MQTT Platform</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Platform(BasePlatform):
+    &#39;&#39;&#39;MQTT Platform&#39;&#39;&#39;
+
     def __init__(self, parent: Stackable, config: MqttPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.app = parent.get_app()
         self.configuration = config
+
         self.callbacks = []
 
-        self.is_connected = False
+    def start(self, call_stack: CallStack):
+        def render(var):
+            &#39;&#39;&#39;this is only to avoid typing errors&#39;&#39;&#39;
+            return str(call_stack.get(var))
 
-        self.client = mqtt.Client(self.app.id + &#34;_&#34; + self.app.device.configuration.name)
+        app_id = str(self.app.get_variable_value(&#34;id&#34;))
+
+        self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name))
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()
-
-
-        if self.configuration.availability:
-            av = self.configuration.availability
-            self.client.will_set(av.topic, av.payload_off)
-            self.client.subscribe(av.topic)
 
         self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
 
         if self.configuration.availability:
             av = self.configuration.availability
-            self.publish(av.topic, av.payload_on)
+
+            av_topic = render(av.topic)
+            av_payload_on = render(av.payload_on)
+            av_payload_off = render(av.payload_off)
+
+            self.client.will_set(av_topic, av_payload_off)
+            self.client.subscribe(av_topic)
+
+            av = self.configuration.availability
+            self.publish(av_topic, av_payload_on)
 
 
-    def start(self):
         def loop():
-            self.client.loop_forever()
+            self.client.loop_start()
 
         loop_thread = threading.Thread(target=loop)
         loop_thread.start()
 
-        super().start()
+        super().start(call_stack)
 
 
     def dispose(self):
@@ -407,25 +427,21 @@ def check_platform_module(cls, v):
         return super().dispose()
 
 
-    def get_variable_value(self, text: str):
-        t = str(text).lower()
-        if t == &#34;connected&#34;:
-            return self.is_connected
-
-        return super().get_variable_value(text)
-
-
     def __init_on_message(self):
         self.on_message_automations = []
-        for automation in self.configuration.on_message:
-            self.on_message_automations.append(Automation(self, automation))
+        if self.configuration.on_message:
+            for automation in self.configuration.on_message:
+                self.on_message_automations.append(Automation(self, automation))
 
         def method(client, userdata, msg):
             payload = msg.payload.decode(&#34;utf-8&#34;)
 
-            call_stack = CallStack(from_list=self.get_full_stack()) \
-                .with_key(&#34;payload&#34;, payload) \
-                .with_key(&#34;topic&#34;, msg.topic)
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
+                .with_keys({
+                    &#34;payload&#34;: payload,
+                    &#34;topic&#34;: msg.topic
+                })
 
             for callback in self.callbacks:
                 if callback[&#34;topic&#34;] == msg.topic:
@@ -438,13 +454,13 @@ def check_platform_module(cls, v):
 
     def __init_on_disconnect(self):
         self.on_disconnect_actions = []
-        for automation in self.configuration.on_disconnected:
-            self.on_disconnect_actions.append(Automation(self, automation))
+        if self.configuration.on_disconnected:
+            for automation in self.configuration.on_disconnected:
+                self.on_disconnect_actions.append(Automation(self, automation))
 
         def method(client, userdata, flags):
-            self.is_connected = False
-
-            call_stack = CallStack(from_list=self.get_full_stack()) \
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
                 .with_key(&#34;flags&#34;, flags)
 
             for automation in self.on_disconnect_actions:
@@ -454,13 +470,13 @@ def check_platform_module(cls, v):
 
     def __init_on_connect(self):
         self.on_connected_actions = []
-        for automationConfig in self.configuration.on_connected:
-            self.on_connected_actions.append(Automation(self, automationConfig))
+        if self.configuration.on_connected:
+            for automationConfig in self.configuration.on_connected:
+                self.on_connected_actions.append(Automation(self, automationConfig))
 
         def method(client, userdata, flags, rc):
-            self.is_connected = True
-
-            call_stack = CallStack(from_list=self.get_full_stack()) \
+            call_stack = CallStack()\
+                .with_stack(self.get_full_stack()) \
                 .with_key(&#34;return_code&#34;, rc)
 
             for automation in self.on_connected_actions:
@@ -470,7 +486,9 @@ def check_platform_module(cls, v):
 
 
     def subscribe(self, topic: str, callback=None):
-        self.callbacks.append({&#34;topic&#34;: topic, &#34;callback&#34;: callback})
+        if callback is not None:
+            self.callbacks.append({&#34;topic&#34;: topic, &#34;callback&#34;: callback})
+
         self.client.subscribe(topic)
 
 
@@ -482,11 +500,10 @@ def check_platform_module(cls, v):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BasePlatform</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Identifyable</li>
-<li>modules.app.base.Instances.Disposeable</li>
-<li>modules.app.base.Instances.VariableProvider</li>
+<li>modules.base.Instances.BasePlatform</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Identifyable</li>
+<li>modules.base.Instances.Disposeable</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -502,23 +519,6 @@ def check_platform_module(cls, v):
 <pre><code class="python">def dispose(self):
     self.client.loop_stop()
     return super().dispose()</code></pre>
-</details>
-</dd>
-<dt id="src.plugins.mqtt.Platform.Platform.get_variable_value"><code class="name flex">
-<span>def <span class="ident">get_variable_value</span></span>(<span>self, text: str)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_variable_value(self, text: str):
-    t = str(text).lower()
-    if t == &#34;connected&#34;:
-        return self.is_connected
-
-    return super().get_variable_value(text)</code></pre>
 </details>
 </dd>
 <dt id="src.plugins.mqtt.Platform.Platform.publish"><code class="name flex">
@@ -538,22 +538,50 @@ def check_platform_module(cls, v):
 </details>
 </dd>
 <dt id="src.plugins.mqtt.Platform.Platform.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>self)</span>
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>is called when the configuration is loaded completely.
+Here is where we initialize and load stuff</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(self):
+<pre><code class="python">def start(self, call_stack: CallStack):
+    def render(var):
+        &#39;&#39;&#39;this is only to avoid typing errors&#39;&#39;&#39;
+        return str(call_stack.get(var))
+
+    app_id = str(self.app.get_variable_value(&#34;id&#34;))
+
+    self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name))
+    self.client.on_connect = self.__init_on_connect()
+    self.client.on_disconnect = self.__init_on_disconnect()
+    self.client.on_message = self.__init_on_message()
+
+    self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
+
+    if self.configuration.availability:
+        av = self.configuration.availability
+
+        av_topic = render(av.topic)
+        av_payload_on = render(av.payload_on)
+        av_payload_off = render(av.payload_off)
+
+        self.client.will_set(av_topic, av_payload_off)
+        self.client.subscribe(av_topic)
+
+        av = self.configuration.availability
+        self.publish(av_topic, av_payload_on)
+
+
     def loop():
-        self.client.loop_forever()
+        self.client.loop_start()
 
     loop_thread = threading.Thread(target=loop)
     loop_thread.start()
 
-    super().start()</code></pre>
+    super().start(call_stack)</code></pre>
 </details>
 </dd>
 <dt id="src.plugins.mqtt.Platform.Platform.subscribe"><code class="name flex">
@@ -566,7 +594,9 @@ def check_platform_module(cls, v):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def subscribe(self, topic: str, callback=None):
-    self.callbacks.append({&#34;topic&#34;: topic, &#34;callback&#34;: callback})
+    if callback is not None:
+        self.callbacks.append({&#34;topic&#34;: topic, &#34;callback&#34;: callback})
+
     self.client.subscribe(topic)</code></pre>
 </details>
 </dd>
@@ -606,7 +636,6 @@ def check_platform_module(cls, v):
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_connected" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_connected">on_connected</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_disconnected" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_disconnected">on_disconnected</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_message" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_message">on_message</a></code></li>
-<li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.platform" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.platform">platform</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.port" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.port">port</a></code></li>
 </ul>
 </li>
@@ -614,7 +643,6 @@ def check_platform_module(cls, v):
 <h4><code><a title="src.plugins.mqtt.Platform.Platform" href="#src.plugins.mqtt.Platform.Platform">Platform</a></code></h4>
 <ul class="">
 <li><code><a title="src.plugins.mqtt.Platform.Platform.dispose" href="#src.plugins.mqtt.Platform.Platform.dispose">dispose</a></code></li>
-<li><code><a title="src.plugins.mqtt.Platform.Platform.get_variable_value" href="#src.plugins.mqtt.Platform.Platform.get_variable_value">get_variable_value</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.Platform.publish" href="#src.plugins.mqtt.Platform.Platform.publish">publish</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.Platform.start" href="#src.plugins.mqtt.Platform.Platform.start">start</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.Platform.subscribe" href="#src.plugins.mqtt.Platform.Platform.subscribe">subscribe</a></code></li>

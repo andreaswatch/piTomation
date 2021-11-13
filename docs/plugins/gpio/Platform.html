@@ -29,8 +29,8 @@
 <pre><code class="python">import gpiozero as gpiozero
 from pydantic.class_validators import validator
 
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 @configuration
 class GpioPlatform(PlatformConfiguration):
@@ -132,10 +132,11 @@ class GpioPlatform(PlatformConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.PlatformConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.PlatformConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
@@ -172,7 +173,7 @@ def check_platform_module(cls, v):
 </dd>
 <dt id="src.plugins.gpio.Platform.Platform"><code class="flex name class">
 <span>class <span class="ident">Platform</span></span>
-<span>(</span><span>parent: modules.app.base.Instances.Stackable, config: <a title="src.plugins.gpio.Platform.GpioPlatform" href="#src.plugins.gpio.Platform.GpioPlatform">GpioPlatform</a>)</span>
+<span>(</span><span>parent: modules.base.Instances.Stackable, config: <a title="src.plugins.gpio.Platform.GpioPlatform" href="#src.plugins.gpio.Platform.GpioPlatform">GpioPlatform</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -229,11 +230,10 @@ def check_platform_module(cls, v):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BasePlatform</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Identifyable</li>
-<li>modules.app.base.Instances.Disposeable</li>
-<li>modules.app.base.Instances.VariableProvider</li>
+<li>modules.base.Instances.BasePlatform</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Identifyable</li>
+<li>modules.base.Instances.Disposeable</li>
 </ul>
 <h3>Methods</h3>
 <dl>

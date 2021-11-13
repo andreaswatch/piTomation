@@ -28,8 +28,8 @@
 </summary>
 <pre><code class="python">from enum import Enum
 from pydantic.main import BaseModel
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 from plugins.hass.Configurations import *
 
 class HassType(Enum):
@@ -38,7 +38,7 @@ class HassType(Enum):
     ACTION = &#34;switch&#34;
 
 
-class HassEntityAutomation(Stackable, Disposeable):
+class HassEntityAutomation(Stackable, Disposeable, Logging):
 
     def __init__(self, parent: Stackable, config: HassEntityConfiguration) -&gt; None:
         from plugins.hass.Platform import Platform
@@ -74,33 +74,34 @@ class HassEntityAutomation(Stackable, Disposeable):
                 c.command_topic = self.platform.configuration.base_topic + &#34;/&#34; + c.id + &#34;/command&#34;
             
         self.auto_discovery_topic = self.platform.configuration.auto_discovery_topic \
-            + &#34;/&#34; + str(self.hass_type) \
+            + &#34;/&#34; + str(self.hass_type.value) \
             + &#34;/&#34; + self.platform.hass_device[&#34;name&#34;] \
             + &#34;/&#34; + config.id \
             + &#34;/config&#34;
 
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         from plugins.mqtt.Platform import Platform as mqtt_platform
         self.mqtt: mqtt_platform = self.platform.communication
 
-        class UpdateHass():
+        class UpdateHass(Automation):
             def invoke(_, call_stack: CallStack):
-                self.mqtt.Publish(self.configuration.state_topic, call_stack.get(&#34;payload&#34;))
+                self.mqtt.publish(self.configuration.state_topic, call_stack.get(&#34;payload&#34;))
 
         wrapped_id = self.app.get_id(self.configuration.id)
 
-        if wrapped_id is BaseSensor:
-            w: BaseSensor = wrapped_id
-            w.on_state_changed_automations.append(UpdateHass())
-        elif wrapped_id is BaseAction:
-            w: BaseAction = wrapped_id
-            w.on_invoked_automations.append(UpdateHass())
+        
+        if isinstance(wrapped_id, BaseSensor):
+            wrapped_id.on_state_changed_automations.append(UpdateHass(self, AutomationConfiguration()))
+        elif isinstance(wrapped_id, BaseAction):
+            wrapped_id.on_invoked_automations.append(UpdateHass(self, AutomationConfiguration()))
+        else: 
+            self.log_error(&#34;Unsupported type: &#34; + self.configuration.id)
 
         entity = {}
         entity[&#34;device&#34;] = self.platform.hass_device
         entity[&#34;name&#34;] = self.configuration.id
-        entity[&#34;friendly_name&#34;] = self.configuration.name
+        #entity[&#34;friendly_name&#34;] = self.configuration.name
 
         if self.hass_type == HassType.TRIGGER:
             entity[&#34;topic&#34;] = self.configuration.command_topic
@@ -109,7 +110,7 @@ class HassEntityAutomation(Stackable, Disposeable):
 
         elif self.hass_type == HassType.ACTION:
             entity[&#34;unique_id&#34;] = self.app.device.configuration.name \
-                + &#34;_&#34; + str(self.hass_type) + &#34;_&#34; + self.configuration.id
+                + &#34;_&#34; + str(self.hass_type.value) + &#34;_&#34; + self.configuration.id
             entity[&#34;availability_topic&#34;] = self.mqtt.configuration.availability.topic
             entity[&#34;state_topic&#34;] = self.configuration.state_topic
             entity[&#34;command_topic&#34;] = self.configuration.command_topic
@@ -124,10 +125,14 @@ class HassEntityAutomation(Stackable, Disposeable):
             self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand)
         
         elif self.hass_type == HassType.SENSOR:
-            entity[&#34;unique_id&#34;] = self.app.device.configuration.name \
-                + &#34;_&#34; + str(self.hass_type) + &#34;_&#34; + self.configuration.id
-            entity[&#34;availability_topic&#34;] = self.mqtt.configuration.availability.topic
-            entity[&#34;state_topic&#34;] = self.configuration.state_topic
+            entity[&#34;unique_id&#34;] = &#34;&#34; \
+                + str(call_stack.get(self.app.device.configuration.name)) \
+                + &#34;_&#34; \
+                + str(call_stack.get(str(self.hass_type.value))) \
+                + &#34;_&#34; \
+                + str(call_stack.get(self.configuration.id))
+            entity[&#34;availability_topic&#34;] = call_stack.get(self.mqtt.configuration.availability.topic)
+            entity[&#34;state_topic&#34;] = call_stack.get(self.configuration.state_topic)
             entity[&#34;payload_off&#34;] = &#34;off&#34;
             entity[&#34;payload_on&#34;] = &#34;on&#34;
 
@@ -145,15 +150,15 @@ class HassEntityAutomation(Stackable, Disposeable):
 <dl>
 <dt id="src.plugins.hass.HassEntityAutomation.HassEntityAutomation"><code class="flex name class">
 <span>class <span class="ident">HassEntityAutomation</span></span>
-<span>(</span><span>parent: modules.app.base.Instances.Stackable, config: plugins.hass.Configurations.HassEntityConfiguration)</span>
+<span>(</span><span>parent: modules.base.Instances.Stackable, config: plugins.hass.Configurations.HassEntityConfiguration)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Classes that want to log should be based on this class</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HassEntityAutomation(Stackable, Disposeable):
+<pre><code class="python">class HassEntityAutomation(Stackable, Disposeable, Logging):
 
     def __init__(self, parent: Stackable, config: HassEntityConfiguration) -&gt; None:
         from plugins.hass.Platform import Platform
@@ -189,33 +194,34 @@ class HassEntityAutomation(Stackable, Disposeable):
                 c.command_topic = self.platform.configuration.base_topic + &#34;/&#34; + c.id + &#34;/command&#34;
             
         self.auto_discovery_topic = self.platform.configuration.auto_discovery_topic \
-            + &#34;/&#34; + str(self.hass_type) \
+            + &#34;/&#34; + str(self.hass_type.value) \
             + &#34;/&#34; + self.platform.hass_device[&#34;name&#34;] \
             + &#34;/&#34; + config.id \
             + &#34;/config&#34;
 
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         from plugins.mqtt.Platform import Platform as mqtt_platform
         self.mqtt: mqtt_platform = self.platform.communication
 
-        class UpdateHass():
+        class UpdateHass(Automation):
             def invoke(_, call_stack: CallStack):
-                self.mqtt.Publish(self.configuration.state_topic, call_stack.get(&#34;payload&#34;))
+                self.mqtt.publish(self.configuration.state_topic, call_stack.get(&#34;payload&#34;))
 
         wrapped_id = self.app.get_id(self.configuration.id)
 
-        if wrapped_id is BaseSensor:
-            w: BaseSensor = wrapped_id
-            w.on_state_changed_automations.append(UpdateHass())
-        elif wrapped_id is BaseAction:
-            w: BaseAction = wrapped_id
-            w.on_invoked_automations.append(UpdateHass())
+        
+        if isinstance(wrapped_id, BaseSensor):
+            wrapped_id.on_state_changed_automations.append(UpdateHass(self, AutomationConfiguration()))
+        elif isinstance(wrapped_id, BaseAction):
+            wrapped_id.on_invoked_automations.append(UpdateHass(self, AutomationConfiguration()))
+        else: 
+            self.log_error(&#34;Unsupported type: &#34; + self.configuration.id)
 
         entity = {}
         entity[&#34;device&#34;] = self.platform.hass_device
         entity[&#34;name&#34;] = self.configuration.id
-        entity[&#34;friendly_name&#34;] = self.configuration.name
+        #entity[&#34;friendly_name&#34;] = self.configuration.name
 
         if self.hass_type == HassType.TRIGGER:
             entity[&#34;topic&#34;] = self.configuration.command_topic
@@ -224,7 +230,7 @@ class HassEntityAutomation(Stackable, Disposeable):
 
         elif self.hass_type == HassType.ACTION:
             entity[&#34;unique_id&#34;] = self.app.device.configuration.name \
-                + &#34;_&#34; + str(self.hass_type) + &#34;_&#34; + self.configuration.id
+                + &#34;_&#34; + str(self.hass_type.value) + &#34;_&#34; + self.configuration.id
             entity[&#34;availability_topic&#34;] = self.mqtt.configuration.availability.topic
             entity[&#34;state_topic&#34;] = self.configuration.state_topic
             entity[&#34;command_topic&#34;] = self.configuration.command_topic
@@ -239,10 +245,14 @@ class HassEntityAutomation(Stackable, Disposeable):
             self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand)
         
         elif self.hass_type == HassType.SENSOR:
-            entity[&#34;unique_id&#34;] = self.app.device.configuration.name \
-                + &#34;_&#34; + str(self.hass_type) + &#34;_&#34; + self.configuration.id
-            entity[&#34;availability_topic&#34;] = self.mqtt.configuration.availability.topic
-            entity[&#34;state_topic&#34;] = self.configuration.state_topic
+            entity[&#34;unique_id&#34;] = &#34;&#34; \
+                + str(call_stack.get(self.app.device.configuration.name)) \
+                + &#34;_&#34; \
+                + str(call_stack.get(str(self.hass_type.value))) \
+                + &#34;_&#34; \
+                + str(call_stack.get(self.configuration.id))
+            entity[&#34;availability_topic&#34;] = call_stack.get(self.mqtt.configuration.availability.topic)
+            entity[&#34;state_topic&#34;] = call_stack.get(self.configuration.state_topic)
             entity[&#34;payload_off&#34;] = &#34;off&#34;
             entity[&#34;payload_on&#34;] = &#34;on&#34;
 
@@ -250,13 +260,14 @@ class HassEntityAutomation(Stackable, Disposeable):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Disposeable</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Disposeable</li>
+<li>modules.base.Instances.Logging</li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="src.plugins.hass.HassEntityAutomation.HassEntityAutomation.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>self)</span>
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -264,27 +275,28 @@ class HassEntityAutomation(Stackable, Disposeable):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(self):
+<pre><code class="python">def start(self, call_stack: CallStack):
     from plugins.mqtt.Platform import Platform as mqtt_platform
     self.mqtt: mqtt_platform = self.platform.communication
 
-    class UpdateHass():
+    class UpdateHass(Automation):
         def invoke(_, call_stack: CallStack):
-            self.mqtt.Publish(self.configuration.state_topic, call_stack.get(&#34;payload&#34;))
+            self.mqtt.publish(self.configuration.state_topic, call_stack.get(&#34;payload&#34;))
 
     wrapped_id = self.app.get_id(self.configuration.id)
 
-    if wrapped_id is BaseSensor:
-        w: BaseSensor = wrapped_id
-        w.on_state_changed_automations.append(UpdateHass())
-    elif wrapped_id is BaseAction:
-        w: BaseAction = wrapped_id
-        w.on_invoked_automations.append(UpdateHass())
+    
+    if isinstance(wrapped_id, BaseSensor):
+        wrapped_id.on_state_changed_automations.append(UpdateHass(self, AutomationConfiguration()))
+    elif isinstance(wrapped_id, BaseAction):
+        wrapped_id.on_invoked_automations.append(UpdateHass(self, AutomationConfiguration()))
+    else: 
+        self.log_error(&#34;Unsupported type: &#34; + self.configuration.id)
 
     entity = {}
     entity[&#34;device&#34;] = self.platform.hass_device
     entity[&#34;name&#34;] = self.configuration.id
-    entity[&#34;friendly_name&#34;] = self.configuration.name
+    #entity[&#34;friendly_name&#34;] = self.configuration.name
 
     if self.hass_type == HassType.TRIGGER:
         entity[&#34;topic&#34;] = self.configuration.command_topic
@@ -293,7 +305,7 @@ class HassEntityAutomation(Stackable, Disposeable):
 
     elif self.hass_type == HassType.ACTION:
         entity[&#34;unique_id&#34;] = self.app.device.configuration.name \
-            + &#34;_&#34; + str(self.hass_type) + &#34;_&#34; + self.configuration.id
+            + &#34;_&#34; + str(self.hass_type.value) + &#34;_&#34; + self.configuration.id
         entity[&#34;availability_topic&#34;] = self.mqtt.configuration.availability.topic
         entity[&#34;state_topic&#34;] = self.configuration.state_topic
         entity[&#34;command_topic&#34;] = self.configuration.command_topic
@@ -308,10 +320,14 @@ class HassEntityAutomation(Stackable, Disposeable):
         self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand)
     
     elif self.hass_type == HassType.SENSOR:
-        entity[&#34;unique_id&#34;] = self.app.device.configuration.name \
-            + &#34;_&#34; + str(self.hass_type) + &#34;_&#34; + self.configuration.id
-        entity[&#34;availability_topic&#34;] = self.mqtt.configuration.availability.topic
-        entity[&#34;state_topic&#34;] = self.configuration.state_topic
+        entity[&#34;unique_id&#34;] = &#34;&#34; \
+            + str(call_stack.get(self.app.device.configuration.name)) \
+            + &#34;_&#34; \
+            + str(call_stack.get(str(self.hass_type.value))) \
+            + &#34;_&#34; \
+            + str(call_stack.get(self.configuration.id))
+        entity[&#34;availability_topic&#34;] = call_stack.get(self.mqtt.configuration.availability.topic)
+        entity[&#34;state_topic&#34;] = call_stack.get(self.configuration.state_topic)
         entity[&#34;payload_off&#34;] = &#34;off&#34;
         entity[&#34;payload_on&#34;] = &#34;on&#34;
 

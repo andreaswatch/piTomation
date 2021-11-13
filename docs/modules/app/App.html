@@ -30,17 +30,15 @@
 import importlib
 import os
 import sys
-from marshmallow_dataclass import class_schema
-import pydantic
 from pydantic.error_wrappers import ValidationError
 import yaml
 import json
 import socket
-from modules.app.base.CallStack import CallStack
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.CallStack import CallStack
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
-VERSION = &#34;2021.11.09&#34;
+VERSION = &#34;2021.11.12&#34;
 CONF_YAML = &#34;yaml&#34;
 CONF_JSON = &#34;json&#34;
 CONF = CONF_YAML
@@ -50,32 +48,53 @@ class App(BaseApp, Logging, Debuggable):
     def __init__(self) -&gt; None:
         super().__init__()
 
-        self.read_configuration()
+        init_renderer()
+
+        self.__read_configuration()
 
         self.device = Device(self, self.configuration.device)
-        self.platforms = self.init_platforms()
-        self.actions = self.init_actions()
-        self.sensors = self.init_sensors()
+        self.platforms = self.__init_platforms()
+        self.actions = self.__init_actions()
+        self.sensors = self.__init_sensors()
 
         self.log_debug(&#34;Initialization done&#34;)
 
+        call_stack = CallStack().with_stack(self.get_full_stack())
+
         for platfrom in self.platforms:
-            platfrom.start()
+            platfrom.start(call_stack)
+
+        for action in self.actions:
+            action.start(call_stack)        
+
+        for sensor in self.sensors:
+            sensor.start(call_stack)                  
 
         self.log_debug(&#34;Platforms started&#34;)
 
-        call_stack = CallStack(from_list=self.get_full_stack())
         for startupAction in self.device.startup_actions:
             startupAction.invoke(call_stack)
 
 
-    def read_configuration(self):
-        if socket.gethostname() == &#34;DESKTOP-7CS476B&#34;:  # todo: remove
-            config_filename = os.getcwd() + &#34;/src/&#34; + socket.gethostname() + &#34;.&#34; + CONF
-        else:
-            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
+    def get_id(self, id: str):
+        &#39;&#39;&#39;get a configured component(action/sensor/script +app&amp;device) by id&#39;&#39;&#39;
 
+        if id == &#34;device&#34;:
+            return self.device
+
+        if id == &#34;app&#34;:
+            return self
+
+        return super().get_id(id)
+
+
+    def __read_configuration(self):
+        &#39;&#39;&#39;Read the configuration file&#39;&#39;&#39;
+        &#39;&#39;&#39;If the filename is not given in cli args, try to find the config file by the device&#39;s hostname.&#39;&#39;&#39;
+
+        config_filename = &#34;&#34;
         if len(sys.argv) == 1:
+            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
             print(&#34;No configuration file given, use &#34; + config_filename)
         else:
             config_filename = sys.argv[-1]
@@ -92,8 +111,7 @@ class App(BaseApp, Logging, Debuggable):
 
             from marshmallow_dataclass import class_schema
             from modules.app.AppConfiguration import AppConfiguration
-            #typeofactions = type(AppConfiguration())
-            #print(typeofactions)
+
             try:
                 result = AppConfiguration.parse_obj(raw)
                 self.configuration = result
@@ -106,8 +124,7 @@ class App(BaseApp, Logging, Debuggable):
             exit()
 
 
-
-    def init_platforms(self):
+    def __init_platforms(self):
         result: list[BasePlatform] = []
         if self.configuration.platforms is not None:
             for platform_conf in self.configuration.platforms:
@@ -119,7 +136,8 @@ class App(BaseApp, Logging, Debuggable):
                 result.append(ctor(self, platform_conf))
         return result
 
-    def init_actions(self):
+
+    def __init_actions(self):
         result: list[BaseAction] = []
         if self.configuration.actions is not None:
             for action_conf in self.configuration.actions:
@@ -135,7 +153,8 @@ class App(BaseApp, Logging, Debuggable):
                 result.append(ctor(platform, action_conf))
         return result        
 
-    def init_sensors(self):
+
+    def __init_sensors(self):
         result: list[BaseScript] = []
         if self.configuration.sensors is not None:
             for sensor_conf in self.configuration.sensors:
@@ -174,32 +193,53 @@ class App(BaseApp, Logging, Debuggable):
     def __init__(self) -&gt; None:
         super().__init__()
 
-        self.read_configuration()
+        init_renderer()
+
+        self.__read_configuration()
 
         self.device = Device(self, self.configuration.device)
-        self.platforms = self.init_platforms()
-        self.actions = self.init_actions()
-        self.sensors = self.init_sensors()
+        self.platforms = self.__init_platforms()
+        self.actions = self.__init_actions()
+        self.sensors = self.__init_sensors()
 
         self.log_debug(&#34;Initialization done&#34;)
 
+        call_stack = CallStack().with_stack(self.get_full_stack())
+
         for platfrom in self.platforms:
-            platfrom.start()
+            platfrom.start(call_stack)
+
+        for action in self.actions:
+            action.start(call_stack)        
+
+        for sensor in self.sensors:
+            sensor.start(call_stack)                  
 
         self.log_debug(&#34;Platforms started&#34;)
 
-        call_stack = CallStack(from_list=self.get_full_stack())
         for startupAction in self.device.startup_actions:
             startupAction.invoke(call_stack)
 
 
-    def read_configuration(self):
-        if socket.gethostname() == &#34;DESKTOP-7CS476B&#34;:  # todo: remove
-            config_filename = os.getcwd() + &#34;/src/&#34; + socket.gethostname() + &#34;.&#34; + CONF
-        else:
-            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
+    def get_id(self, id: str):
+        &#39;&#39;&#39;get a configured component(action/sensor/script +app&amp;device) by id&#39;&#39;&#39;
 
+        if id == &#34;device&#34;:
+            return self.device
+
+        if id == &#34;app&#34;:
+            return self
+
+        return super().get_id(id)
+
+
+    def __read_configuration(self):
+        &#39;&#39;&#39;Read the configuration file&#39;&#39;&#39;
+        &#39;&#39;&#39;If the filename is not given in cli args, try to find the config file by the device&#39;s hostname.&#39;&#39;&#39;
+
+        config_filename = &#34;&#34;
         if len(sys.argv) == 1:
+            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
             print(&#34;No configuration file given, use &#34; + config_filename)
         else:
             config_filename = sys.argv[-1]
@@ -216,8 +256,7 @@ class App(BaseApp, Logging, Debuggable):
 
             from marshmallow_dataclass import class_schema
             from modules.app.AppConfiguration import AppConfiguration
-            #typeofactions = type(AppConfiguration())
-            #print(typeofactions)
+
             try:
                 result = AppConfiguration.parse_obj(raw)
                 self.configuration = result
@@ -230,8 +269,7 @@ class App(BaseApp, Logging, Debuggable):
             exit()
 
 
-
-    def init_platforms(self):
+    def __init_platforms(self):
         result: list[BasePlatform] = []
         if self.configuration.platforms is not None:
             for platform_conf in self.configuration.platforms:
@@ -243,7 +281,8 @@ class App(BaseApp, Logging, Debuggable):
                 result.append(ctor(self, platform_conf))
         return result
 
-    def init_actions(self):
+
+    def __init_actions(self):
         result: list[BaseAction] = []
         if self.configuration.actions is not None:
             for action_conf in self.configuration.actions:
@@ -259,7 +298,8 @@ class App(BaseApp, Logging, Debuggable):
                 result.append(ctor(platform, action_conf))
         return result        
 
-    def init_sensors(self):
+
+    def __init_sensors(self):
         result: list[BaseScript] = []
         if self.configuration.sensors is not None:
             for sensor_conf in self.configuration.sensors:
@@ -277,133 +317,34 @@ class App(BaseApp, Logging, Debuggable):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BaseApp</li>
-<li>modules.app.base.Instances.VariableProvider</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Disposeable</li>
-<li>modules.app.base.Instances.Logging</li>
-<li>modules.app.base.Instances.Debuggable</li>
+<li>modules.base.Instances.BaseApp</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Disposeable</li>
+<li>modules.base.Instances.VariableProvider</li>
+<li>modules.base.Instances.Logging</li>
+<li>modules.base.Instances.Debuggable</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.App.App.init_actions"><code class="name flex">
-<span>def <span class="ident">init_actions</span></span>(<span>self)</span>
+<dt id="src.modules.app.App.App.get_id"><code class="name flex">
+<span>def <span class="ident">get_id</span></span>(<span>self, id: str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>get a configured component(action/sensor/script +app&amp;device) by id</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def init_actions(self):
-    result: list[BaseAction] = []
-    if self.configuration.actions is not None:
-        for action_conf in self.configuration.actions:
-            action_conf: ScriptConfiguration = action_conf
-            module_name = &#34;plugins.&#34; + action_conf.platform
-            class_name = &#34;Action&#34;
-            if action_conf.type is not None:
-                class_name = action_conf.type
-            module_name += &#34;.&#34; + class_name
-            module = importlib.import_module(module_name)
-            ctor = getattr(module, class_name)
-            platform = self.get_platform(action_conf.platform)
-            result.append(ctor(platform, action_conf))
-    return result        </code></pre>
-</details>
-</dd>
-<dt id="src.modules.app.App.App.init_platforms"><code class="name flex">
-<span>def <span class="ident">init_platforms</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def init_platforms(self):
-    result: list[BasePlatform] = []
-    if self.configuration.platforms is not None:
-        for platform_conf in self.configuration.platforms:
-            platform_conf: PlatformConfiguration = platform_conf
-            module_name = platform_conf.platform + &#34;.Platform&#34;
-            module = importlib.import_module(module_name)
-            class_name = &#34;Platform&#34;
-            ctor = getattr(module, class_name)
-            result.append(ctor(self, platform_conf))
-    return result</code></pre>
-</details>
-</dd>
-<dt id="src.modules.app.App.App.init_sensors"><code class="name flex">
-<span>def <span class="ident">init_sensors</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def init_sensors(self):
-    result: list[BaseScript] = []
-    if self.configuration.sensors is not None:
-        for sensor_conf in self.configuration.sensors:
-            sensor_conf: ScriptConfiguration = sensor_conf
-            module_name = &#34;plugins.&#34; + sensor_conf.platform
-            class_name = &#34;Sensor&#34;
-            if sensor_conf.type is not None:
-                class_name = sensor_conf.type
-            module_name += &#34;.&#34; + class_name
-            module = importlib.import_module(module_name)
-            ctor = getattr(module, class_name)
-            platform = self.get_platform(sensor_conf.platform)
-            result.append(ctor(platform, sensor_conf))
-    return result             </code></pre>
-</details>
-</dd>
-<dt id="src.modules.app.App.App.read_configuration"><code class="name flex">
-<span>def <span class="ident">read_configuration</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_configuration(self):
-    if socket.gethostname() == &#34;DESKTOP-7CS476B&#34;:  # todo: remove
-        config_filename = os.getcwd() + &#34;/src/&#34; + socket.gethostname() + &#34;.&#34; + CONF
-    else:
-        config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
+<pre><code class="python">def get_id(self, id: str):
+    &#39;&#39;&#39;get a configured component(action/sensor/script +app&amp;device) by id&#39;&#39;&#39;
 
-    if len(sys.argv) == 1:
-        print(&#34;No configuration file given, use &#34; + config_filename)
-    else:
-        config_filename = sys.argv[-1]
+    if id == &#34;device&#34;:
+        return self.device
 
-    try:
-        print(&#34;Loading &#34; + config_filename)
-        with open(config_filename) as config_file:
-            if (CONF == CONF_JSON):
-                raw = json.load(config_file)
-            elif (CONF == CONF_YAML):
-                raw = yaml.safe_load(config_file)
-            else:
-                raise Exception(&#34;Unknown config type: &#34; + CONF)
+    if id == &#34;app&#34;:
+        return self
 
-        from marshmallow_dataclass import class_schema
-        from modules.app.AppConfiguration import AppConfiguration
-        #typeofactions = type(AppConfiguration())
-        #print(typeofactions)
-        try:
-            result = AppConfiguration.parse_obj(raw)
-            self.configuration = result
-        except ValidationError as e:
-            print(e)
-            exit()
-
-    except IOError:
-        print(&#34;Configuration file not found: &#34; + config_filename)
-        exit()</code></pre>
+    return super().get_id(id)</code></pre>
 </details>
 </dd>
 </dl>
@@ -427,10 +368,7 @@ class App(BaseApp, Logging, Debuggable):
 <li>
 <h4><code><a title="src.modules.app.App.App" href="#src.modules.app.App.App">App</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.App.App.init_actions" href="#src.modules.app.App.App.init_actions">init_actions</a></code></li>
-<li><code><a title="src.modules.app.App.App.init_platforms" href="#src.modules.app.App.App.init_platforms">init_platforms</a></code></li>
-<li><code><a title="src.modules.app.App.App.init_sensors" href="#src.modules.app.App.App.init_sensors">init_sensors</a></code></li>
-<li><code><a title="src.modules.app.App.App.read_configuration" href="#src.modules.app.App.App.read_configuration">read_configuration</a></code></li>
+<li><code><a title="src.modules.app.App.App.get_id" href="#src.modules.app.App.App.get_id">get_id</a></code></li>
 </ul>
 </li>
 </ul>

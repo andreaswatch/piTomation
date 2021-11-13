@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>src.modules.app.base.Instances API documentation</title>
+<title>src.modules.base.Instances API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,28 +19,41 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.modules.app.base.Instances</code></h1>
+<h1 class="title">Module <code>src.modules.base.Instances</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from typing import Optional
-from modules.app.base.CallStack import CallStack
-from modules.app.base.Configuration import *
+<pre><code class="python">from ctypes import ArgumentError
+from typing import Optional
+
+from modules.base.CallStack import *
+from modules.base.Configuration import *
 
 
 class Base:
     &#34;&#34;&#34;Base class for everything&#34;&#34;&#34;
+
     def __init__(self, config: Configuration) -&gt; None:
-        self.configuration = config  
+        self.configuration = config
 
     def __str__(self):
         return type(self).__name__
 
     def __repr__(self):
         return type(self).__name__
+
+
+class VariableProvider:
+    def __init__(self, config: VariablesConfiguration) -&gt; None:
+        self.variables = config.variables
+
+    def get_variable_value(self, variable_id):
+        if self.variables is not None:
+            if variable_id in self.variables:
+                return self.variables[variable_id]
 
 
 class Logging():
@@ -50,10 +63,9 @@ class Logging():
         &#34;&#34;&#34;Log an error to the console&#34;&#34;&#34;
         print(&#34;[ERROR] &#34; + message)
 
-
     def log_warning(self, message):
         &#34;&#34;&#34;Log a warning to the console&#34;&#34;&#34;
-        print(&#34;[WARN] &#34; + message) 
+        print(&#34;[WARN] &#34; + message)
 
 
 class Debuggable():
@@ -67,11 +79,12 @@ class Debuggable():
 
         if hasattr(self.configuration, &#34;debug&#34;):
             if self.configuration.debug:
-                print(&#34;[DEBUG] &#34; + message)        
+                print(&#34;[DEBUG] &#34; + message)
 
 
 class Identifyable():
     &#34;&#34;&#34;Base class for classes with an Identifier (id)&#34;&#34;&#34;
+
     def __init__(self, config: IdConfiguration) -&gt; None:
         self.configuration = config
 
@@ -79,7 +92,7 @@ class Identifyable():
         return super().__str__() + &#34;: &#34; + self.configuration.id
 
     def __repr__(self):
-        return super().__str__() + &#34;: &#34; + self.configuration.id            
+        return super().__str__() + &#34;: &#34; + self.configuration.id
 
 
 class Disposeable():
@@ -90,20 +103,6 @@ class Disposeable():
         self.is_disposed = True
 
 
-class VariableProvider():
-    def __init__(self, config: VariableConfiguration) -&gt; None:
-        self.configuration = config
-
-        self.variables = {}
-
-
-    def get_variable_value(self, name: str) -&gt; Optional[str]:
-        name = str(name).lower()
-        if hasattr(self.configuration, &#34;variables&#34;):
-            if self.configuration.variables is not None:
-                return self.configuration.variables.get(name)
-
-
 class Stackable():
     def __init__(self, parent) -&gt; None:
 
@@ -112,8 +111,7 @@ class Stackable():
             return
 
         self.parent = parent
-        self.call_stack = CallStack(from_list=self.get_full_stack())
-
+        self.call_stack = CallStack().with_stack(self.get_full_stack())
 
     def get_full_stack(self):
         scopes = self.get_parents()
@@ -121,13 +119,11 @@ class Stackable():
         scopes.reverse()
         return scopes
 
-
     def get_app(self) -&gt; &#39;BaseApp&#39;:
         app = self
         while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
             app = app.parent
-        return app #types: BaseApp
-
+        return app  # types: BaseApp
 
     def get_parents(self) -&gt; list[&#39;Stackable&#39;]:
         parents = []
@@ -136,12 +132,14 @@ class Stackable():
             parent = parent.parent
             parents.insert(0, parent)
         return parents
-    
 
-class Device(VariableProvider, Stackable):
+
+class Device(Stackable, VariableProvider):
     def __init__(self, parent, config: DeviceConfiguration) -&gt; None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        VariableProvider.__init__(self, config)
         self.configuration = config
+        self.variables = config.variables
 
         self.startup_actions = []
         if self.configuration.on_init is not None:
@@ -149,26 +147,31 @@ class Device(VariableProvider, Stackable):
                 self.startup_actions.append(ActionTrigger(self, action))
 
 
-class BaseApp(VariableProvider, Stackable, Disposeable):
+class BaseApp(Stackable, Disposeable, VariableProvider):
     def __init__(self) -&gt; None:
-        super().__init__(VariableConfiguration())
-        
-        self.id = &#34;piTomation&#34;
-        self.is_disposed = False
+        Stackable.__init__(self, None)
+        Disposeable.__init__(self)
+        VariableProvider.__init__(self, VariablesConfiguration())
+
+        self.variables = {
+            &#34;id&#34;: &#34;piTomation&#34;
+        }
 
         self.device: Device
         self.platforms: list[BasePlatform]
         self.actions: list[BaseAction]
         self.sensors: list[BaseScript]
 
-        self.variables[&#34;name&#34;] = &#34;piTomation&#34;
 
     def get_platform(self, id: str):
+        &#39;&#39;&#39;get a configured platform by id&#39;&#39;&#39;
         for platform in self.platforms:
             if platform.configuration.id == id:
                 return platform
 
-    def get_id(self, id: str) -&gt; Union[&#39;BaseAction&#39;, &#39;BaseScript&#39;, &#39;BasePlatform&#39;, None]:
+
+    def get_id(self, id: str) -&gt; Identifyable:
+        &#39;&#39;&#39;get a configured component(action/sensor/script) by id&#39;&#39;&#39;
         for action in self.actions:
             if action.configuration.id == id:
                 return action
@@ -181,10 +184,12 @@ class BaseApp(VariableProvider, Stackable, Disposeable):
             if platform.configuration.id == id:
                 return platform
 
-        return None
+        raise ArgumentError(&#34;Id &#34; + id + &#34; not found&#34;)
 
 
     def dispose(self):
+        &#39;&#39;&#39;dispose all components&#39;&#39;&#39;
+
         for action in self.actions:
             action.dispose()
 
@@ -197,10 +202,18 @@ class BaseApp(VariableProvider, Stackable, Disposeable):
         super().dispose()
 
 
-class BaseScript(Stackable, Identifyable, Disposeable):
+class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
     def __init__(self, parent: Stackable, config: ScriptConfiguration) -&gt; None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        Identifyable.__init__(self, config)
+        Disposeable.__init__(self)
+        VariableProvider.__init__(self, config)
         self.configuration = config
+
+    def start(self, call_stack: CallStack):
+        &#39;&#39;&#39;is called when the configuration is loaded completely.
+        Here is where we initialize and load stuff&#39;&#39;&#39;
+        pass        
 
     def _create_automations(self, conf: Optional[list[AutomationConfiguration]]):
         &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
@@ -210,16 +223,18 @@ class BaseScript(Stackable, Identifyable, Disposeable):
         if conf is not None:
             for action_conf in conf:
                 automations.append(Automation(self, action_conf))
-            
-        return automations          
-        
+
+        return automations
+
 
 class BaseSensor(BaseScript):
     def __init__(self, parent: Stackable, config: SensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
+        self.variables = config.variables
 
-        self.on_state_changed_automations = self._create_automations(config.on_state_changed)
+        self.on_state_changed_automations = self._create_automations(
+            config.on_state_changed)
 
     def on_state_changed(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
@@ -232,21 +247,27 @@ class BaseAction(BaseScript):
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_invoked_automations = self._create_automations(config.on_invoked)
+        self.on_invoked_automations = self._create_automations(
+            config.on_invoked)
 
     def invoke(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
         for automation in self.on_invoked_automations:
-            automation.invoke(call_stack)
-        
+            automation.invoke(call_stack)            
 
 
-class BasePlatform(Stackable, Identifyable, Disposeable, VariableProvider):
+class BasePlatform(Stackable, Identifyable, Disposeable):
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
-        super().__init__(parent)
-        self.configuration = config
+        Stackable.__init__(self, parent)
+        Identifyable.__init__(self, config)
+        Disposeable.__init__(self)
 
-    def start(self):
+        self.configuration = config
+        self.variables = config.variables
+
+    def start(self, call_stack: CallStack):
+        &#39;&#39;&#39;is called when the configuration is loaded completely.
+        Here is where we initialize and load stuff&#39;&#39;&#39;
         pass
 
 
@@ -261,11 +282,10 @@ class Automation(Stackable):
             for condition in self.configuration.conditions:
                 self.__conditions.append(Condition(self, condition))
 
-        self.__actions = []
+        self._actions = []
         if self.configuration.actions is not None:
             for action in self.configuration.actions:
-                self.__actions.append(ActionTrigger(self, action))
-
+                self._actions.append(ActionTrigger(self, action))
 
     def check_conditions(self, call_stack: CallStack):
         for condition in self.__conditions:
@@ -273,14 +293,13 @@ class Automation(Stackable):
                 return False
         return True
 
-
     def invoke(self, call_stack: CallStack):
-        call_stack = call_stack.with_(self)
+        call_stack = call_stack.with_element(self)
 
         if not self.check_conditions(call_stack):
             return
 
-        for action in self.__actions:
+        for action in self._actions:
             action.invoke(call_stack)
 
 
@@ -316,21 +335,9 @@ class Condition(Stackable):
 
 class ActionTrigger(Stackable, Logging):
     def __init__(self, parent: Stackable, config: ActionTriggerConfiguration) -&gt; None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        Logging.__init__(self)
         self.configuration = config
-
-    def render(self, call_stack: CallStack, values: Union[None,dict]):
-        if values is None:
-            return 
-        values = dict(values)
-
-        for item in values.keys():
-            if type(values[item]) is dict:
-                self.render(call_stack, item)
-            else:
-                values[item] = call_stack.get(values[item])
-
-        return values
 
 
     def invoke(self, call_stack: CallStack):
@@ -341,10 +348,10 @@ class ActionTrigger(Stackable, Logging):
             self.log_error(&#34;Id &#39;&#34; + self.configuration.action + &#34;&#39; not found&#34;)
             return
 
-        rendered = self.render(call_stack, self.configuration.values)
+        call_stack = call_stack.with_element(self) 
 
-        call_stack = call_stack.with_(self) \
-            .with_keys(rendered)
+        if self.configuration.values:
+            call_stack = call_stack.with_keys(self.configuration.values)
 
         id.invoke(call_stack)</code></pre>
 </details>
@@ -358,9 +365,9 @@ class ActionTrigger(Stackable, Logging):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.modules.app.base.Instances.ActionTrigger"><code class="flex name class">
+<dt id="src.modules.base.Instances.ActionTrigger"><code class="flex name class">
 <span>class <span class="ident">ActionTrigger</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.ActionTriggerConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.ActionTriggerConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Classes that want to log should be based on this class</p></div>
@@ -370,21 +377,9 @@ class ActionTrigger(Stackable, Logging):
 </summary>
 <pre><code class="python">class ActionTrigger(Stackable, Logging):
     def __init__(self, parent: Stackable, config: ActionTriggerConfiguration) -&gt; None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        Logging.__init__(self)
         self.configuration = config
-
-    def render(self, call_stack: CallStack, values: Union[None,dict]):
-        if values is None:
-            return 
-        values = dict(values)
-
-        for item in values.keys():
-            if type(values[item]) is dict:
-                self.render(call_stack, item)
-            else:
-                values[item] = call_stack.get(values[item])
-
-        return values
 
 
     def invoke(self, call_stack: CallStack):
@@ -395,22 +390,22 @@ class ActionTrigger(Stackable, Logging):
             self.log_error(&#34;Id &#39;&#34; + self.configuration.action + &#34;&#39; not found&#34;)
             return
 
-        rendered = self.render(call_stack, self.configuration.values)
+        call_stack = call_stack.with_element(self) 
 
-        call_stack = call_stack.with_(self) \
-            .with_keys(rendered)
+        if self.configuration.values:
+            call_stack = call_stack.with_keys(self.configuration.values)
 
         id.invoke(call_stack)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
-<li><a title="src.modules.app.base.Instances.Logging" href="#src.modules.app.base.Instances.Logging">Logging</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Logging" href="#src.modules.base.Instances.Logging">Logging</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.ActionTrigger.invoke"><code class="name flex">
-<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<dt id="src.modules.base.Instances.ActionTrigger.invoke"><code class="name flex">
+<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -426,51 +421,28 @@ class ActionTrigger(Stackable, Logging):
         self.log_error(&#34;Id &#39;&#34; + self.configuration.action + &#34;&#39; not found&#34;)
         return
 
-    rendered = self.render(call_stack, self.configuration.values)
+    call_stack = call_stack.with_element(self) 
 
-    call_stack = call_stack.with_(self) \
-        .with_keys(rendered)
+    if self.configuration.values:
+        call_stack = call_stack.with_keys(self.configuration.values)
 
     id.invoke(call_stack)</code></pre>
-</details>
-</dd>
-<dt id="src.modules.app.base.Instances.ActionTrigger.render"><code class="name flex">
-<span>def <span class="ident">render</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack, values: Optional[dict])</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def render(self, call_stack: CallStack, values: Union[None,dict]):
-    if values is None:
-        return 
-    values = dict(values)
-
-    for item in values.keys():
-        if type(values[item]) is dict:
-            self.render(call_stack, item)
-        else:
-            values[item] = call_stack.get(values[item])
-
-    return values</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Instances.Logging" href="#src.modules.app.base.Instances.Logging">Logging</a></b></code>:
+<li><code><b><a title="src.modules.base.Instances.Logging" href="#src.modules.base.Instances.Logging">Logging</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Instances.Logging.log_error" href="#src.modules.app.base.Instances.Logging.log_error">log_error</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.Logging.log_warning" href="#src.modules.app.base.Instances.Logging.log_warning">log_warning</a></code></li>
+<li><code><a title="src.modules.base.Instances.Logging.log_error" href="#src.modules.base.Instances.Logging.log_error">log_error</a></code></li>
+<li><code><a title="src.modules.base.Instances.Logging.log_warning" href="#src.modules.base.Instances.Logging.log_warning">log_warning</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Instances.Automation"><code class="flex name class">
+<dt id="src.modules.base.Instances.Automation"><code class="flex name class">
 <span>class <span class="ident">Automation</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.AutomationConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.AutomationConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -489,11 +461,10 @@ class ActionTrigger(Stackable, Logging):
             for condition in self.configuration.conditions:
                 self.__conditions.append(Condition(self, condition))
 
-        self.__actions = []
+        self._actions = []
         if self.configuration.actions is not None:
             for action in self.configuration.actions:
-                self.__actions.append(ActionTrigger(self, action))
-
+                self._actions.append(ActionTrigger(self, action))
 
     def check_conditions(self, call_stack: CallStack):
         for condition in self.__conditions:
@@ -501,24 +472,23 @@ class ActionTrigger(Stackable, Logging):
                 return False
         return True
 
-
     def invoke(self, call_stack: CallStack):
-        call_stack = call_stack.with_(self)
+        call_stack = call_stack.with_element(self)
 
         if not self.check_conditions(call_stack):
             return
 
-        for action in self.__actions:
+        for action in self._actions:
             action.invoke(call_stack)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.Automation.check_conditions"><code class="name flex">
-<span>def <span class="ident">check_conditions</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<dt id="src.modules.base.Instances.Automation.check_conditions"><code class="name flex">
+<span>def <span class="ident">check_conditions</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -533,8 +503,8 @@ class ActionTrigger(Stackable, Logging):
     return True</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.Automation.invoke"><code class="name flex">
-<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<dt id="src.modules.base.Instances.Automation.invoke"><code class="name flex">
+<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -543,20 +513,20 @@ class ActionTrigger(Stackable, Logging):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
-    call_stack = call_stack.with_(self)
+    call_stack = call_stack.with_element(self)
 
     if not self.check_conditions(call_stack):
         return
 
-    for action in self.__actions:
+    for action in self._actions:
         action.invoke(call_stack)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.Base"><code class="flex name class">
+<dt id="src.modules.base.Instances.Base"><code class="flex name class">
 <span>class <span class="ident">Base</span></span>
-<span>(</span><span>config: modules.app.base.Configuration.Configuration)</span>
+<span>(</span><span>config: modules.base.Configuration.Configuration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for everything</p></div>
@@ -566,8 +536,9 @@ class ActionTrigger(Stackable, Logging):
 </summary>
 <pre><code class="python">class Base:
     &#34;&#34;&#34;Base class for everything&#34;&#34;&#34;
+
     def __init__(self, config: Configuration) -&gt; None:
-        self.configuration = config  
+        self.configuration = config
 
     def __str__(self):
         return type(self).__name__
@@ -576,9 +547,9 @@ class ActionTrigger(Stackable, Logging):
         return type(self).__name__</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.BaseAction"><code class="flex name class">
+<dt id="src.modules.base.Instances.BaseAction"><code class="flex name class">
 <span>class <span class="ident">BaseAction</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.ActionConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.ActionConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -591,24 +562,26 @@ class ActionTrigger(Stackable, Logging):
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_invoked_automations = self._create_automations(config.on_invoked)
+        self.on_invoked_automations = self._create_automations(
+            config.on_invoked)
 
     def invoke(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
         for automation in self.on_invoked_automations:
-            automation.invoke(call_stack)</code></pre>
+            automation.invoke(call_stack)            </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a></li>
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
-<li><a title="src.modules.app.base.Instances.Identifyable" href="#src.modules.app.base.Instances.Identifyable">Identifyable</a></li>
-<li><a title="src.modules.app.base.Instances.Disposeable" href="#src.modules.app.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></li>
+<li><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.BaseAction.invoke"><code class="name flex">
-<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<dt id="src.modules.base.Instances.BaseAction.invoke"><code class="name flex">
+<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>must get called whenever the action has been invoked</p></div>
@@ -619,12 +592,20 @@ class ActionTrigger(Stackable, Logging):
 <pre><code class="python">def invoke(self, call_stack: CallStack):
     &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
     for automation in self.on_invoked_automations:
-        automation.invoke(call_stack)</code></pre>
+        automation.invoke(call_stack)            </code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></b></code>:
+<ul class="hlist">
+<li><code><a title="src.modules.base.Instances.BaseScript.start" href="#src.modules.base.Instances.BaseScript.start">start</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
-<dt id="src.modules.app.base.Instances.BaseApp"><code class="flex name class">
+<dt id="src.modules.base.Instances.BaseApp"><code class="flex name class">
 <span>class <span class="ident">BaseApp</span></span>
 </code></dt>
 <dd>
@@ -633,26 +614,31 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseApp(VariableProvider, Stackable, Disposeable):
+<pre><code class="python">class BaseApp(Stackable, Disposeable, VariableProvider):
     def __init__(self) -&gt; None:
-        super().__init__(VariableConfiguration())
-        
-        self.id = &#34;piTomation&#34;
-        self.is_disposed = False
+        Stackable.__init__(self, None)
+        Disposeable.__init__(self)
+        VariableProvider.__init__(self, VariablesConfiguration())
+
+        self.variables = {
+            &#34;id&#34;: &#34;piTomation&#34;
+        }
 
         self.device: Device
         self.platforms: list[BasePlatform]
         self.actions: list[BaseAction]
         self.sensors: list[BaseScript]
 
-        self.variables[&#34;name&#34;] = &#34;piTomation&#34;
 
     def get_platform(self, id: str):
+        &#39;&#39;&#39;get a configured platform by id&#39;&#39;&#39;
         for platform in self.platforms:
             if platform.configuration.id == id:
                 return platform
 
-    def get_id(self, id: str) -&gt; Union[&#39;BaseAction&#39;, &#39;BaseScript&#39;, &#39;BasePlatform&#39;, None]:
+
+    def get_id(self, id: str) -&gt; Identifyable:
+        &#39;&#39;&#39;get a configured component(action/sensor/script) by id&#39;&#39;&#39;
         for action in self.actions:
             if action.configuration.id == id:
                 return action
@@ -665,10 +651,12 @@ class ActionTrigger(Stackable, Logging):
             if platform.configuration.id == id:
                 return platform
 
-        return None
+        raise ArgumentError(&#34;Id &#34; + id + &#34; not found&#34;)
 
 
     def dispose(self):
+        &#39;&#39;&#39;dispose all components&#39;&#39;&#39;
+
         for action in self.actions:
             action.dispose()
 
@@ -682,22 +670,24 @@ class ActionTrigger(Stackable, Logging):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.VariableProvider" href="#src.modules.app.base.Instances.VariableProvider">VariableProvider</a></li>
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
-<li><a title="src.modules.app.base.Instances.Disposeable" href="#src.modules.app.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.BaseApp.dispose"><code class="name flex">
+<dt id="src.modules.base.Instances.BaseApp.dispose"><code class="name flex">
 <span>def <span class="ident">dispose</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>dispose all components</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dispose(self):
+    &#39;&#39;&#39;dispose all components&#39;&#39;&#39;
+
     for action in self.actions:
         action.dispose()
 
@@ -710,16 +700,17 @@ class ActionTrigger(Stackable, Logging):
     super().dispose()</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.BaseApp.get_id"><code class="name flex">
-<span>def <span class="ident">get_id</span></span>(<span>self, id: str) ‑> Union[<a title="src.modules.app.base.Instances.BaseAction" href="#src.modules.app.base.Instances.BaseAction">BaseAction</a>, <a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a>, <a title="src.modules.app.base.Instances.BasePlatform" href="#src.modules.app.base.Instances.BasePlatform">BasePlatform</a>, ForwardRef(None)]</span>
+<dt id="src.modules.base.Instances.BaseApp.get_id"><code class="name flex">
+<span>def <span class="ident">get_id</span></span>(<span>self, id: str) ‑> <a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>get a configured component(action/sensor/script) by id</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_id(self, id: str) -&gt; Union[&#39;BaseAction&#39;, &#39;BaseScript&#39;, &#39;BasePlatform&#39;, None]:
+<pre><code class="python">def get_id(self, id: str) -&gt; Identifyable:
+    &#39;&#39;&#39;get a configured component(action/sensor/script) by id&#39;&#39;&#39;
     for action in self.actions:
         if action.configuration.id == id:
             return action
@@ -732,19 +723,20 @@ class ActionTrigger(Stackable, Logging):
         if platform.configuration.id == id:
             return platform
 
-    return None</code></pre>
+    raise ArgumentError(&#34;Id &#34; + id + &#34; not found&#34;)</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.BaseApp.get_platform"><code class="name flex">
+<dt id="src.modules.base.Instances.BaseApp.get_platform"><code class="name flex">
 <span>def <span class="ident">get_platform</span></span>(<span>self, id: str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>get a configured platform by id</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_platform(self, id: str):
+    &#39;&#39;&#39;get a configured platform by id&#39;&#39;&#39;
     for platform in self.platforms:
         if platform.configuration.id == id:
             return platform</code></pre>
@@ -752,9 +744,9 @@ class ActionTrigger(Stackable, Logging):
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.BasePlatform"><code class="flex name class">
+<dt id="src.modules.base.Instances.BasePlatform"><code class="flex name class">
 <span>class <span class="ident">BasePlatform</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.PlatformConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.PlatformConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -762,41 +754,49 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BasePlatform(Stackable, Identifyable, Disposeable, VariableProvider):
+<pre><code class="python">class BasePlatform(Stackable, Identifyable, Disposeable):
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
-        super().__init__(parent)
-        self.configuration = config
+        Stackable.__init__(self, parent)
+        Identifyable.__init__(self, config)
+        Disposeable.__init__(self)
 
-    def start(self):
+        self.configuration = config
+        self.variables = config.variables
+
+    def start(self, call_stack: CallStack):
+        &#39;&#39;&#39;is called when the configuration is loaded completely.
+        Here is where we initialize and load stuff&#39;&#39;&#39;
         pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
-<li><a title="src.modules.app.base.Instances.Identifyable" href="#src.modules.app.base.Instances.Identifyable">Identifyable</a></li>
-<li><a title="src.modules.app.base.Instances.Disposeable" href="#src.modules.app.base.Instances.Disposeable">Disposeable</a></li>
-<li><a title="src.modules.app.base.Instances.VariableProvider" href="#src.modules.app.base.Instances.VariableProvider">VariableProvider</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></li>
+<li><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.BasePlatform.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>self)</span>
+<dt id="src.modules.base.Instances.BasePlatform.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>is called when the configuration is loaded completely.
+Here is where we initialize and load stuff</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(self):
+<pre><code class="python">def start(self, call_stack: CallStack):
+    &#39;&#39;&#39;is called when the configuration is loaded completely.
+    Here is where we initialize and load stuff&#39;&#39;&#39;
     pass</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.BaseScript"><code class="flex name class">
+<dt id="src.modules.base.Instances.BaseScript"><code class="flex name class">
 <span>class <span class="ident">BaseScript</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.ScriptConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.ScriptConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -804,10 +804,18 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BaseScript(Stackable, Identifyable, Disposeable):
+<pre><code class="python">class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
     def __init__(self, parent: Stackable, config: ScriptConfiguration) -&gt; None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        Identifyable.__init__(self, config)
+        Disposeable.__init__(self)
+        VariableProvider.__init__(self, config)
         self.configuration = config
+
+    def start(self, call_stack: CallStack):
+        &#39;&#39;&#39;is called when the configuration is loaded completely.
+        Here is where we initialize and load stuff&#39;&#39;&#39;
+        pass        
 
     def _create_automations(self, conf: Optional[list[AutomationConfiguration]]):
         &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
@@ -817,24 +825,44 @@ class ActionTrigger(Stackable, Logging):
         if conf is not None:
             for action_conf in conf:
                 automations.append(Automation(self, action_conf))
-            
-        return automations          </code></pre>
+
+        return automations</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
-<li><a title="src.modules.app.base.Instances.Identifyable" href="#src.modules.app.base.Instances.Identifyable">Identifyable</a></li>
-<li><a title="src.modules.app.base.Instances.Disposeable" href="#src.modules.app.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></li>
+<li><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.BaseAction" href="#src.modules.app.base.Instances.BaseAction">BaseAction</a></li>
-<li><a title="src.modules.app.base.Instances.BaseSensor" href="#src.modules.app.base.Instances.BaseSensor">BaseSensor</a></li>
+<li><a title="src.modules.base.Instances.BaseAction" href="#src.modules.base.Instances.BaseAction">BaseAction</a></li>
+<li><a title="src.modules.base.Instances.BaseSensor" href="#src.modules.base.Instances.BaseSensor">BaseSensor</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="src.modules.base.Instances.BaseScript.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>is called when the configuration is loaded completely.
+Here is where we initialize and load stuff</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self, call_stack: CallStack):
+    &#39;&#39;&#39;is called when the configuration is loaded completely.
+    Here is where we initialize and load stuff&#39;&#39;&#39;
+    pass        </code></pre>
+</details>
 </dd>
-<dt id="src.modules.app.base.Instances.BaseSensor"><code class="flex name class">
+</dl>
+</dd>
+<dt id="src.modules.base.Instances.BaseSensor"><code class="flex name class">
 <span>class <span class="ident">BaseSensor</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.SensorConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.SensorConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -846,8 +874,10 @@ class ActionTrigger(Stackable, Logging):
     def __init__(self, parent: Stackable, config: SensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
+        self.variables = config.variables
 
-        self.on_state_changed_automations = self._create_automations(config.on_state_changed)
+        self.on_state_changed_automations = self._create_automations(
+            config.on_state_changed)
 
     def on_state_changed(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
@@ -856,15 +886,16 @@ class ActionTrigger(Stackable, Logging):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a></li>
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
-<li><a title="src.modules.app.base.Instances.Identifyable" href="#src.modules.app.base.Instances.Identifyable">Identifyable</a></li>
-<li><a title="src.modules.app.base.Instances.Disposeable" href="#src.modules.app.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></li>
+<li><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.BaseSensor.on_state_changed"><code class="name flex">
-<span>def <span class="ident">on_state_changed</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<dt id="src.modules.base.Instances.BaseSensor.on_state_changed"><code class="name flex">
+<span>def <span class="ident">on_state_changed</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>must get called whenever the local state has changed</p></div>
@@ -879,10 +910,18 @@ class ActionTrigger(Stackable, Logging):
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></b></code>:
+<ul class="hlist">
+<li><code><a title="src.modules.base.Instances.BaseScript.start" href="#src.modules.base.Instances.BaseScript.start">start</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
-<dt id="src.modules.app.base.Instances.Condition"><code class="flex name class">
+<dt id="src.modules.base.Instances.Condition"><code class="flex name class">
 <span>class <span class="ident">Condition</span></span>
-<span>(</span><span>parent: <a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a>, config: modules.app.base.Configuration.ConditionConfiguration)</span>
+<span>(</span><span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, config: modules.base.Configuration.ConditionConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -921,12 +960,12 @@ class ActionTrigger(Stackable, Logging):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.Condition.check"><code class="name flex">
-<span>def <span class="ident">check</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack) ‑> bool</span>
+<dt id="src.modules.base.Instances.Condition.check"><code class="name flex">
+<span>def <span class="ident">check</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -961,9 +1000,9 @@ class ActionTrigger(Stackable, Logging):
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.Debuggable"><code class="flex name class">
+<dt id="src.modules.base.Instances.Debuggable"><code class="flex name class">
 <span>class <span class="ident">Debuggable</span></span>
-<span>(</span><span>config: modules.app.base.Configuration.Configuration)</span>
+<span>(</span><span>config: modules.base.Configuration.Configuration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Classes that want to log debug messages should be based on this class</p></div>
@@ -982,11 +1021,11 @@ class ActionTrigger(Stackable, Logging):
 
         if hasattr(self.configuration, &#34;debug&#34;):
             if self.configuration.debug:
-                print(&#34;[DEBUG] &#34; + message)        </code></pre>
+                print(&#34;[DEBUG] &#34; + message)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.Debuggable.log_debug"><code class="name flex">
+<dt id="src.modules.base.Instances.Debuggable.log_debug"><code class="name flex">
 <span>def <span class="ident">log_debug</span></span>(<span>self, message)</span>
 </code></dt>
 <dd>
@@ -1000,14 +1039,14 @@ class ActionTrigger(Stackable, Logging):
 
     if hasattr(self.configuration, &#34;debug&#34;):
         if self.configuration.debug:
-            print(&#34;[DEBUG] &#34; + message)        </code></pre>
+            print(&#34;[DEBUG] &#34; + message)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.Device"><code class="flex name class">
+<dt id="src.modules.base.Instances.Device"><code class="flex name class">
 <span>class <span class="ident">Device</span></span>
-<span>(</span><span>parent, config: modules.app.base.Configuration.DeviceConfiguration)</span>
+<span>(</span><span>parent, config: modules.base.Configuration.DeviceConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1015,10 +1054,12 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Device(VariableProvider, Stackable):
+<pre><code class="python">class Device(Stackable, VariableProvider):
     def __init__(self, parent, config: DeviceConfiguration) -&gt; None:
-        super().__init__(parent)
+        Stackable.__init__(self, parent)
+        VariableProvider.__init__(self, config)
         self.configuration = config
+        self.variables = config.variables
 
         self.startup_actions = []
         if self.configuration.on_init is not None:
@@ -1027,11 +1068,11 @@ class ActionTrigger(Stackable, Logging):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.VariableProvider" href="#src.modules.app.base.Instances.VariableProvider">VariableProvider</a></li>
-<li><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Instances.Disposeable"><code class="flex name class">
+<dt id="src.modules.base.Instances.Disposeable"><code class="flex name class">
 <span>class <span class="ident">Disposeable</span></span>
 </code></dt>
 <dd>
@@ -1049,13 +1090,13 @@ class ActionTrigger(Stackable, Logging):
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.BaseApp" href="#src.modules.app.base.Instances.BaseApp">BaseApp</a></li>
-<li><a title="src.modules.app.base.Instances.BasePlatform" href="#src.modules.app.base.Instances.BasePlatform">BasePlatform</a></li>
-<li><a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a></li>
+<li><a title="src.modules.base.Instances.BaseApp" href="#src.modules.base.Instances.BaseApp">BaseApp</a></li>
+<li><a title="src.modules.base.Instances.BasePlatform" href="#src.modules.base.Instances.BasePlatform">BasePlatform</a></li>
+<li><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.Disposeable.dispose"><code class="name flex">
+<dt id="src.modules.base.Instances.Disposeable.dispose"><code class="name flex">
 <span>def <span class="ident">dispose</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1070,9 +1111,9 @@ class ActionTrigger(Stackable, Logging):
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.Identifyable"><code class="flex name class">
+<dt id="src.modules.base.Instances.Identifyable"><code class="flex name class">
 <span>class <span class="ident">Identifyable</span></span>
-<span>(</span><span>config: modules.app.base.Configuration.IdConfiguration)</span>
+<span>(</span><span>config: modules.base.Configuration.IdConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -1082,6 +1123,7 @@ class ActionTrigger(Stackable, Logging):
 </summary>
 <pre><code class="python">class Identifyable():
     &#34;&#34;&#34;Base class for classes with an Identifier (id)&#34;&#34;&#34;
+
     def __init__(self, config: IdConfiguration) -&gt; None:
         self.configuration = config
 
@@ -1089,15 +1131,15 @@ class ActionTrigger(Stackable, Logging):
         return super().__str__() + &#34;: &#34; + self.configuration.id
 
     def __repr__(self):
-        return super().__str__() + &#34;: &#34; + self.configuration.id            </code></pre>
+        return super().__str__() + &#34;: &#34; + self.configuration.id</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.BasePlatform" href="#src.modules.app.base.Instances.BasePlatform">BasePlatform</a></li>
-<li><a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a></li>
+<li><a title="src.modules.base.Instances.BasePlatform" href="#src.modules.base.Instances.BasePlatform">BasePlatform</a></li>
+<li><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Instances.Logging"><code class="flex name class">
+<dt id="src.modules.base.Instances.Logging"><code class="flex name class">
 <span>class <span class="ident">Logging</span></span>
 </code></dt>
 <dd>
@@ -1113,18 +1155,17 @@ class ActionTrigger(Stackable, Logging):
         &#34;&#34;&#34;Log an error to the console&#34;&#34;&#34;
         print(&#34;[ERROR] &#34; + message)
 
-
     def log_warning(self, message):
         &#34;&#34;&#34;Log a warning to the console&#34;&#34;&#34;
-        print(&#34;[WARN] &#34; + message) </code></pre>
+        print(&#34;[WARN] &#34; + message)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.ActionTrigger" href="#src.modules.app.base.Instances.ActionTrigger">ActionTrigger</a></li>
+<li><a title="src.modules.base.Instances.ActionTrigger" href="#src.modules.base.Instances.ActionTrigger">ActionTrigger</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.Logging.log_error"><code class="name flex">
+<dt id="src.modules.base.Instances.Logging.log_error"><code class="name flex">
 <span>def <span class="ident">log_error</span></span>(<span>self, message)</span>
 </code></dt>
 <dd>
@@ -1138,7 +1179,7 @@ class ActionTrigger(Stackable, Logging):
     print(&#34;[ERROR] &#34; + message)</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.Logging.log_warning"><code class="name flex">
+<dt id="src.modules.base.Instances.Logging.log_warning"><code class="name flex">
 <span>def <span class="ident">log_warning</span></span>(<span>self, message)</span>
 </code></dt>
 <dd>
@@ -1149,12 +1190,12 @@ class ActionTrigger(Stackable, Logging):
 </summary>
 <pre><code class="python">def log_warning(self, message):
     &#34;&#34;&#34;Log a warning to the console&#34;&#34;&#34;
-    print(&#34;[WARN] &#34; + message) </code></pre>
+    print(&#34;[WARN] &#34; + message)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.Stackable"><code class="flex name class">
+<dt id="src.modules.base.Instances.Stackable"><code class="flex name class">
 <span>class <span class="ident">Stackable</span></span>
 <span>(</span><span>parent)</span>
 </code></dt>
@@ -1172,8 +1213,7 @@ class ActionTrigger(Stackable, Logging):
             return
 
         self.parent = parent
-        self.call_stack = CallStack(from_list=self.get_full_stack())
-
+        self.call_stack = CallStack().with_stack(self.get_full_stack())
 
     def get_full_stack(self):
         scopes = self.get_parents()
@@ -1181,13 +1221,11 @@ class ActionTrigger(Stackable, Logging):
         scopes.reverse()
         return scopes
 
-
     def get_app(self) -&gt; &#39;BaseApp&#39;:
         app = self
         while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
             app = app.parent
-        return app #types: BaseApp
-
+        return app  # types: BaseApp
 
     def get_parents(self) -&gt; list[&#39;Stackable&#39;]:
         parents = []
@@ -1199,18 +1237,18 @@ class ActionTrigger(Stackable, Logging):
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.ActionTrigger" href="#src.modules.app.base.Instances.ActionTrigger">ActionTrigger</a></li>
-<li><a title="src.modules.app.base.Instances.Automation" href="#src.modules.app.base.Instances.Automation">Automation</a></li>
-<li><a title="src.modules.app.base.Instances.BaseApp" href="#src.modules.app.base.Instances.BaseApp">BaseApp</a></li>
-<li><a title="src.modules.app.base.Instances.BasePlatform" href="#src.modules.app.base.Instances.BasePlatform">BasePlatform</a></li>
-<li><a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a></li>
-<li><a title="src.modules.app.base.Instances.Condition" href="#src.modules.app.base.Instances.Condition">Condition</a></li>
-<li><a title="src.modules.app.base.Instances.Device" href="#src.modules.app.base.Instances.Device">Device</a></li>
+<li><a title="src.modules.base.Instances.ActionTrigger" href="#src.modules.base.Instances.ActionTrigger">ActionTrigger</a></li>
+<li><a title="src.modules.base.Instances.Automation" href="#src.modules.base.Instances.Automation">Automation</a></li>
+<li><a title="src.modules.base.Instances.BaseApp" href="#src.modules.base.Instances.BaseApp">BaseApp</a></li>
+<li><a title="src.modules.base.Instances.BasePlatform" href="#src.modules.base.Instances.BasePlatform">BasePlatform</a></li>
+<li><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></li>
+<li><a title="src.modules.base.Instances.Condition" href="#src.modules.base.Instances.Condition">Condition</a></li>
+<li><a title="src.modules.base.Instances.Device" href="#src.modules.base.Instances.Device">Device</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.Stackable.get_app"><code class="name flex">
-<span>def <span class="ident">get_app</span></span>(<span>self) ‑> <a title="src.modules.app.base.Instances.BaseApp" href="#src.modules.app.base.Instances.BaseApp">BaseApp</a></span>
+<dt id="src.modules.base.Instances.Stackable.get_app"><code class="name flex">
+<span>def <span class="ident">get_app</span></span>(<span>self) ‑> <a title="src.modules.base.Instances.BaseApp" href="#src.modules.base.Instances.BaseApp">BaseApp</a></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1222,10 +1260,10 @@ class ActionTrigger(Stackable, Logging):
     app = self
     while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
         app = app.parent
-    return app #types: BaseApp</code></pre>
+    return app  # types: BaseApp</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.Stackable.get_full_stack"><code class="name flex">
+<dt id="src.modules.base.Instances.Stackable.get_full_stack"><code class="name flex">
 <span>def <span class="ident">get_full_stack</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1241,7 +1279,7 @@ class ActionTrigger(Stackable, Logging):
     return scopes</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Instances.Stackable.get_parents"><code class="name flex">
+<dt id="src.modules.base.Instances.Stackable.get_parents"><code class="name flex">
 <span>def <span class="ident">get_parents</span></span>(<span>self) ‑> list</span>
 </code></dt>
 <dd>
@@ -1261,9 +1299,9 @@ class ActionTrigger(Stackable, Logging):
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Instances.VariableProvider"><code class="flex name class">
+<dt id="src.modules.base.Instances.VariableProvider"><code class="flex name class">
 <span>class <span class="ident">VariableProvider</span></span>
-<span>(</span><span>config: modules.app.base.Configuration.VariableConfiguration)</span>
+<span>(</span><span>config: modules.base.Configuration.VariablesConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1271,29 +1309,25 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class VariableProvider():
-    def __init__(self, config: VariableConfiguration) -&gt; None:
-        self.configuration = config
+<pre><code class="python">class VariableProvider:
+    def __init__(self, config: VariablesConfiguration) -&gt; None:
+        self.variables = config.variables
 
-        self.variables = {}
-
-
-    def get_variable_value(self, name: str) -&gt; Optional[str]:
-        name = str(name).lower()
-        if hasattr(self.configuration, &#34;variables&#34;):
-            if self.configuration.variables is not None:
-                return self.configuration.variables.get(name)</code></pre>
+    def get_variable_value(self, variable_id):
+        if self.variables is not None:
+            if variable_id in self.variables:
+                return self.variables[variable_id]</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Instances.BaseApp" href="#src.modules.app.base.Instances.BaseApp">BaseApp</a></li>
-<li><a title="src.modules.app.base.Instances.BasePlatform" href="#src.modules.app.base.Instances.BasePlatform">BasePlatform</a></li>
-<li><a title="src.modules.app.base.Instances.Device" href="#src.modules.app.base.Instances.Device">Device</a></li>
+<li><a title="src.modules.base.Instances.BaseApp" href="#src.modules.base.Instances.BaseApp">BaseApp</a></li>
+<li><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></li>
+<li><a title="src.modules.base.Instances.Device" href="#src.modules.base.Instances.Device">Device</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="src.modules.app.base.Instances.VariableProvider.get_variable_value"><code class="name flex">
-<span>def <span class="ident">get_variable_value</span></span>(<span>self, name: str) ‑> Optional[str]</span>
+<dt id="src.modules.base.Instances.VariableProvider.get_variable_value"><code class="name flex">
+<span>def <span class="ident">get_variable_value</span></span>(<span>self, variable_id)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1301,11 +1335,10 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_variable_value(self, name: str) -&gt; Optional[str]:
-    name = str(name).lower()
-    if hasattr(self.configuration, &#34;variables&#34;):
-        if self.configuration.variables is not None:
-            return self.configuration.variables.get(name)</code></pre>
+<pre><code class="python">def get_variable_value(self, variable_id):
+    if self.variables is not None:
+        if variable_id in self.variables:
+            return self.variables[variable_id]</code></pre>
 </details>
 </dd>
 </dl>
@@ -1321,100 +1354,102 @@ class ActionTrigger(Stackable, Logging):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.modules.app.base" href="index.html">src.modules.app.base</a></code></li>
+<li><code><a title="src.modules.base" href="index.html">src.modules.base</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.ActionTrigger" href="#src.modules.app.base.Instances.ActionTrigger">ActionTrigger</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.ActionTrigger" href="#src.modules.base.Instances.ActionTrigger">ActionTrigger</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.ActionTrigger.invoke" href="#src.modules.app.base.Instances.ActionTrigger.invoke">invoke</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.ActionTrigger.render" href="#src.modules.app.base.Instances.ActionTrigger.render">render</a></code></li>
+<li><code><a title="src.modules.base.Instances.ActionTrigger.invoke" href="#src.modules.base.Instances.ActionTrigger.invoke">invoke</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Automation" href="#src.modules.app.base.Instances.Automation">Automation</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Automation" href="#src.modules.base.Instances.Automation">Automation</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.Automation.check_conditions" href="#src.modules.app.base.Instances.Automation.check_conditions">check_conditions</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.Automation.invoke" href="#src.modules.app.base.Instances.Automation.invoke">invoke</a></code></li>
+<li><code><a title="src.modules.base.Instances.Automation.check_conditions" href="#src.modules.base.Instances.Automation.check_conditions">check_conditions</a></code></li>
+<li><code><a title="src.modules.base.Instances.Automation.invoke" href="#src.modules.base.Instances.Automation.invoke">invoke</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Base" href="#src.modules.app.base.Instances.Base">Base</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Base" href="#src.modules.base.Instances.Base">Base</a></code></h4>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.BaseAction" href="#src.modules.app.base.Instances.BaseAction">BaseAction</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.BaseAction" href="#src.modules.base.Instances.BaseAction">BaseAction</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.BaseAction.invoke" href="#src.modules.app.base.Instances.BaseAction.invoke">invoke</a></code></li>
+<li><code><a title="src.modules.base.Instances.BaseAction.invoke" href="#src.modules.base.Instances.BaseAction.invoke">invoke</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.BaseApp" href="#src.modules.app.base.Instances.BaseApp">BaseApp</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.BaseApp" href="#src.modules.base.Instances.BaseApp">BaseApp</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.BaseApp.dispose" href="#src.modules.app.base.Instances.BaseApp.dispose">dispose</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.BaseApp.get_id" href="#src.modules.app.base.Instances.BaseApp.get_id">get_id</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.BaseApp.get_platform" href="#src.modules.app.base.Instances.BaseApp.get_platform">get_platform</a></code></li>
+<li><code><a title="src.modules.base.Instances.BaseApp.dispose" href="#src.modules.base.Instances.BaseApp.dispose">dispose</a></code></li>
+<li><code><a title="src.modules.base.Instances.BaseApp.get_id" href="#src.modules.base.Instances.BaseApp.get_id">get_id</a></code></li>
+<li><code><a title="src.modules.base.Instances.BaseApp.get_platform" href="#src.modules.base.Instances.BaseApp.get_platform">get_platform</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.BasePlatform" href="#src.modules.app.base.Instances.BasePlatform">BasePlatform</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.BasePlatform" href="#src.modules.base.Instances.BasePlatform">BasePlatform</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.BasePlatform.start" href="#src.modules.app.base.Instances.BasePlatform.start">start</a></code></li>
+<li><code><a title="src.modules.base.Instances.BasePlatform.start" href="#src.modules.base.Instances.BasePlatform.start">start</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.BaseScript" href="#src.modules.app.base.Instances.BaseScript">BaseScript</a></code></h4>
-</li>
-<li>
-<h4><code><a title="src.modules.app.base.Instances.BaseSensor" href="#src.modules.app.base.Instances.BaseSensor">BaseSensor</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.BaseSensor.on_state_changed" href="#src.modules.app.base.Instances.BaseSensor.on_state_changed">on_state_changed</a></code></li>
+<li><code><a title="src.modules.base.Instances.BaseScript.start" href="#src.modules.base.Instances.BaseScript.start">start</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Condition" href="#src.modules.app.base.Instances.Condition">Condition</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.BaseSensor" href="#src.modules.base.Instances.BaseSensor">BaseSensor</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.Condition.check" href="#src.modules.app.base.Instances.Condition.check">check</a></code></li>
+<li><code><a title="src.modules.base.Instances.BaseSensor.on_state_changed" href="#src.modules.base.Instances.BaseSensor.on_state_changed">on_state_changed</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Debuggable" href="#src.modules.app.base.Instances.Debuggable">Debuggable</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Condition" href="#src.modules.base.Instances.Condition">Condition</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.Debuggable.log_debug" href="#src.modules.app.base.Instances.Debuggable.log_debug">log_debug</a></code></li>
+<li><code><a title="src.modules.base.Instances.Condition.check" href="#src.modules.base.Instances.Condition.check">check</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Device" href="#src.modules.app.base.Instances.Device">Device</a></code></h4>
-</li>
-<li>
-<h4><code><a title="src.modules.app.base.Instances.Disposeable" href="#src.modules.app.base.Instances.Disposeable">Disposeable</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Debuggable" href="#src.modules.base.Instances.Debuggable">Debuggable</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.Disposeable.dispose" href="#src.modules.app.base.Instances.Disposeable.dispose">dispose</a></code></li>
+<li><code><a title="src.modules.base.Instances.Debuggable.log_debug" href="#src.modules.base.Instances.Debuggable.log_debug">log_debug</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Identifyable" href="#src.modules.app.base.Instances.Identifyable">Identifyable</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Device" href="#src.modules.base.Instances.Device">Device</a></code></h4>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Logging" href="#src.modules.app.base.Instances.Logging">Logging</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.Logging.log_error" href="#src.modules.app.base.Instances.Logging.log_error">log_error</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.Logging.log_warning" href="#src.modules.app.base.Instances.Logging.log_warning">log_warning</a></code></li>
+<li><code><a title="src.modules.base.Instances.Disposeable.dispose" href="#src.modules.base.Instances.Disposeable.dispose">dispose</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.Stackable" href="#src.modules.app.base.Instances.Stackable">Stackable</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></code></h4>
+</li>
+<li>
+<h4><code><a title="src.modules.base.Instances.Logging" href="#src.modules.base.Instances.Logging">Logging</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.Stackable.get_app" href="#src.modules.app.base.Instances.Stackable.get_app">get_app</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.Stackable.get_full_stack" href="#src.modules.app.base.Instances.Stackable.get_full_stack">get_full_stack</a></code></li>
-<li><code><a title="src.modules.app.base.Instances.Stackable.get_parents" href="#src.modules.app.base.Instances.Stackable.get_parents">get_parents</a></code></li>
+<li><code><a title="src.modules.base.Instances.Logging.log_error" href="#src.modules.base.Instances.Logging.log_error">log_error</a></code></li>
+<li><code><a title="src.modules.base.Instances.Logging.log_warning" href="#src.modules.base.Instances.Logging.log_warning">log_warning</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Instances.VariableProvider" href="#src.modules.app.base.Instances.VariableProvider">VariableProvider</a></code></h4>
+<h4><code><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Instances.VariableProvider.get_variable_value" href="#src.modules.app.base.Instances.VariableProvider.get_variable_value">get_variable_value</a></code></li>
+<li><code><a title="src.modules.base.Instances.Stackable.get_app" href="#src.modules.base.Instances.Stackable.get_app">get_app</a></code></li>
+<li><code><a title="src.modules.base.Instances.Stackable.get_full_stack" href="#src.modules.base.Instances.Stackable.get_full_stack">get_full_stack</a></code></li>
+<li><code><a title="src.modules.base.Instances.Stackable.get_parents" href="#src.modules.base.Instances.Stackable.get_parents">get_parents</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></code></h4>
+<ul class="">
+<li><code><a title="src.modules.base.Instances.VariableProvider.get_variable_value" href="#src.modules.base.Instances.VariableProvider.get_variable_value">get_variable_value</a></code></li>
 </ul>
 </li>
 </ul>

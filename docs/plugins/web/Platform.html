@@ -33,8 +33,8 @@ import pywebio.output as OUT
 import time
 import threading
 
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 class WebPlatformConfiguration(PlatformConfiguration):
 
@@ -78,7 +78,7 @@ class Platform(BasePlatform):
         self.has_been_updated = True
 
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         def loop():
             OUT.set_scope(&#39;result&#39;)
             while True:
@@ -94,7 +94,7 @@ class Platform(BasePlatform):
         
         loop_thread = threading.Thread(target=loop)
         loop_thread.start()
-        super().start()
+        super().start(call_stack)
         self.has_started = True</code></pre>
 </details>
 </section>
@@ -109,7 +109,7 @@ class Platform(BasePlatform):
 <dl>
 <dt id="src.plugins.web.Platform.Platform"><code class="flex name class">
 <span>class <span class="ident">Platform</span></span>
-<span>(</span><span>parent: modules.app.base.Instances.Stackable, config: modules.app.base.Configuration.PlatformConfiguration)</span>
+<span>(</span><span>parent: modules.base.Instances.Stackable, config: modules.base.Configuration.PlatformConfiguration)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
@@ -149,7 +149,7 @@ class Platform(BasePlatform):
         self.has_been_updated = True
 
 
-    def start(self):
+    def start(self, call_stack: CallStack):
         def loop():
             OUT.set_scope(&#39;result&#39;)
             while True:
@@ -165,16 +165,15 @@ class Platform(BasePlatform):
         
         loop_thread = threading.Thread(target=loop)
         loop_thread.start()
-        super().start()
+        super().start(call_stack)
         self.has_started = True</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BasePlatform</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Identifyable</li>
-<li>modules.app.base.Instances.Disposeable</li>
-<li>modules.app.base.Instances.VariableProvider</li>
+<li>modules.base.Instances.BasePlatform</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Identifyable</li>
+<li>modules.base.Instances.Disposeable</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -196,15 +195,16 @@ class Platform(BasePlatform):
 </details>
 </dd>
 <dt id="src.plugins.web.Platform.Platform.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>self)</span>
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>is called when the configuration is loaded completely.
+Here is where we initialize and load stuff</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(self):
+<pre><code class="python">def start(self, call_stack: CallStack):
     def loop():
         OUT.set_scope(&#39;result&#39;)
         while True:
@@ -220,7 +220,7 @@ class Platform(BasePlatform):
     
     loop_thread = threading.Thread(target=loop)
     loop_thread.start()
-    super().start()
+    super().start(call_stack)
     self.has_started = True</code></pre>
 </details>
 </dd>
@@ -273,10 +273,11 @@ class Platform(BasePlatform):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.PlatformConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.PlatformConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>

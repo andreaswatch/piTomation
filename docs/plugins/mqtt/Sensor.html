@@ -27,8 +27,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from enum import auto
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 
 @configuration
@@ -51,11 +51,13 @@ class Sensor(BaseSensor):
 
     def __init__(self, parent: Platform, config: MqttSensorConfiguration) -&gt; None:
         super().__init__(parent, config)
+        self.configuration = config
 
         self.on_message_automations = self._create_automations(config.on_message)
 
-        parent.subscribe(config.topic, self.on_message)
-
+    def start(self, call_stack: CallStack):
+        topic = call_stack.get(self.configuration.topic)
+        self.parent.subscribe(topic, self.on_message)
 
     def on_message(self, call_stack: CallStack):
         for automation in self.on_message_automations:
@@ -101,11 +103,12 @@ class MqttSensorConfiguration(SensorConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.SensorConfiguration</li>
-<li>modules.app.base.Configuration.ScriptConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.SensorConfiguration</li>
+<li>modules.base.Configuration.ScriptConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
@@ -156,11 +159,13 @@ def check_platform_module(cls, v):
 
     def __init__(self, parent: Platform, config: MqttSensorConfiguration) -&gt; None:
         super().__init__(parent, config)
+        self.configuration = config
 
         self.on_message_automations = self._create_automations(config.on_message)
 
-        parent.subscribe(config.topic, self.on_message)
-
+    def start(self, call_stack: CallStack):
+        topic = call_stack.get(self.configuration.topic)
+        self.parent.subscribe(topic, self.on_message)
 
     def on_message(self, call_stack: CallStack):
         for automation in self.on_message_automations:
@@ -170,23 +175,24 @@ def check_platform_module(cls, v):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BaseSensor</li>
-<li>modules.app.base.Instances.BaseScript</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Identifyable</li>
-<li>modules.app.base.Instances.Disposeable</li>
+<li>modules.base.Instances.BaseSensor</li>
+<li>modules.base.Instances.BaseScript</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Identifyable</li>
+<li>modules.base.Instances.Disposeable</li>
+<li>modules.base.Instances.VariableProvider</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="src.plugins.mqtt.Sensor.Sensor.Platform"><code class="name">var <span class="ident">Platform</span></code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>MQTT Platform</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
 <dt id="src.plugins.mqtt.Sensor.Sensor.on_message"><code class="name flex">
-<span>def <span class="ident">on_message</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<span>def <span class="ident">on_message</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -199,6 +205,21 @@ def check_platform_module(cls, v):
         automation.invoke(call_stack)
 
     self.on_state_changed(call_stack)</code></pre>
+</details>
+</dd>
+<dt id="src.plugins.mqtt.Sensor.Sensor.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>is called when the configuration is loaded completely.
+Here is where we initialize and load stuff</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self, call_stack: CallStack):
+    topic = call_stack.get(self.configuration.topic)
+    self.parent.subscribe(topic, self.on_message)</code></pre>
 </details>
 </dd>
 </dl>
@@ -232,6 +253,7 @@ def check_platform_module(cls, v):
 <ul class="">
 <li><code><a title="src.plugins.mqtt.Sensor.Sensor.Platform" href="#src.plugins.mqtt.Sensor.Sensor.Platform">Platform</a></code></li>
 <li><code><a title="src.plugins.mqtt.Sensor.Sensor.on_message" href="#src.plugins.mqtt.Sensor.Sensor.on_message">on_message</a></code></li>
+<li><code><a title="src.plugins.mqtt.Sensor.Sensor.start" href="#src.plugins.mqtt.Sensor.Sensor.start">start</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>src.modules.app.base.Configuration API documentation</title>
+<title>src.modules.base.Configuration API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.modules.app.base.Configuration</code></h1>
+<h1 class="title">Module <code>src.modules.base.Configuration</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -61,8 +61,6 @@ def WithPlugins(t: type):
 
 
 
-
-
 @configuration
 class Configuration(BaseModel):
     &#39;&#39;&#39;Base class for all configuration classes&#39;&#39;&#39;
@@ -77,6 +75,11 @@ class IdConfiguration(Configuration):
 
     id: str
     &#39;&#39;&#39;Own reference&#39;&#39;&#39;
+
+@configuration
+class VariablesConfiguration(Configuration):
+    variables: Optional[dict]
+    &#39;&#39;&#39;Variables, exposed as id(xy).variables.name&#39;&#39;&#39;
 
 
 @configuration
@@ -103,12 +106,6 @@ class ActionTriggerConfiguration(Configuration):
     &#39;&#39;&#39;optional list of values to pass&#39;&#39;&#39;
 
 
-class VariableConfiguration(Configuration):
-
-    variables: Optional[dict[str, str]] = {}
-    &#39;&#39;&#39;custom variables&#39;&#39;&#39;   
-
-
 @configuration
 class AutomationConfiguration(Configuration):
     &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute&#39;&#39;&#39;
@@ -121,14 +118,13 @@ class AutomationConfiguration(Configuration):
 
 
 @configuration
-class StackableConfiguration(IdConfiguration):
+class StackableConfiguration(IdConfiguration, VariablesConfiguration):
 
     on_init: Optional[list[AutomationConfiguration]] = []
     &#39;&#39;&#39;Actions to execute after init is done&#39;&#39;&#39;
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
     &#39;&#39;&#39;Actions to execute before this platform is disposed&#39;&#39;&#39;
- 
 
 
 @configuration
@@ -149,6 +145,7 @@ class ScriptConfiguration(StackableConfiguration):
     type: Optional[str]
     &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
 
+
 @configuration
 class ActionConfiguration(ScriptConfiguration):
     &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;
@@ -165,9 +162,8 @@ class SensorConfiguration(ScriptConfiguration):
     &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;    
 
 
-
 @configuration
-class DeviceConfiguration(Configuration):
+class DeviceConfiguration(VariablesConfiguration):
     name: str
     &#39;&#39;&#39;Name of the device.&#39;&#39;&#39;
 
@@ -185,7 +181,7 @@ class DeviceConfiguration(Configuration):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="src.modules.app.base.Configuration.WithPlugins"><code class="name flex">
+<dt id="src.modules.base.Configuration.WithPlugins"><code class="name flex">
 <span>def <span class="ident">WithPlugins</span></span>(<span>t: type)</span>
 </code></dt>
 <dd>
@@ -201,7 +197,7 @@ class DeviceConfiguration(Configuration):
     return t</code></pre>
 </details>
 </dd>
-<dt id="src.modules.app.base.Configuration.configuration"><code class="name flex">
+<dt id="src.modules.base.Configuration.configuration"><code class="name flex">
 <span>def <span class="ident">configuration</span></span>(<span>cls)</span>
 </code></dt>
 <dd>
@@ -234,7 +230,7 @@ class DeviceConfiguration(Configuration):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.modules.app.base.Configuration.ActionConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.ActionConfiguration"><code class="flex name class">
 <span>class <span class="ident">ActionConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -255,35 +251,37 @@ class ActionConfiguration(ScriptConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.ScriptConfiguration" href="#src.modules.app.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.ActionConfiguration.on_invoked"><code class="name">var <span class="ident">on_invoked</span> : Optional[list]</code></dt>
+<dt id="src.modules.base.Configuration.ActionConfiguration.on_invoked"><code class="name">var <span class="ident">on_invoked</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>List of Automations to execute after this action got executed</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.ScriptConfiguration" href="#src.modules.app.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.id" href="#src.modules.app.base.Configuration.IdConfiguration.id">id</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.on_dispose" href="#src.modules.app.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.on_init" href="#src.modules.app.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.platform" href="#src.modules.app.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.type" href="#src.modules.app.base.Configuration.ScriptConfiguration.type">type</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.platform" href="#src.modules.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.type" href="#src.modules.base.Configuration.ScriptConfiguration.type">type</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.ActionTriggerConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.ActionTriggerConfiguration"><code class="flex name class">
 <span>class <span class="ident">ActionTriggerConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -305,31 +303,31 @@ class ActionTriggerConfiguration(Configuration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.ActionTriggerConfiguration.action"><code class="name">var <span class="ident">action</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.ActionTriggerConfiguration.action"><code class="name">var <span class="ident">action</span> : str</code></dt>
 <dd>
 <div class="desc"><p>id of the action to execute</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.ActionTriggerConfiguration.values"><code class="name">var <span class="ident">values</span> : Optional[dict]</code></dt>
+<dt id="src.modules.base.Configuration.ActionTriggerConfiguration.values"><code class="name">var <span class="ident">values</span> : Optional[dict]</code></dt>
 <dd>
 <div class="desc"><p>optional list of values to pass</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.Configuration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.AutomationConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.AutomationConfiguration"><code class="flex name class">
 <span>class <span class="ident">AutomationConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -353,31 +351,31 @@ class AutomationConfiguration(Configuration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.AutomationConfiguration.actions"><code class="name">var <span class="ident">actions</span> : list</code></dt>
+<dt id="src.modules.base.Configuration.AutomationConfiguration.actions"><code class="name">var <span class="ident">actions</span> : list</code></dt>
 <dd>
 <div class="desc"><p>list of actions to execute</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.AutomationConfiguration.conditions"><code class="name">var <span class="ident">conditions</span> : Optional[list]</code></dt>
+<dt id="src.modules.base.Configuration.AutomationConfiguration.conditions"><code class="name">var <span class="ident">conditions</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>list of conditions to prove before the actions get executed</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.Configuration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.ConditionConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.ConditionConfiguration"><code class="flex name class">
 <span>class <span class="ident">ConditionConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -405,39 +403,39 @@ class ConditionConfiguration(Configuration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.ConditionConfiguration.actual"><code class="name">var <span class="ident">actual</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.ConditionConfiguration.actual"><code class="name">var <span class="ident">actual</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Adress of the actual value, e.g. "payload"</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.ConditionConfiguration.comperator"><code class="name">var <span class="ident">comperator</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.ConditionConfiguration.comperator"><code class="name">var <span class="ident">comperator</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Function name used to compare the values</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.ConditionConfiguration.expected"><code class="name">var <span class="ident">expected</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.ConditionConfiguration.expected"><code class="name">var <span class="ident">expected</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Expected value</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.ConditionConfiguration.inverted"><code class="name">var <span class="ident">inverted</span> : Optional[bool]</code></dt>
+<dt id="src.modules.base.Configuration.ConditionConfiguration.inverted"><code class="name">var <span class="ident">inverted</span> : Optional[bool]</code></dt>
 <dd>
 <div class="desc"><p>Invert result</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.Configuration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.Configuration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.Configuration"><code class="flex name class">
 <span>class <span class="ident">Configuration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -463,22 +461,21 @@ class Configuration(BaseModel):
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.ActionTriggerConfiguration" href="#src.modules.app.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.AutomationConfiguration" href="#src.modules.app.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.ConditionConfiguration" href="#src.modules.app.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.DeviceConfiguration" href="#src.modules.app.base.Configuration.DeviceConfiguration">DeviceConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.VariableConfiguration" href="#src.modules.app.base.Configuration.VariableConfiguration">VariableConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.ActionTriggerConfiguration" href="#src.modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.AutomationConfiguration" href="#src.modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.ConditionConfiguration" href="#src.modules.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.Configuration.debug"><code class="name">var <span class="ident">debug</span> : Optional[bool]</code></dt>
+<dt id="src.modules.base.Configuration.Configuration.debug"><code class="name">var <span class="ident">debug</span> : Optional[bool]</code></dt>
 <dd>
 <div class="desc"><p>Enable additional debugging output for this instance</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="src.modules.app.base.Configuration.DeviceConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.DeviceConfiguration"><code class="flex name class">
 <span>class <span class="ident">DeviceConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -491,7 +488,7 @@ class Configuration(BaseModel):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@configuration
-class DeviceConfiguration(Configuration):
+class DeviceConfiguration(VariablesConfiguration):
     name: str
     &#39;&#39;&#39;Name of the device.&#39;&#39;&#39;
 
@@ -503,35 +500,37 @@ class DeviceConfiguration(Configuration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.DeviceConfiguration.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.DeviceConfiguration.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Name of the device.</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.DeviceConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
+<dt id="src.modules.base.Configuration.DeviceConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>Actions to execute after init is done</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.DeviceConfiguration.version"><code class="name">var <span class="ident">version</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.DeviceConfiguration.version"><code class="name">var <span class="ident">version</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.VariablesConfiguration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.VariablesConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.IdConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.IdConfiguration"><code class="flex name class">
 <span>class <span class="ident">IdConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -552,31 +551,31 @@ class IdConfiguration(Configuration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.IdConfiguration.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.IdConfiguration.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Own reference</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.Configuration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.PlatformConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.PlatformConfiguration"><code class="flex name class">
 <span>class <span class="ident">PlatformConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -597,32 +596,34 @@ class PlatformConfiguration(StackableConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.PlatformConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.PlatformConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
 <div class="desc"><p>plugin name of the platform</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.id" href="#src.modules.app.base.Configuration.IdConfiguration.id">id</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.on_dispose" href="#src.modules.app.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.on_init" href="#src.modules.app.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.ScriptConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.ScriptConfiguration"><code class="flex name class">
 <span>class <span class="ident">ScriptConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -646,41 +647,43 @@ class ScriptConfiguration(StackableConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.ActionConfiguration" href="#src.modules.app.base.Configuration.ActionConfiguration">ActionConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.SensorConfiguration" href="#src.modules.app.base.Configuration.SensorConfiguration">SensorConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.ActionConfiguration" href="#src.modules.base.Configuration.ActionConfiguration">ActionConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.SensorConfiguration" href="#src.modules.base.Configuration.SensorConfiguration">SensorConfiguration</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.ScriptConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
+<dt id="src.modules.base.Configuration.ScriptConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
 <div class="desc"><p>The platform of this script</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.ScriptConfiguration.type"><code class="name">var <span class="ident">type</span> : Optional[str]</code></dt>
+<dt id="src.modules.base.Configuration.ScriptConfiguration.type"><code class="name">var <span class="ident">type</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>The class type of this script</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.id" href="#src.modules.app.base.Configuration.IdConfiguration.id">id</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.on_dispose" href="#src.modules.app.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.on_init" href="#src.modules.app.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.SensorConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.SensorConfiguration"><code class="flex name class">
 <span>class <span class="ident">SensorConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -701,35 +704,37 @@ class SensorConfiguration(ScriptConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.ScriptConfiguration" href="#src.modules.app.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.SensorConfiguration.on_state_changed"><code class="name">var <span class="ident">on_state_changed</span> : Optional[list]</code></dt>
+<dt id="src.modules.base.Configuration.SensorConfiguration.on_state_changed"><code class="name">var <span class="ident">on_state_changed</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>List of Automations to execute after the sensor's state has changed</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.ScriptConfiguration" href="#src.modules.app.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.id" href="#src.modules.app.base.Configuration.IdConfiguration.id">id</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.on_dispose" href="#src.modules.app.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.on_init" href="#src.modules.app.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.platform" href="#src.modules.app.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.type" href="#src.modules.app.base.Configuration.ScriptConfiguration.type">type</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.platform" href="#src.modules.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.type" href="#src.modules.base.Configuration.ScriptConfiguration.type">type</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.StackableConfiguration"><code class="flex name class">
+<dt id="src.modules.base.Configuration.StackableConfiguration"><code class="flex name class">
 <span>class <span class="ident">StackableConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
@@ -742,7 +747,7 @@ class SensorConfiguration(ScriptConfiguration):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@configuration
-class StackableConfiguration(IdConfiguration):
+class StackableConfiguration(IdConfiguration, VariablesConfiguration):
 
     on_init: Optional[list[AutomationConfiguration]] = []
     &#39;&#39;&#39;Actions to execute after init is done&#39;&#39;&#39;
@@ -752,39 +757,45 @@ class StackableConfiguration(IdConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.PlatformConfiguration" href="#src.modules.app.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></li>
-<li><a title="src.modules.app.base.Configuration.ScriptConfiguration" href="#src.modules.app.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.PlatformConfiguration" href="#src.modules.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.StackableConfiguration.on_dispose"><code class="name">var <span class="ident">on_dispose</span> : Optional[list]</code></dt>
+<dt id="src.modules.base.Configuration.StackableConfiguration.on_dispose"><code class="name">var <span class="ident">on_dispose</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>Actions to execute before this platform is disposed</p></div>
 </dd>
-<dt id="src.modules.app.base.Configuration.StackableConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
+<dt id="src.modules.base.Configuration.StackableConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>Actions to execute after init is done</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.IdConfiguration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.IdConfiguration.id" href="#src.modules.app.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="src.modules.base.Configuration.IdConfiguration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.IdConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
+</ul>
+</li>
+<li><code><b><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></b></code>:
+<ul class="hlist">
+<li><code><a title="src.modules.base.Configuration.VariablesConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.modules.app.base.Configuration.VariableConfiguration"><code class="flex name class">
-<span>class <span class="ident">VariableConfiguration</span></span>
+<dt id="src.modules.base.Configuration.VariablesConfiguration"><code class="flex name class">
+<span>class <span class="ident">VariablesConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
@@ -795,29 +806,34 @@ class StackableConfiguration(IdConfiguration):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class VariableConfiguration(Configuration):
-
-    variables: Optional[dict[str, str]] = {}
-    &#39;&#39;&#39;custom variables&#39;&#39;&#39;   </code></pre>
+<pre><code class="python">@configuration
+class VariablesConfiguration(Configuration):
+    variables: Optional[dict]
+    &#39;&#39;&#39;Variables, exposed as id(xy).variables.name&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></li>
+<li><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="src.modules.base.Configuration.DeviceConfiguration" href="#src.modules.base.Configuration.DeviceConfiguration">DeviceConfiguration</a></li>
+<li><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+</ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.modules.app.base.Configuration.VariableConfiguration.variables"><code class="name">var <span class="ident">variables</span> : Optional[dict]</code></dt>
+<dt id="src.modules.base.Configuration.VariablesConfiguration.variables"><code class="name">var <span class="ident">variables</span> : Optional[dict]</code></dt>
 <dd>
-<div class="desc"><p>custom variables</p></div>
+<div class="desc"><p>Variables, exposed as id(xy).variables.name</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></b></code>:
+<li><code><b><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.Configuration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
 </ul>
@@ -833,96 +849,96 @@ class StackableConfiguration(IdConfiguration):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.modules.app.base" href="index.html">src.modules.app.base</a></code></li>
+<li><code><a title="src.modules.base" href="index.html">src.modules.base</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.WithPlugins" href="#src.modules.app.base.Configuration.WithPlugins">WithPlugins</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.configuration" href="#src.modules.app.base.Configuration.configuration">configuration</a></code></li>
+<li><code><a title="src.modules.base.Configuration.WithPlugins" href="#src.modules.base.Configuration.WithPlugins">WithPlugins</a></code></li>
+<li><code><a title="src.modules.base.Configuration.configuration" href="#src.modules.base.Configuration.configuration">configuration</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.ActionConfiguration" href="#src.modules.app.base.Configuration.ActionConfiguration">ActionConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.ActionConfiguration" href="#src.modules.base.Configuration.ActionConfiguration">ActionConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.ActionConfiguration.on_invoked" href="#src.modules.app.base.Configuration.ActionConfiguration.on_invoked">on_invoked</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ActionConfiguration.on_invoked" href="#src.modules.base.Configuration.ActionConfiguration.on_invoked">on_invoked</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.ActionTriggerConfiguration" href="#src.modules.app.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.ActionTriggerConfiguration" href="#src.modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.ActionTriggerConfiguration.action" href="#src.modules.app.base.Configuration.ActionTriggerConfiguration.action">action</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ActionTriggerConfiguration.values" href="#src.modules.app.base.Configuration.ActionTriggerConfiguration.values">values</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ActionTriggerConfiguration.action" href="#src.modules.base.Configuration.ActionTriggerConfiguration.action">action</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ActionTriggerConfiguration.values" href="#src.modules.base.Configuration.ActionTriggerConfiguration.values">values</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.AutomationConfiguration" href="#src.modules.app.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.AutomationConfiguration" href="#src.modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.AutomationConfiguration.actions" href="#src.modules.app.base.Configuration.AutomationConfiguration.actions">actions</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.AutomationConfiguration.conditions" href="#src.modules.app.base.Configuration.AutomationConfiguration.conditions">conditions</a></code></li>
+<li><code><a title="src.modules.base.Configuration.AutomationConfiguration.actions" href="#src.modules.base.Configuration.AutomationConfiguration.actions">actions</a></code></li>
+<li><code><a title="src.modules.base.Configuration.AutomationConfiguration.conditions" href="#src.modules.base.Configuration.AutomationConfiguration.conditions">conditions</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.ConditionConfiguration" href="#src.modules.app.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.ConditionConfiguration" href="#src.modules.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.ConditionConfiguration.actual" href="#src.modules.app.base.Configuration.ConditionConfiguration.actual">actual</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ConditionConfiguration.comperator" href="#src.modules.app.base.Configuration.ConditionConfiguration.comperator">comperator</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ConditionConfiguration.expected" href="#src.modules.app.base.Configuration.ConditionConfiguration.expected">expected</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ConditionConfiguration.inverted" href="#src.modules.app.base.Configuration.ConditionConfiguration.inverted">inverted</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ConditionConfiguration.actual" href="#src.modules.base.Configuration.ConditionConfiguration.actual">actual</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ConditionConfiguration.comperator" href="#src.modules.base.Configuration.ConditionConfiguration.comperator">comperator</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ConditionConfiguration.expected" href="#src.modules.base.Configuration.ConditionConfiguration.expected">expected</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ConditionConfiguration.inverted" href="#src.modules.base.Configuration.ConditionConfiguration.inverted">inverted</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.Configuration" href="#src.modules.app.base.Configuration.Configuration">Configuration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.Configuration" href="#src.modules.base.Configuration.Configuration">Configuration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.Configuration.debug" href="#src.modules.app.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="src.modules.base.Configuration.Configuration.debug" href="#src.modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.DeviceConfiguration" href="#src.modules.app.base.Configuration.DeviceConfiguration">DeviceConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.DeviceConfiguration" href="#src.modules.base.Configuration.DeviceConfiguration">DeviceConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.DeviceConfiguration.name" href="#src.modules.app.base.Configuration.DeviceConfiguration.name">name</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.DeviceConfiguration.on_init" href="#src.modules.app.base.Configuration.DeviceConfiguration.on_init">on_init</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.DeviceConfiguration.version" href="#src.modules.app.base.Configuration.DeviceConfiguration.version">version</a></code></li>
+<li><code><a title="src.modules.base.Configuration.DeviceConfiguration.name" href="#src.modules.base.Configuration.DeviceConfiguration.name">name</a></code></li>
+<li><code><a title="src.modules.base.Configuration.DeviceConfiguration.on_init" href="#src.modules.base.Configuration.DeviceConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.DeviceConfiguration.version" href="#src.modules.base.Configuration.DeviceConfiguration.version">version</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.IdConfiguration" href="#src.modules.app.base.Configuration.IdConfiguration">IdConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.IdConfiguration" href="#src.modules.base.Configuration.IdConfiguration">IdConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.IdConfiguration.id" href="#src.modules.app.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="src.modules.base.Configuration.IdConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.PlatformConfiguration" href="#src.modules.app.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.PlatformConfiguration" href="#src.modules.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.PlatformConfiguration.platform" href="#src.modules.app.base.Configuration.PlatformConfiguration.platform">platform</a></code></li>
+<li><code><a title="src.modules.base.Configuration.PlatformConfiguration.platform" href="#src.modules.base.Configuration.PlatformConfiguration.platform">platform</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.ScriptConfiguration" href="#src.modules.app.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.platform" href="#src.modules.app.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.ScriptConfiguration.type" href="#src.modules.app.base.Configuration.ScriptConfiguration.type">type</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.platform" href="#src.modules.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.type" href="#src.modules.base.Configuration.ScriptConfiguration.type">type</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.SensorConfiguration" href="#src.modules.app.base.Configuration.SensorConfiguration">SensorConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.SensorConfiguration" href="#src.modules.base.Configuration.SensorConfiguration">SensorConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.SensorConfiguration.on_state_changed" href="#src.modules.app.base.Configuration.SensorConfiguration.on_state_changed">on_state_changed</a></code></li>
+<li><code><a title="src.modules.base.Configuration.SensorConfiguration.on_state_changed" href="#src.modules.base.Configuration.SensorConfiguration.on_state_changed">on_state_changed</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.StackableConfiguration" href="#src.modules.app.base.Configuration.StackableConfiguration">StackableConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.on_dispose" href="#src.modules.app.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
-<li><code><a title="src.modules.app.base.Configuration.StackableConfiguration.on_init" href="#src.modules.app.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
+<li><code><a title="src.modules.base.Configuration.StackableConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.modules.app.base.Configuration.VariableConfiguration" href="#src.modules.app.base.Configuration.VariableConfiguration">VariableConfiguration</a></code></h4>
+<h4><code><a title="src.modules.base.Configuration.VariablesConfiguration" href="#src.modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.modules.app.base.Configuration.VariableConfiguration.variables" href="#src.modules.app.base.Configuration.VariableConfiguration.variables">variables</a></code></li>
+<li><code><a title="src.modules.base.Configuration.VariablesConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
 </li>
 </ul>

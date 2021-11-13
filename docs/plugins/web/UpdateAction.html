@@ -26,8 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from modules.app.base.Instances import *
-from modules.app.base.Configuration import *
+<pre><code class="python">from modules.base.Instances import *
+from modules.base.Configuration import *
 
 @configuration
 class UpdateActionConfiguration(ActionConfiguration):
@@ -46,7 +46,7 @@ class UpdateAction(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_(self))
+        super().invoke(call_stack.with_element(self))
 
         topic = call_stack.get(&#34;topic&#34;)
         payload = call_stack.get(&#34;payload&#34;)
@@ -81,7 +81,7 @@ class UpdateAction(BaseAction):
         self.platform = parent
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_(self))
+        super().invoke(call_stack.with_element(self))
 
         topic = call_stack.get(&#34;topic&#34;)
         payload = call_stack.get(&#34;payload&#34;)
@@ -90,11 +90,12 @@ class UpdateAction(BaseAction):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Instances.BaseAction</li>
-<li>modules.app.base.Instances.BaseScript</li>
-<li>modules.app.base.Instances.Stackable</li>
-<li>modules.app.base.Instances.Identifyable</li>
-<li>modules.app.base.Instances.Disposeable</li>
+<li>modules.base.Instances.BaseAction</li>
+<li>modules.base.Instances.BaseScript</li>
+<li>modules.base.Instances.Stackable</li>
+<li>modules.base.Instances.Identifyable</li>
+<li>modules.base.Instances.Disposeable</li>
+<li>modules.base.Instances.VariableProvider</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -106,7 +107,7 @@ class UpdateAction(BaseAction):
 <h3>Methods</h3>
 <dl>
 <dt id="src.plugins.web.UpdateAction.UpdateAction.invoke"><code class="name flex">
-<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.app.base.CallStack.CallStack)</span>
+<span>def <span class="ident">invoke</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>must get called whenever the action has been invoked</p></div>
@@ -115,7 +116,7 @@ class UpdateAction(BaseAction):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
-    super().invoke(call_stack.with_(self))
+    super().invoke(call_stack.with_element(self))
 
     topic = call_stack.get(&#34;topic&#34;)
     payload = call_stack.get(&#34;payload&#34;)
@@ -148,11 +149,12 @@ class UpdateActionConfiguration(ActionConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.app.base.Configuration.ActionConfiguration</li>
-<li>modules.app.base.Configuration.ScriptConfiguration</li>
-<li>modules.app.base.Configuration.StackableConfiguration</li>
-<li>modules.app.base.Configuration.IdConfiguration</li>
-<li>modules.app.base.Configuration.Configuration</li>
+<li>modules.base.Configuration.ActionConfiguration</li>
+<li>modules.base.Configuration.ScriptConfiguration</li>
+<li>modules.base.Configuration.StackableConfiguration</li>
+<li>modules.base.Configuration.IdConfiguration</li>
+<li>modules.base.Configuration.VariablesConfiguration</li>
+<li>modules.base.Configuration.Configuration</li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
