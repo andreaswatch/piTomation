@@ -7,8 +7,6 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-Python-3.9.7
-Python-3.9.7.tar.xz
 .Python
 build/
 develop-eggs/
