@@ -1,0 +1,9 @@
+#pip3 freeze > requirements.txt
+colorzero
+gpiozero
+pigpio
+RPi.GPIO
+pydantic
+PyYAML
+pywebio
+chevron

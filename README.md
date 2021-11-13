@@ -3,6 +3,35 @@
 piTomation is a system to control your Raspberry Pi and similar devices by simple yet powerful configuration files and control them remotely.
 https://andreaswatch.github.io/piTomation/
 
+## Install
+### Python 3.9
+piTomation is based on Python 3.9. RaspberryPi OS delivers Python 3.7.
+
+**Manual method**
+
+Here is a simple instruction to install Python 3.9:
+https://itheo.tech/install-python-3-9-on-raspberry-pi/
+
+**Script**
+```
+wget -qO - https://raw.githubusercontent.com/tvdsluijs/sh-python-installer/main/python.sh | sudo bash -s 3.9.7
+```
+Source: https://itheo.tech/ultimate-python-installation-on-a-raspberry-pi-ubuntu-script/
+
+### piTomation
+```
+cd ~
+git clone http://github.com/andreasWatch/piTomation
+pip3 install -r piTomation/src/requirements.txt
+```
+
+## Run
+```
+cd ~
+python3 piTomation
+```
+
+
 ## Example 1
 Prints 'hello' to the console when the mqtt plugin connects.
 
