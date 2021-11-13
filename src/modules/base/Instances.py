@@ -1,8 +1,8 @@
 from ctypes import ArgumentError
 from typing import Optional
 
-from modules.app.base.CallStack import *
-from modules.app.base.Configuration import *
+from modules.base.CallStack import *
+from modules.base.Configuration import *
 
 
 class Base:

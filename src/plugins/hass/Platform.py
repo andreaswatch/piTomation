@@ -1,5 +1,5 @@
 from modules.app.App import VERSION
-from modules.app.base.Instances import *
+from modules.base.Instances import *
 from plugins.hass.HassEntityAutomation import *
 from plugins.hass.Configurations import *
 

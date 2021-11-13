@@ -7,8 +7,8 @@ import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
 from pydantic.main import BaseModel
 
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 class Availability(BaseModel):
     '''Availability topic and last will'''

@@ -1,8 +1,8 @@
 from enum import auto
 from colorzero import Color
 from plugins.gpio.Platform import Platform
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 
 @configuration

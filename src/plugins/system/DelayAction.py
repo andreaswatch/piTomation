@@ -1,7 +1,7 @@
 
 import time
 
-from modules.app.base.Instances import *
+from modules.base.Instances import *
 from plugins.system.Platform import *
 
 @configuration

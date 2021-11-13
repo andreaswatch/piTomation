@@ -5,8 +5,8 @@ import pywebio.output as OUT
 import time
 import threading
 
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 class WebPlatformConfiguration(PlatformConfiguration):
 

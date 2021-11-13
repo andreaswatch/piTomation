@@ -2,8 +2,8 @@
 from sys import platform
 
 from pydantic.class_validators import validator
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 
 @configuration
 class SystemPlatformConfiguration(PlatformConfiguration):

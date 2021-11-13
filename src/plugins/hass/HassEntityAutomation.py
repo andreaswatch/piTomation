@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic.main import BaseModel
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 from plugins.hass.Configurations import *
 
 class HassType(Enum):

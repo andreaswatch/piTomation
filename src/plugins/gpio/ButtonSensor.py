@@ -1,7 +1,7 @@
 from os import execv
 from gpiozero.input_devices import Button
-from modules.app.base.Configuration import *
-from modules.app.base.Instances import *
+from modules.base.Configuration import *
+from modules.base.Instances import *
 from plugins.gpio.Platform import Platform
 from dataclasses import dataclass
 
