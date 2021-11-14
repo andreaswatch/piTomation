@@ -32,6 +32,7 @@ from modules.base.Instances import *
 
 @configuration
 class MqttActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Mqtt action to send a message through the mqtt client.&#39;&#39;&#39;
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;mqtt&#34;
@@ -40,6 +41,7 @@ class MqttActionConfiguration(ActionConfiguration):
         return v    
 
 class Action(BaseAction):
+    &#39;&#39;&#39;Mqtt action to send a message through the mqtt client.&#39;&#39;&#39;
     from plugins.mqtt.Platform import Platform as MqttPlatform
 
     def __init__(self, parent: MqttPlatform, config: MqttActionConfiguration) -&gt; None:
@@ -73,12 +75,13 @@ class Action(BaseAction):
 <span>(</span><span>parent: plugins.mqtt.Platform.Platform, config: <a title="src.plugins.mqtt.Action.MqttActionConfiguration" href="#src.plugins.mqtt.Action.MqttActionConfiguration">MqttActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Mqtt action to send a message through the mqtt client.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Action(BaseAction):
+    &#39;&#39;&#39;Mqtt action to send a message through the mqtt client.&#39;&#39;&#39;
     from plugins.mqtt.Platform import Platform as MqttPlatform
 
     def __init__(self, parent: MqttPlatform, config: MqttActionConfiguration) -&gt; None:
@@ -144,7 +147,7 @@ class Action(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Mqtt action to send a message through the mqtt client.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -153,6 +156,7 @@ class Action(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class MqttActionConfiguration(ActionConfiguration):
+    &#39;&#39;&#39;Mqtt action to send a message through the mqtt client.&#39;&#39;&#39;
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
         platform_name = &#34;mqtt&#34;

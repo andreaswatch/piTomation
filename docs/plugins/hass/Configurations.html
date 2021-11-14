@@ -32,8 +32,10 @@ from pydantic.class_validators import validator
 from modules.base.Configuration import *
 from modules.base.Instances import *
 
-@configuration
+#@configuration
 class HassEntityConfiguration(BaseModel):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant.&#39;&#39;&#39;
+
     id: str
     &#39;&#39;&#39;script id to export&#39;&#39;&#39;
 
@@ -46,6 +48,8 @@ class HassEntityConfiguration(BaseModel):
 
 @configuration
 class HassTriggerEntityConfiguration(HassEntityConfiguration):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as a trigger entity.&#39;&#39;&#39;
+
     event: str
     &#39;&#39;&#39;event to listen for the state&#39;&#39;&#39;
 
@@ -58,6 +62,8 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 
 @configuration
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as a binary sensor entity.&#39;&#39;&#39;
+
     on_event: str
     &#39;&#39;&#39;event to listen for ON&#39;&#39;&#39;
 
@@ -76,6 +82,7 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 
 @configuration
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as an action entity.&#39;&#39;&#39;
 
     on_command: str     
     &#39;&#39;&#39;command to execute when Homeassistant triggers ON&#39;&#39;&#39;
@@ -95,8 +102,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 
 @configuration
 class HassPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    &#39;&#39;&#39;Allows to export actions and sensors to HomeAssistant entities.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -131,7 +137,8 @@ class HassPlatformConfiguration(PlatformConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<div class="desc"><p>Exposes an action or sensor to HomeAssistant as an action entity.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
@@ -139,6 +146,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
 </summary>
 <pre><code class="python">@configuration
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as an action entity.&#39;&#39;&#39;
 
     on_command: str     
     &#39;&#39;&#39;command to execute when Homeassistant triggers ON&#39;&#39;&#39;
@@ -215,7 +223,8 @@ def check_platform_module(cls, v):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<div class="desc"><p>Exposes an action or sensor to HomeAssistant as a binary sensor entity.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
@@ -223,6 +232,8 @@ def check_platform_module(cls, v):
 </summary>
 <pre><code class="python">@configuration
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as a binary sensor entity.&#39;&#39;&#39;
+
     on_event: str
     &#39;&#39;&#39;event to listen for ON&#39;&#39;&#39;
 
@@ -298,14 +309,16 @@ def check_platform_module(cls, v):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<div class="desc"><p>Exposes an action or sensor to HomeAssistant.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@configuration
-class HassEntityConfiguration(BaseModel):
+<pre><code class="python">class HassEntityConfiguration(BaseModel):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant.&#39;&#39;&#39;
+
     id: str
     &#39;&#39;&#39;script id to export&#39;&#39;&#39;
 
@@ -346,7 +359,7 @@ class HassEntityConfiguration(BaseModel):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all platform configuration classes</p>
+<div class="desc"><p>Allows to export actions and sensors to HomeAssistant entities.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -355,8 +368,7 @@ class HassEntityConfiguration(BaseModel):
 </summary>
 <pre><code class="python">@configuration
 class HassPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    &#39;&#39;&#39;Allows to export actions and sensors to HomeAssistant entities.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -404,10 +416,6 @@ class HassPlatformConfiguration(PlatformConfiguration):
 <dd>
 <div class="desc"><p>Homeassistant Autodiscovery topic "homeassistant" by default</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
@@ -434,7 +442,8 @@ def check_platform_module(cls, v):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<div class="desc"><p>Exposes an action or sensor to HomeAssistant as a trigger entity.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
 <summary>
@@ -442,6 +451,8 @@ def check_platform_module(cls, v):
 </summary>
 <pre><code class="python">@configuration
 class HassTriggerEntityConfiguration(HassEntityConfiguration):
+    &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as a trigger entity.&#39;&#39;&#39;
+
     event: str
     &#39;&#39;&#39;event to listen for the state&#39;&#39;&#39;
 
@@ -544,7 +555,6 @@ def check_platform_module(cls, v):
 <li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.check_platform_module" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.connection" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.connection">connection</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.exports" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.exports">exports</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.platform" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.platform">platform</a></code></li>
 </ul>
 </li>
 <li>

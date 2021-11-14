@@ -47,6 +47,7 @@ class MqttSensorConfiguration(SensorConfiguration):
 
 
 class Sensor(BaseSensor):
+    &#39;&#39;&#39;Allows to listen to a given MQTT topic.&#39;&#39;&#39;
     from plugins.mqtt.Platform import Platform
 
     def __init__(self, parent: Platform, config: MqttSensorConfiguration) -&gt; None:
@@ -149,12 +150,13 @@ def check_platform_module(cls, v):
 <span>(</span><span>parent: plugins.mqtt.Platform.Platform, config: <a title="src.plugins.mqtt.Sensor.MqttSensorConfiguration" href="#src.plugins.mqtt.Sensor.MqttSensorConfiguration">MqttSensorConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Allows to listen to a given MQTT topic.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Sensor(BaseSensor):
+    &#39;&#39;&#39;Allows to listen to a given MQTT topic.&#39;&#39;&#39;
     from plugins.mqtt.Platform import Platform
 
     def __init__(self, parent: Platform, config: MqttSensorConfiguration) -&gt; None:

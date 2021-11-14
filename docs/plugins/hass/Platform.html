@@ -33,6 +33,8 @@ from plugins.hass.Configurations import *
 
 
 class Platform(BasePlatform):
+    &#39;&#39;&#39;Exports actions and sensors to HomeAssistant entities.&#39;&#39;&#39;
+
     def __init__(self, parent: Stackable, config: HassPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
@@ -77,12 +79,14 @@ class Platform(BasePlatform):
 <span>(</span><span>parent: modules.base.Instances.Stackable, config: plugins.hass.Configurations.HassPlatformConfiguration)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>Exports actions and sensors to HomeAssistant entities.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Platform(BasePlatform):
+    &#39;&#39;&#39;Exports actions and sensors to HomeAssistant entities.&#39;&#39;&#39;
+
     def __init__(self, parent: Stackable, config: HassPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config

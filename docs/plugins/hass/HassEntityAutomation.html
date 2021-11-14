@@ -39,6 +39,7 @@ class HassType(Enum):
 
 
 class HassEntityAutomation(Stackable, Disposeable, Logging):
+    &#39;&#39;&#39;Connection between our actions and scripts and HomeAssistants different entity types.&#39;&#39;&#39;
 
     def __init__(self, parent: Stackable, config: HassEntityConfiguration) -&gt; None:
         from plugins.hass.Platform import Platform
@@ -153,12 +154,13 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 <span>(</span><span>parent: modules.base.Instances.Stackable, config: plugins.hass.Configurations.HassEntityConfiguration)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Classes that want to log should be based on this class</p></div>
+<div class="desc"><p>Connection between our actions and scripts and HomeAssistants different entity types.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HassEntityAutomation(Stackable, Disposeable, Logging):
+    &#39;&#39;&#39;Connection between our actions and scripts and HomeAssistants different entity types.&#39;&#39;&#39;
 
     def __init__(self, parent: Stackable, config: HassEntityConfiguration) -&gt; None:
         from plugins.hass.Platform import Platform

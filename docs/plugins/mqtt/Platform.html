@@ -30,7 +30,6 @@
 from sys import platform
 import threading
 from typing import Optional
-from marshmallow.validate import Equal
 import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
 from pydantic.main import BaseModel
@@ -39,7 +38,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 class Availability(BaseModel):
-    &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
+    &#39;&#39;&#39;Availability topic and last will.&#39;&#39;&#39;
 
     topic: str
     &#39;&#39;&#39;configured topic for the mqtt client&#39;s last will and we also send a message on connect&#39;&#39;&#39;
@@ -53,7 +52,7 @@ class Availability(BaseModel):
 
 @configuration
 class MqttPlatformConfiguration(PlatformConfiguration):
-    &#39;&#39;&#39;Configuration settings for the MQTT platform&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for the MQTT platform.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -221,7 +220,7 @@ class Platform(BasePlatform):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Availability topic and last will</p>
+<div class="desc"><p>Availability topic and last will.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -229,7 +228,7 @@ class Platform(BasePlatform):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Availability(BaseModel):
-    &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
+    &#39;&#39;&#39;Availability topic and last will.&#39;&#39;&#39;
 
     topic: str
     &#39;&#39;&#39;configured topic for the mqtt client&#39;s last will and we also send a message on connect&#39;&#39;&#39;
@@ -266,7 +265,7 @@ class Platform(BasePlatform):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configuration settings for the MQTT platform</p>
+<div class="desc"><p>Configuration settings for the MQTT platform.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -275,7 +274,7 @@ class Platform(BasePlatform):
 </summary>
 <pre><code class="python">@configuration
 class MqttPlatformConfiguration(PlatformConfiguration):
-    &#39;&#39;&#39;Configuration settings for the MQTT platform&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for the MQTT platform.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):

@@ -34,8 +34,7 @@ from modules.base.Instances import *
 
 @configuration
 class SystemPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    &#39;&#39;&#39;Configuration settings for the System platform.&#39;&#39;&#39;
     
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -44,6 +43,7 @@ class SystemPlatformConfiguration(PlatformConfiguration):
         return v
 
 class Platform(BasePlatform):
+    &#39;&#39;&#39;System platform&#39;&#39;&#39;
 
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
@@ -67,12 +67,13 @@ class Platform(BasePlatform):
 <span>(</span><span>parent: modules.base.Instances.Stackable, config: modules.base.Configuration.PlatformConfiguration)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for classes with an Identifier (id)</p></div>
+<div class="desc"><p>System platform</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Platform(BasePlatform):
+    &#39;&#39;&#39;System platform&#39;&#39;&#39;
 
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
         super().__init__(parent, config)</code></pre>
@@ -90,7 +91,7 @@ class Platform(BasePlatform):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all platform configuration classes</p>
+<div class="desc"><p>Configuration settings for the System platform.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -99,8 +100,7 @@ class Platform(BasePlatform):
 </summary>
 <pre><code class="python">@configuration
 class SystemPlatformConfiguration(PlatformConfiguration):
-
-    platform: str
+    &#39;&#39;&#39;Configuration settings for the System platform.&#39;&#39;&#39;
     
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
