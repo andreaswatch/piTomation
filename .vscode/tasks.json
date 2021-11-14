@@ -37,7 +37,10 @@
             "options": {
                 "cwd": "docs"
             },
-            "command": "Remove-Item '*' -Recurse",
+            "windows":{
+                "command": "Remove-Item '*' -Recurse",
+            },
+            "command": "rm -f *.html",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
