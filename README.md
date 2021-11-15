@@ -3,7 +3,7 @@
 piTomation is a system to control your Raspberry Pi and similar devices by simple yet powerful configuration files and control them remotely.
 https://andreaswatch.github.io/piTomation/
 
-# Conceps
+# Concept
 
 This service is fully configurable through YAML files. It's recommended to read the sample configuration in src/raspberrypi.yaml.
 The YAML allows to configure platforms that provide a given functionality, sensors to read values from the platform and actions to send values to the platform.
