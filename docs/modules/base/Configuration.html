@@ -38,6 +38,8 @@ def configuration(cls):
     
     def __register(self):
         hasBase = False
+        base = None
+        
         for base in self.__bases__:
             hasBase = True
             if not base in __registry.keys():
@@ -45,8 +47,9 @@ def configuration(cls):
             __registry[base].append(self)
 
         if not hasBase:
-            if not base in __registry.keys():
-                __registry[self.Type] = []
+            if base is not None:
+                if not base in __registry.keys():
+                    __registry[self.Type] = []
 
     __register(cls)
 
@@ -134,6 +137,10 @@ class PlatformConfiguration(StackableConfiguration):
     platform: str
     &#39;&#39;&#39;plugin name of the platform&#39;&#39;&#39;
 
+    @validator(&#39;platform&#39;, always=False, allow_reuse=False)
+    def check_platform_module(cls, v):
+        raise ValueError(&#34;Generic PlatformConfiguration not supported for: &#34; + v)
+
 
 @configuration
 class ScriptConfiguration(StackableConfiguration):
@@ -145,21 +152,18 @@ class ScriptConfiguration(StackableConfiguration):
     type: Optional[str]
     &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
 
+    on_state_changed: Optional[list[AutomationConfiguration]] = []
+    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;    
+
 
 @configuration
 class ActionConfiguration(ScriptConfiguration):
     &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;
 
-    on_invoked: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after this action got executed&#39;&#39;&#39;   
-
 
 @configuration
 class SensorConfiguration(ScriptConfiguration):
-    &#39;&#39;&#39;Base clss for all sensor configuration classes&#39;&#39;&#39;
-
-    on_state_changed: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;    
+    &#39;&#39;&#39;Base clas for all sensor configuration classes&#39;&#39;&#39;
 
 
 @configuration
@@ -210,6 +214,8 @@ class DeviceConfiguration(VariablesConfiguration):
     
     def __register(self):
         hasBase = False
+        base = None
+        
         for base in self.__bases__:
             hasBase = True
             if not base in __registry.keys():
@@ -217,8 +223,9 @@ class DeviceConfiguration(VariablesConfiguration):
             __registry[base].append(self)
 
         if not hasBase:
-            if not base in __registry.keys():
-                __registry[self.Type] = []
+            if base is not None:
+                if not base in __registry.keys():
+                    __registry[self.Type] = []
 
     __register(cls)
 
@@ -244,10 +251,7 @@ class DeviceConfiguration(VariablesConfiguration):
 </summary>
 <pre><code class="python">@configuration
 class ActionConfiguration(ScriptConfiguration):
-    &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;
-
-    on_invoked: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after this action got executed&#39;&#39;&#39;   </code></pre>
+    &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -259,13 +263,6 @@ class ActionConfiguration(ScriptConfiguration):
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="src.modules.base.Configuration.ActionConfiguration.on_invoked"><code class="name">var <span class="ident">on_invoked</span> : Optional[list]</code></dt>
-<dd>
-<div class="desc"><p>List of Automations to execute after this action got executed</p></div>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
@@ -274,6 +271,7 @@ class ActionConfiguration(ScriptConfiguration):
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_state_changed" href="#src.modules.base.Configuration.ScriptConfiguration.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.platform" href="#src.modules.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.type" href="#src.modules.base.Configuration.ScriptConfiguration.type">type</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
@@ -592,7 +590,11 @@ class PlatformConfiguration(StackableConfiguration):
     &#39;&#39;&#39;Base class for all platform configuration classes&#39;&#39;&#39;
 
     platform: str
-    &#39;&#39;&#39;plugin name of the platform&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;plugin name of the platform&#39;&#39;&#39;
+
+    @validator(&#39;platform&#39;, always=False, allow_reuse=False)
+    def check_platform_module(cls, v):
+        raise ValueError(&#34;Generic PlatformConfiguration not supported for: &#34; + v)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -608,6 +610,23 @@ class PlatformConfiguration(StackableConfiguration):
 <dt id="src.modules.base.Configuration.PlatformConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
 <div class="desc"><p>plugin name of the platform</p></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.modules.base.Configuration.PlatformConfiguration.check_platform_module"><code class="name flex">
+<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;platform&#39;, always=False, allow_reuse=False)
+def check_platform_module(cls, v):
+    raise ValueError(&#34;Generic PlatformConfiguration not supported for: &#34; + v)</code></pre>
+</details>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -643,7 +662,10 @@ class ScriptConfiguration(StackableConfiguration):
     &#39;&#39;&#39;The platform of this script&#39;&#39;&#39;
 
     type: Optional[str]
-    &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
+
+    on_state_changed: Optional[list[AutomationConfiguration]] = []
+    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;    </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -661,6 +683,10 @@ class ScriptConfiguration(StackableConfiguration):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="src.modules.base.Configuration.ScriptConfiguration.on_state_changed"><code class="name">var <span class="ident">on_state_changed</span> : Optional[list]</code></dt>
+<dd>
+<div class="desc"><p>List of Automations to execute after the sensor's state has changed</p></div>
+</dd>
 <dt id="src.modules.base.Configuration.ScriptConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
 <div class="desc"><p>The platform of this script</p></div>
@@ -688,7 +714,7 @@ class ScriptConfiguration(StackableConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all sensor configuration classes</p>
+<div class="desc"><p>Base clas for all sensor configuration classes</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -697,10 +723,7 @@ class ScriptConfiguration(StackableConfiguration):
 </summary>
 <pre><code class="python">@configuration
 class SensorConfiguration(ScriptConfiguration):
-    &#39;&#39;&#39;Base clss for all sensor configuration classes&#39;&#39;&#39;
-
-    on_state_changed: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;    </code></pre>
+    &#39;&#39;&#39;Base clas for all sensor configuration classes&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -712,13 +735,6 @@ class SensorConfiguration(ScriptConfiguration):
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="src.modules.base.Configuration.SensorConfiguration.on_state_changed"><code class="name">var <span class="ident">on_state_changed</span> : Optional[list]</code></dt>
-<dd>
-<div class="desc"><p>List of Automations to execute after the sensor's state has changed</p></div>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
@@ -727,6 +743,7 @@ class SensorConfiguration(ScriptConfiguration):
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.id" href="#src.modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_dispose" href="#src.modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_init" href="#src.modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_state_changed" href="#src.modules.base.Configuration.ScriptConfiguration.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.platform" href="#src.modules.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.type" href="#src.modules.base.Configuration.ScriptConfiguration.type">type</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.variables" href="#src.modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
@@ -862,9 +879,6 @@ class VariablesConfiguration(Configuration):
 <ul>
 <li>
 <h4><code><a title="src.modules.base.Configuration.ActionConfiguration" href="#src.modules.base.Configuration.ActionConfiguration">ActionConfiguration</a></code></h4>
-<ul class="">
-<li><code><a title="src.modules.base.Configuration.ActionConfiguration.on_invoked" href="#src.modules.base.Configuration.ActionConfiguration.on_invoked">on_invoked</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="src.modules.base.Configuration.ActionTriggerConfiguration" href="#src.modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></h4>
@@ -912,21 +926,20 @@ class VariablesConfiguration(Configuration):
 <li>
 <h4><code><a title="src.modules.base.Configuration.PlatformConfiguration" href="#src.modules.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></code></h4>
 <ul class="">
+<li><code><a title="src.modules.base.Configuration.PlatformConfiguration.check_platform_module" href="#src.modules.base.Configuration.PlatformConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.modules.base.Configuration.PlatformConfiguration.platform" href="#src.modules.base.Configuration.PlatformConfiguration.platform">platform</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="src.modules.base.Configuration.ScriptConfiguration" href="#src.modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></code></h4>
 <ul class="">
+<li><code><a title="src.modules.base.Configuration.ScriptConfiguration.on_state_changed" href="#src.modules.base.Configuration.ScriptConfiguration.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.platform" href="#src.modules.base.Configuration.ScriptConfiguration.platform">platform</a></code></li>
 <li><code><a title="src.modules.base.Configuration.ScriptConfiguration.type" href="#src.modules.base.Configuration.ScriptConfiguration.type">type</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="src.modules.base.Configuration.SensorConfiguration" href="#src.modules.base.Configuration.SensorConfiguration">SensorConfiguration</a></code></h4>
-<ul class="">
-<li><code><a title="src.modules.base.Configuration.SensorConfiguration.on_state_changed" href="#src.modules.base.Configuration.SensorConfiguration.on_state_changed">on_state_changed</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="src.modules.base.Configuration.StackableConfiguration" href="#src.modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></code></h4>

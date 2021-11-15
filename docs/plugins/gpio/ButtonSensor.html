@@ -42,13 +42,13 @@ class ButtonSensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
 
     pull_up: Optional[bool] = True
-    &#39;&#39;&#39;True=enable software pullup, False=enable software pulldown, None=disabled(floating)&#39;&#39;&#39;
+    &#39;&#39;&#39;True=enable software pull up, False=enable software pulldown, None=disabled(floating)&#39;&#39;&#39;
 
-    active_state: Optional[bool] = True
+    active_state: Optional[bool] = None
     &#39;&#39;&#39;True: Active=HIGH, False: Active=LOW, None=auto-select with pull_up not None&#39;&#39;&#39;
 
     bounce_time: Optional[int] = None
-    &#39;&#39;&#39;Length of time (in seconds) to ignore changes adter initial change&#39;&#39;&#39;
+    &#39;&#39;&#39;Length of time (in seconds) to ignore changes after initial change&#39;&#39;&#39;
 
     hold_time: int = 1
     &#39;&#39;&#39;Length of time (in seconds) to wait after the button is pushed, until executing the when_held handler&#39;&#39;&#39;
@@ -69,6 +69,8 @@ class ButtonSensorConfiguration(SensorConfiguration):
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
         return v    
 
+class ButtonState(BaseState):
+    is_pressed = False
 
 class ButtonSensor(BaseSensor, Debuggable):
     &#39;&#39;&#39;Read the state of a GPIO pin&#39;&#39;&#39;
@@ -77,6 +79,7 @@ class ButtonSensor(BaseSensor, Debuggable):
         super().__init__(parent, config)
         self.GPIO = parent.GPIO
         self.configuration = config
+        self.state = ButtonState()
 
         self.Button = Button(
             pin = self.configuration.pin,
@@ -87,32 +90,37 @@ class ButtonSensor(BaseSensor, Debuggable):
             hold_repeat = self.configuration.hold_repeat
         )
 
-        def exec(automations: list[Automation]):
-            call_stack = CallStack().with_keys({
-                &#34;held_time&#34;: self.Button.held_time,
-                &#34;hold_repeat&#34;: self.Button.hold_repeat,
-                &#34;hold_time&#34;: self.Button.hold_time,
-                &#34;is_held&#34;: self.Button.is_held,
-                &#34;is_active&#34;: self.Button.is_active,
-                &#34;pin&#34;: self.Button.pin,
-                &#34;pull_up&#34;: self.Button.pull_up,
-                &#34;value&#34;: self.Button.value,
-            })
+        class exec():
+            def __init__(cls, automations: list[Automation], is_pressed) -&gt; None:
+                cls.automations = automations
+                cls.is_pressed = is_pressed
 
-            for automation in automations:
-                automation.invoke(call_stack)
+            def invoke(cls):
+                self.state.is_pressed = cls.is_pressed
+                call_stack = CallStack().with_keys({
+                    &#34;held_time&#34;: self.Button.held_time,
+                    &#34;hold_repeat&#34;: self.Button.hold_repeat,
+                    &#34;hold_time&#34;: self.Button.hold_time,
+                    &#34;is_held&#34;: self.Button.is_held,
+                    &#34;is_active&#34;: self.Button.is_active,
+                    &#34;pin&#34;: self.Button.pin,
+                    &#34;pull_up&#34;: self.Button.pull_up,
+                    &#34;value&#34;: self.Button.value,
+                })
 
-            for automation in self.on_state_changed_automations:
-                automation.invoke(call_stack)
+                for automation in cls.automations:
+                    automation.invoke(call_stack)
+
+                self.on_state_changed(call_stack)
 
 
-        self.on_press_automations = self._create_automations(self.configuration.on_press)
-        self.on_hold_automations = self._create_automations(self.configuration.on_hold)
-        self.on_release_automations = self._create_automations(self.configuration.on_release)
-
-        self.Button.when_activated = exec(self.on_press_automations)
-        self.Button.when_held = exec(self.on_hold_automations)
-        self.Button.when_deactivated = exec(self.on_release_automations)</code></pre>
+        self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
+        self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
+        self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
+        
+        self.Button.when_activated = exec(self.on_press_automations, True).invoke
+        self.Button.when_held = exec(self.on_hold_automations, True).invoke
+        self.Button.when_deactivated = exec(self.on_release_automations, False).invoke</code></pre>
 </details>
 </section>
 <section>
@@ -141,6 +149,7 @@ class ButtonSensor(BaseSensor, Debuggable):
         super().__init__(parent, config)
         self.GPIO = parent.GPIO
         self.configuration = config
+        self.state = ButtonState()
 
         self.Button = Button(
             pin = self.configuration.pin,
@@ -151,32 +160,37 @@ class ButtonSensor(BaseSensor, Debuggable):
             hold_repeat = self.configuration.hold_repeat
         )
 
-        def exec(automations: list[Automation]):
-            call_stack = CallStack().with_keys({
-                &#34;held_time&#34;: self.Button.held_time,
-                &#34;hold_repeat&#34;: self.Button.hold_repeat,
-                &#34;hold_time&#34;: self.Button.hold_time,
-                &#34;is_held&#34;: self.Button.is_held,
-                &#34;is_active&#34;: self.Button.is_active,
-                &#34;pin&#34;: self.Button.pin,
-                &#34;pull_up&#34;: self.Button.pull_up,
-                &#34;value&#34;: self.Button.value,
-            })
+        class exec():
+            def __init__(cls, automations: list[Automation], is_pressed) -&gt; None:
+                cls.automations = automations
+                cls.is_pressed = is_pressed
 
-            for automation in automations:
-                automation.invoke(call_stack)
+            def invoke(cls):
+                self.state.is_pressed = cls.is_pressed
+                call_stack = CallStack().with_keys({
+                    &#34;held_time&#34;: self.Button.held_time,
+                    &#34;hold_repeat&#34;: self.Button.hold_repeat,
+                    &#34;hold_time&#34;: self.Button.hold_time,
+                    &#34;is_held&#34;: self.Button.is_held,
+                    &#34;is_active&#34;: self.Button.is_active,
+                    &#34;pin&#34;: self.Button.pin,
+                    &#34;pull_up&#34;: self.Button.pull_up,
+                    &#34;value&#34;: self.Button.value,
+                })
 
-            for automation in self.on_state_changed_automations:
-                automation.invoke(call_stack)
+                for automation in cls.automations:
+                    automation.invoke(call_stack)
+
+                self.on_state_changed(call_stack)
 
 
-        self.on_press_automations = self._create_automations(self.configuration.on_press)
-        self.on_hold_automations = self._create_automations(self.configuration.on_hold)
-        self.on_release_automations = self._create_automations(self.configuration.on_release)
-
-        self.Button.when_activated = exec(self.on_press_automations)
-        self.Button.when_held = exec(self.on_hold_automations)
-        self.Button.when_deactivated = exec(self.on_release_automations)</code></pre>
+        self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
+        self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
+        self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
+        
+        self.Button.when_activated = exec(self.on_press_automations, True).invoke
+        self.Button.when_held = exec(self.on_hold_automations, True).invoke
+        self.Button.when_deactivated = exec(self.on_release_automations, False).invoke</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -209,13 +223,13 @@ class ButtonSensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
 
     pull_up: Optional[bool] = True
-    &#39;&#39;&#39;True=enable software pullup, False=enable software pulldown, None=disabled(floating)&#39;&#39;&#39;
+    &#39;&#39;&#39;True=enable software pull up, False=enable software pulldown, None=disabled(floating)&#39;&#39;&#39;
 
-    active_state: Optional[bool] = True
+    active_state: Optional[bool] = None
     &#39;&#39;&#39;True: Active=HIGH, False: Active=LOW, None=auto-select with pull_up not None&#39;&#39;&#39;
 
     bounce_time: Optional[int] = None
-    &#39;&#39;&#39;Length of time (in seconds) to ignore changes adter initial change&#39;&#39;&#39;
+    &#39;&#39;&#39;Length of time (in seconds) to ignore changes after initial change&#39;&#39;&#39;
 
     hold_time: int = 1
     &#39;&#39;&#39;Length of time (in seconds) to wait after the button is pushed, until executing the when_held handler&#39;&#39;&#39;
@@ -255,7 +269,7 @@ class ButtonSensorConfiguration(SensorConfiguration):
 </dd>
 <dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.bounce_time"><code class="name">var <span class="ident">bounce_time</span> : Optional[int]</code></dt>
 <dd>
-<div class="desc"><p>Length of time (in seconds) to ignore changes adter initial change</p></div>
+<div class="desc"><p>Length of time (in seconds) to ignore changes after initial change</p></div>
 </dd>
 <dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_repeat"><code class="name">var <span class="ident">hold_repeat</span> : Optional[bool]</code></dt>
 <dd>
@@ -283,7 +297,7 @@ class ButtonSensorConfiguration(SensorConfiguration):
 </dd>
 <dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pull_up"><code class="name">var <span class="ident">pull_up</span> : Optional[bool]</code></dt>
 <dd>
-<div class="desc"><p>True=enable software pullup, False=enable software pulldown, None=disabled(floating)</p></div>
+<div class="desc"><p>True=enable software pull up, False=enable software pulldown, None=disabled(floating)</p></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
@@ -304,6 +318,30 @@ def check_platform_module(cls, v):
         raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
     return v    </code></pre>
 </details>
+</dd>
+</dl>
+</dd>
+<dt id="src.plugins.gpio.ButtonSensor.ButtonState"><code class="flex name class">
+<span>class <span class="ident">ButtonState</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ButtonState(BaseState):
+    is_pressed = False</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>modules.base.Instances.BaseState</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.plugins.gpio.ButtonSensor.ButtonState.is_pressed"><code class="name">var <span class="ident">is_pressed</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 </dd>
@@ -339,6 +377,12 @@ def check_platform_module(cls, v):
 <li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_release" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_release">on_release</a></code></li>
 <li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pin" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pin">pin</a></code></li>
 <li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pull_up" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pull_up">pull_up</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.plugins.gpio.ButtonSensor.ButtonState" href="#src.plugins.gpio.ButtonSensor.ButtonState">ButtonState</a></code></h4>
+<ul class="">
+<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonState.is_pressed" href="#src.plugins.gpio.ButtonSensor.ButtonState.is_pressed">is_pressed</a></code></li>
 </ul>
 </li>
 </ul>

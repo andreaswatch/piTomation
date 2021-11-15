@@ -95,13 +95,13 @@ class RgbLed(BaseAction, Debuggable):
             initial_value = Color(self.configuration.initial_color)
         )
 
-        self.on_high = self._create_automations(self.configuration.on_high)
-        self.on_low = self._create_automations(self.configuration.on_low)
-        self.on_color_changed = self._create_automations(self.configuration.on_color_changed)
+        self.on_high = Automation.create_automations(self, self.configuration.on_high)
+        self.on_low = Automation.create_automations(self, self.configuration.on_low)
+        self.on_color_changed = Automation.create_automations(self, self.configuration.on_color_changed)
 
 
     def invoke(self, call_stack: CallStack):
-        topic = call_stack.get(&#34;topic&#34;)
+        topic = call_stack.get(&#34;{{topic}}&#34;)
 
         last_state = self.Led.is_active
 
@@ -133,7 +133,7 @@ class RgbLed(BaseAction, Debuggable):
                 automation.invoke(call_stack)
 
         if &#34;set_color&#34; == topic:
-            payload = call_stack.get(&#34;payload&#34;)
+            payload = call_stack.get(&#34;{{payload}}&#34;)
             self.Led.color = Color(payload)
             for automation in self.on_color_changed:
                 automation.invoke(call_stack)
@@ -177,13 +177,13 @@ class RgbLed(BaseAction, Debuggable):
             initial_value = Color(self.configuration.initial_color)
         )
 
-        self.on_high = self._create_automations(self.configuration.on_high)
-        self.on_low = self._create_automations(self.configuration.on_low)
-        self.on_color_changed = self._create_automations(self.configuration.on_color_changed)
+        self.on_high = Automation.create_automations(self, self.configuration.on_high)
+        self.on_low = Automation.create_automations(self, self.configuration.on_low)
+        self.on_color_changed = Automation.create_automations(self, self.configuration.on_color_changed)
 
 
     def invoke(self, call_stack: CallStack):
-        topic = call_stack.get(&#34;topic&#34;)
+        topic = call_stack.get(&#34;{{topic}}&#34;)
 
         last_state = self.Led.is_active
 
@@ -215,7 +215,7 @@ class RgbLed(BaseAction, Debuggable):
                 automation.invoke(call_stack)
 
         if &#34;set_color&#34; == topic:
-            payload = call_stack.get(&#34;payload&#34;)
+            payload = call_stack.get(&#34;{{payload}}&#34;)
             self.Led.color = Color(payload)
             for automation in self.on_color_changed:
                 automation.invoke(call_stack)
@@ -244,7 +244,7 @@ class RgbLed(BaseAction, Debuggable):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
-    topic = call_stack.get(&#34;topic&#34;)
+    topic = call_stack.get(&#34;{{topic}}&#34;)
 
     last_state = self.Led.is_active
 
@@ -276,7 +276,7 @@ class RgbLed(BaseAction, Debuggable):
             automation.invoke(call_stack)
 
     if &#34;set_color&#34; == topic:
-        payload = call_stack.get(&#34;payload&#34;)
+        payload = call_stack.get(&#34;{{payload}}&#34;)
         self.Led.color = Color(payload)
         for automation in self.on_color_changed:
             automation.invoke(call_stack)

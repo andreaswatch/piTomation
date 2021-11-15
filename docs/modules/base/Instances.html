@@ -67,6 +67,10 @@ class Logging():
         &#34;&#34;&#34;Log a warning to the console&#34;&#34;&#34;
         print(&#34;[WARN] &#34; + message)
 
+    def log_info(self, message):
+        &#34;&#34;&#34;Log a info message to the console&#34;&#34;&#34;
+        print(&#34;[INFO] &#34; + message)        
+
 
 class Debuggable():
     &#34;&#34;&#34;Classes that want to log debug messages should be based on this class&#34;&#34;&#34;
@@ -123,7 +127,7 @@ class Stackable():
         app = self
         while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
             app = app.parent
-        return app  # types: BaseApp
+        return app
 
     def get_parents(self) -&gt; list[&#39;Stackable&#39;]:
         parents = []
@@ -170,7 +174,7 @@ class BaseApp(Stackable, Disposeable, VariableProvider):
                 return platform
 
 
-    def get_id(self, id: str) -&gt; Identifyable:
+    def get_id(self, id: str) -&gt; Union[&#39;BaseScript&#39;, &#39;BasePlatform&#39;]:
         &#39;&#39;&#39;get a configured component(action/sensor/script) by id&#39;&#39;&#39;
         for action in self.actions:
             if action.configuration.id == id:
@@ -201,6 +205,9 @@ class BaseApp(Stackable, Disposeable, VariableProvider):
 
         super().dispose()
 
+class BaseState():
+    pass
+
 
 class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
     def __init__(self, parent: Stackable, config: ScriptConfiguration) -&gt; None:
@@ -209,51 +216,37 @@ class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
         Disposeable.__init__(self)
         VariableProvider.__init__(self, config)
         self.configuration = config
+        self.state = BaseState
+
+        self.variables = config.variables
+
+        self.on_state_changed_automations = Automation\
+            .create_automations(self, config.on_state_changed)        
 
     def start(self, call_stack: CallStack):
         &#39;&#39;&#39;is called when the configuration is loaded completely.
         Here is where we initialize and load stuff&#39;&#39;&#39;
-        pass        
+        pass      
 
-    def _create_automations(self, conf: Optional[list[AutomationConfiguration]]):
-        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
-
-        automations: list[Automation] = []
-
-        if conf is not None:
-            for action_conf in conf:
-                automations.append(Automation(self, action_conf))
-
-        return automations
+    def on_state_changed(self, call_stack: CallStack):
+        &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
+        for automation in self.on_state_changed_automations:
+            automation.invoke(call_stack)      
 
 
 class BaseSensor(BaseScript):
     def __init__(self, parent: Stackable, config: SensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
-        self.variables = config.variables
-
-        self.on_state_changed_automations = self._create_automations(
-            config.on_state_changed)
-
-    def on_state_changed(self, call_stack: CallStack):
-        &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
-        for automation in self.on_state_changed_automations:
-            automation.invoke(call_stack)
-
 
 class BaseAction(BaseScript):
     def __init__(self, parent: Stackable, config: ActionConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_invoked_automations = self._create_automations(
-            config.on_invoked)
-
     def invoke(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
-        for automation in self.on_invoked_automations:
-            automation.invoke(call_stack)            
+        self.on_state_changed(call_stack) 
 
 
 class BasePlatform(Stackable, Identifyable, Disposeable):
@@ -301,6 +294,18 @@ class Automation(Stackable):
 
         for action in self._actions:
             action.invoke(call_stack)
+
+    @staticmethod
+    def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
+        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
+
+        automations: list[Automation] = []
+
+        if conf is not None:
+            for action_conf in conf:
+                automations.append(Automation(parent, action_conf))
+
+        return automations            
 
 
 class Condition(Stackable):
@@ -435,6 +440,7 @@ class ActionTrigger(Stackable, Logging):
 <li><code><b><a title="src.modules.base.Instances.Logging" href="#src.modules.base.Instances.Logging">Logging</a></b></code>:
 <ul class="hlist">
 <li><code><a title="src.modules.base.Instances.Logging.log_error" href="#src.modules.base.Instances.Logging.log_error">log_error</a></code></li>
+<li><code><a title="src.modules.base.Instances.Logging.log_info" href="#src.modules.base.Instances.Logging.log_info">log_info</a></code></li>
 <li><code><a title="src.modules.base.Instances.Logging.log_warning" href="#src.modules.base.Instances.Logging.log_warning">log_warning</a></code></li>
 </ul>
 </li>
@@ -479,12 +485,49 @@ class ActionTrigger(Stackable, Logging):
             return
 
         for action in self._actions:
-            action.invoke(call_stack)</code></pre>
+            action.invoke(call_stack)
+
+    @staticmethod
+    def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
+        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
+
+        automations: list[Automation] = []
+
+        if conf is not None:
+            for action_conf in conf:
+                automations.append(Automation(parent, action_conf))
+
+        return automations            </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a></li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="src.modules.base.Instances.Automation.create_automations"><code class="name flex">
+<span>def <span class="ident">create_automations</span></span>(<span>parent: <a title="src.modules.base.Instances.Stackable" href="#src.modules.base.Instances.Stackable">Stackable</a>, conf: Optional[list])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates automations for all given AutomationConfiguration's</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
+    &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
+
+    automations: list[Automation] = []
+
+    if conf is not None:
+        for action_conf in conf:
+            automations.append(Automation(parent, action_conf))
+
+    return automations            </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="src.modules.base.Instances.Automation.check_conditions"><code class="name flex">
@@ -562,13 +605,9 @@ class ActionTrigger(Stackable, Logging):
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_invoked_automations = self._create_automations(
-            config.on_invoked)
-
     def invoke(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
-        for automation in self.on_invoked_automations:
-            automation.invoke(call_stack)            </code></pre>
+        self.on_state_changed(call_stack) </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -591,8 +630,7 @@ class ActionTrigger(Stackable, Logging):
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
     &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
-    for automation in self.on_invoked_automations:
-        automation.invoke(call_stack)            </code></pre>
+    self.on_state_changed(call_stack) </code></pre>
 </details>
 </dd>
 </dl>
@@ -600,6 +638,7 @@ class ActionTrigger(Stackable, Logging):
 <ul class="hlist">
 <li><code><b><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></b></code>:
 <ul class="hlist">
+<li><code><a title="src.modules.base.Instances.BaseScript.on_state_changed" href="#src.modules.base.Instances.BaseScript.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.modules.base.Instances.BaseScript.start" href="#src.modules.base.Instances.BaseScript.start">start</a></code></li>
 </ul>
 </li>
@@ -637,7 +676,7 @@ class ActionTrigger(Stackable, Logging):
                 return platform
 
 
-    def get_id(self, id: str) -&gt; Identifyable:
+    def get_id(self, id: str) -&gt; Union[&#39;BaseScript&#39;, &#39;BasePlatform&#39;]:
         &#39;&#39;&#39;get a configured component(action/sensor/script) by id&#39;&#39;&#39;
         for action in self.actions:
             if action.configuration.id == id:
@@ -701,7 +740,7 @@ class ActionTrigger(Stackable, Logging):
 </details>
 </dd>
 <dt id="src.modules.base.Instances.BaseApp.get_id"><code class="name flex">
-<span>def <span class="ident">get_id</span></span>(<span>self, id: str) ‑> <a title="src.modules.base.Instances.Identifyable" href="#src.modules.base.Instances.Identifyable">Identifyable</a></span>
+<span>def <span class="ident">get_id</span></span>(<span>self, id: str) ‑> Union[<a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a>, <a title="src.modules.base.Instances.BasePlatform" href="#src.modules.base.Instances.BasePlatform">BasePlatform</a>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get a configured component(action/sensor/script) by id</p></div>
@@ -709,7 +748,7 @@ class ActionTrigger(Stackable, Logging):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_id(self, id: str) -&gt; Identifyable:
+<pre><code class="python">def get_id(self, id: str) -&gt; Union[&#39;BaseScript&#39;, &#39;BasePlatform&#39;]:
     &#39;&#39;&#39;get a configured component(action/sensor/script) by id&#39;&#39;&#39;
     for action in self.actions:
         if action.configuration.id == id:
@@ -811,22 +850,22 @@ Here is where we initialize and load stuff</p></div>
         Disposeable.__init__(self)
         VariableProvider.__init__(self, config)
         self.configuration = config
+        self.state = BaseState
+
+        self.variables = config.variables
+
+        self.on_state_changed_automations = Automation\
+            .create_automations(self, config.on_state_changed)        
 
     def start(self, call_stack: CallStack):
         &#39;&#39;&#39;is called when the configuration is loaded completely.
         Here is where we initialize and load stuff&#39;&#39;&#39;
-        pass        
+        pass      
 
-    def _create_automations(self, conf: Optional[list[AutomationConfiguration]]):
-        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
-
-        automations: list[Automation] = []
-
-        if conf is not None:
-            for action_conf in conf:
-                automations.append(Automation(self, action_conf))
-
-        return automations</code></pre>
+    def on_state_changed(self, call_stack: CallStack):
+        &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
+        for automation in self.on_state_changed_automations:
+            automation.invoke(call_stack)      </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -842,6 +881,21 @@ Here is where we initialize and load stuff</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="src.modules.base.Instances.BaseScript.on_state_changed"><code class="name flex">
+<span>def <span class="ident">on_state_changed</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>must get called whenever the local state has changed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_state_changed(self, call_stack: CallStack):
+    &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
+    for automation in self.on_state_changed_automations:
+        automation.invoke(call_stack)      </code></pre>
+</details>
+</dd>
 <dt id="src.modules.base.Instances.BaseScript.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
 </code></dt>
@@ -855,7 +909,7 @@ Here is where we initialize and load stuff</p></div>
 <pre><code class="python">def start(self, call_stack: CallStack):
     &#39;&#39;&#39;is called when the configuration is loaded completely.
     Here is where we initialize and load stuff&#39;&#39;&#39;
-    pass        </code></pre>
+    pass      </code></pre>
 </details>
 </dd>
 </dl>
@@ -873,16 +927,7 @@ Here is where we initialize and load stuff</p></div>
 <pre><code class="python">class BaseSensor(BaseScript):
     def __init__(self, parent: Stackable, config: SensorConfiguration) -&gt; None:
         super().__init__(parent, config)
-        self.configuration = config
-        self.variables = config.variables
-
-        self.on_state_changed_automations = self._create_automations(
-            config.on_state_changed)
-
-    def on_state_changed(self, call_stack: CallStack):
-        &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
-        for automation in self.on_state_changed_automations:
-            automation.invoke(call_stack)</code></pre>
+        self.configuration = config</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -892,32 +937,28 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="src.modules.base.Instances.Disposeable" href="#src.modules.base.Instances.Disposeable">Disposeable</a></li>
 <li><a title="src.modules.base.Instances.VariableProvider" href="#src.modules.base.Instances.VariableProvider">VariableProvider</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="src.modules.base.Instances.BaseSensor.on_state_changed"><code class="name flex">
-<span>def <span class="ident">on_state_changed</span></span>(<span>self, call_stack: modules.base.CallStack.CallStack)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>must get called whenever the local state has changed</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def on_state_changed(self, call_stack: CallStack):
-    &#39;&#39;&#39;must get called whenever the local state has changed&#39;&#39;&#39;
-    for automation in self.on_state_changed_automations:
-        automation.invoke(call_stack)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></b></code>:
 <ul class="hlist">
+<li><code><a title="src.modules.base.Instances.BaseScript.on_state_changed" href="#src.modules.base.Instances.BaseScript.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.modules.base.Instances.BaseScript.start" href="#src.modules.base.Instances.BaseScript.start">start</a></code></li>
 </ul>
 </li>
 </ul>
+</dd>
+<dt id="src.modules.base.Instances.BaseState"><code class="flex name class">
+<span>class <span class="ident">BaseState</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaseState():
+    pass</code></pre>
+</details>
 </dd>
 <dt id="src.modules.base.Instances.Condition"><code class="flex name class">
 <span>class <span class="ident">Condition</span></span>
@@ -1157,7 +1198,11 @@ Here is where we initialize and load stuff</p></div>
 
     def log_warning(self, message):
         &#34;&#34;&#34;Log a warning to the console&#34;&#34;&#34;
-        print(&#34;[WARN] &#34; + message)</code></pre>
+        print(&#34;[WARN] &#34; + message)
+
+    def log_info(self, message):
+        &#34;&#34;&#34;Log a info message to the console&#34;&#34;&#34;
+        print(&#34;[INFO] &#34; + message)        </code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1177,6 +1222,20 @@ Here is where we initialize and load stuff</p></div>
 <pre><code class="python">def log_error(self, message):
     &#34;&#34;&#34;Log an error to the console&#34;&#34;&#34;
     print(&#34;[ERROR] &#34; + message)</code></pre>
+</details>
+</dd>
+<dt id="src.modules.base.Instances.Logging.log_info"><code class="name flex">
+<span>def <span class="ident">log_info</span></span>(<span>self, message)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Log a info message to the console</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_info(self, message):
+    &#34;&#34;&#34;Log a info message to the console&#34;&#34;&#34;
+    print(&#34;[INFO] &#34; + message)        </code></pre>
 </details>
 </dd>
 <dt id="src.modules.base.Instances.Logging.log_warning"><code class="name flex">
@@ -1225,7 +1284,7 @@ Here is where we initialize and load stuff</p></div>
         app = self
         while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
             app = app.parent
-        return app  # types: BaseApp
+        return app
 
     def get_parents(self) -&gt; list[&#39;Stackable&#39;]:
         parents = []
@@ -1260,7 +1319,7 @@ Here is where we initialize and load stuff</p></div>
     app = self
     while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
         app = app.parent
-    return app  # types: BaseApp</code></pre>
+    return app</code></pre>
 </details>
 </dd>
 <dt id="src.modules.base.Instances.Stackable.get_full_stack"><code class="name flex">
@@ -1369,6 +1428,7 @@ Here is where we initialize and load stuff</p></div>
 <h4><code><a title="src.modules.base.Instances.Automation" href="#src.modules.base.Instances.Automation">Automation</a></code></h4>
 <ul class="">
 <li><code><a title="src.modules.base.Instances.Automation.check_conditions" href="#src.modules.base.Instances.Automation.check_conditions">check_conditions</a></code></li>
+<li><code><a title="src.modules.base.Instances.Automation.create_automations" href="#src.modules.base.Instances.Automation.create_automations">create_automations</a></code></li>
 <li><code><a title="src.modules.base.Instances.Automation.invoke" href="#src.modules.base.Instances.Automation.invoke">invoke</a></code></li>
 </ul>
 </li>
@@ -1398,14 +1458,15 @@ Here is where we initialize and load stuff</p></div>
 <li>
 <h4><code><a title="src.modules.base.Instances.BaseScript" href="#src.modules.base.Instances.BaseScript">BaseScript</a></code></h4>
 <ul class="">
+<li><code><a title="src.modules.base.Instances.BaseScript.on_state_changed" href="#src.modules.base.Instances.BaseScript.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.modules.base.Instances.BaseScript.start" href="#src.modules.base.Instances.BaseScript.start">start</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="src.modules.base.Instances.BaseSensor" href="#src.modules.base.Instances.BaseSensor">BaseSensor</a></code></h4>
-<ul class="">
-<li><code><a title="src.modules.base.Instances.BaseSensor.on_state_changed" href="#src.modules.base.Instances.BaseSensor.on_state_changed">on_state_changed</a></code></li>
-</ul>
+</li>
+<li>
+<h4><code><a title="src.modules.base.Instances.BaseState" href="#src.modules.base.Instances.BaseState">BaseState</a></code></h4>
 </li>
 <li>
 <h4><code><a title="src.modules.base.Instances.Condition" href="#src.modules.base.Instances.Condition">Condition</a></code></h4>
@@ -1435,6 +1496,7 @@ Here is where we initialize and load stuff</p></div>
 <h4><code><a title="src.modules.base.Instances.Logging" href="#src.modules.base.Instances.Logging">Logging</a></code></h4>
 <ul class="">
 <li><code><a title="src.modules.base.Instances.Logging.log_error" href="#src.modules.base.Instances.Logging.log_error">log_error</a></code></li>
+<li><code><a title="src.modules.base.Instances.Logging.log_info" href="#src.modules.base.Instances.Logging.log_info">log_info</a></code></li>
 <li><code><a title="src.modules.base.Instances.Logging.log_warning" href="#src.modules.base.Instances.Logging.log_warning">log_warning</a></code></li>
 </ul>
 </li>

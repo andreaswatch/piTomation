@@ -117,7 +117,7 @@ class Platform(BasePlatform):
             self.client.subscribe(av_topic)
 
             av = self.configuration.availability
-            self.publish(av_topic, av_payload_on)
+            self.publish(av_topic, av_payload_on, retain = True)
 
 
         def loop():
@@ -199,11 +199,11 @@ class Platform(BasePlatform):
         self.client.subscribe(topic)
 
 
-    def publish(self, topic: str, payload: str, retain=True):
+    def publish(self, topic: str, payload: Any, retain: bool = False):
         if type(payload) is dict:
             payload = json.dumps(payload)
 
-        self.client.publish(topic, payload, qos=1, retain=retain)</code></pre>
+        self.client.publish(topic, payload, qos = 1, retain = retain)</code></pre>
 </details>
 </section>
 <section>
@@ -409,7 +409,7 @@ def check_platform_module(cls, v):
             self.client.subscribe(av_topic)
 
             av = self.configuration.availability
-            self.publish(av_topic, av_payload_on)
+            self.publish(av_topic, av_payload_on, retain = True)
 
 
         def loop():
@@ -491,11 +491,11 @@ def check_platform_module(cls, v):
         self.client.subscribe(topic)
 
 
-    def publish(self, topic: str, payload: str, retain=True):
+    def publish(self, topic: str, payload: Any, retain: bool = False):
         if type(payload) is dict:
             payload = json.dumps(payload)
 
-        self.client.publish(topic, payload, qos=1, retain=retain)</code></pre>
+        self.client.publish(topic, payload, qos = 1, retain = retain)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -521,7 +521,7 @@ def check_platform_module(cls, v):
 </details>
 </dd>
 <dt id="src.plugins.mqtt.Platform.Platform.publish"><code class="name flex">
-<span>def <span class="ident">publish</span></span>(<span>self, topic: str, payload: str, retain=True)</span>
+<span>def <span class="ident">publish</span></span>(<span>self, topic: str, payload: Any, retain: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -529,11 +529,11 @@ def check_platform_module(cls, v):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def publish(self, topic: str, payload: str, retain=True):
+<pre><code class="python">def publish(self, topic: str, payload: Any, retain: bool = False):
     if type(payload) is dict:
         payload = json.dumps(payload)
 
-    self.client.publish(topic, payload, qos=1, retain=retain)</code></pre>
+    self.client.publish(topic, payload, qos = 1, retain = retain)</code></pre>
 </details>
 </dd>
 <dt id="src.plugins.mqtt.Platform.Platform.start"><code class="name flex">
@@ -571,7 +571,7 @@ Here is where we initialize and load stuff</p></div>
         self.client.subscribe(av_topic)
 
         av = self.configuration.availability
-        self.publish(av_topic, av_payload_on)
+        self.publish(av_topic, av_payload_on, retain = True)
 
 
     def loop():

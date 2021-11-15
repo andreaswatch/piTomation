@@ -64,11 +64,8 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as a binary sensor entity.&#39;&#39;&#39;
 
-    on_event: str
-    &#39;&#39;&#39;event to listen for ON&#39;&#39;&#39;
-
-    off_event: str    
-    &#39;&#39;&#39;event to listen for OFF&#39;&#39;&#39;
+    expose_state: str
+    &#39;&#39;&#39;state to listen for ON/OFF&#39;&#39;&#39;
 
     state_topic: Optional[str]
     &#39;&#39;&#39;where Homeassistant can get the state&#39;&#39;&#39;    
@@ -84,19 +81,19 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as an action entity.&#39;&#39;&#39;
 
-    on_command: str     
-    &#39;&#39;&#39;command to execute when Homeassistant triggers ON&#39;&#39;&#39;
+    on_command: Optional[list[AutomationConfiguration]]
+    &#39;&#39;&#39;automation to execute when Homeassistant triggers ON&#39;&#39;&#39;
 
-    off_command: str   
-    &#39;&#39;&#39;command to execute when Homeassistant triggers OFF&#39;&#39;&#39;
+    off_command: Optional[list[AutomationConfiguration]]
+    &#39;&#39;&#39;automation to execute when Homeassistant triggers OFF&#39;&#39;&#39;
 
     command_topic: Optional[str]
     &#39;&#39;&#39;where Homeassistant can publish the state&#39;&#39;&#39;
 
     @validator(&#39;type&#39;)
     def check_platform_module(cls, v):
-        if &#34;action&#34; not in v:
-            raise ValueError(&#34;wrong type: action, is: &#34; + v)
+        if &#34;switch&#34; not in v:
+            raise ValueError(&#34;wrong type: switch, is: &#34; + v)
         return v          
 
 
@@ -120,7 +117,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
     auto_discovery_topic: str = &#34;homeassistant&#34;
 
     &#39;&#39;&#39;Base topic for entity values &#34;home/piTomation&#34; by default&#39;&#39;&#39;
-    base_topic: str = &#34;home/piTomation&#34;</code></pre>
+    base_topic: Optional[str]</code></pre>
 </details>
 </section>
 <section>
@@ -148,19 +145,19 @@ class HassPlatformConfiguration(PlatformConfiguration):
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as an action entity.&#39;&#39;&#39;
 
-    on_command: str     
-    &#39;&#39;&#39;command to execute when Homeassistant triggers ON&#39;&#39;&#39;
+    on_command: Optional[list[AutomationConfiguration]]
+    &#39;&#39;&#39;automation to execute when Homeassistant triggers ON&#39;&#39;&#39;
 
-    off_command: str   
-    &#39;&#39;&#39;command to execute when Homeassistant triggers OFF&#39;&#39;&#39;
+    off_command: Optional[list[AutomationConfiguration]]
+    &#39;&#39;&#39;automation to execute when Homeassistant triggers OFF&#39;&#39;&#39;
 
     command_topic: Optional[str]
     &#39;&#39;&#39;where Homeassistant can publish the state&#39;&#39;&#39;
 
     @validator(&#39;type&#39;)
     def check_platform_module(cls, v):
-        if &#34;action&#34; not in v:
-            raise ValueError(&#34;wrong type: action, is: &#34; + v)
+        if &#34;switch&#34; not in v:
+            raise ValueError(&#34;wrong type: switch, is: &#34; + v)
         return v          </code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -176,13 +173,13 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 <dd>
 <div class="desc"><p>where Homeassistant can publish the state</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command"><code class="name">var <span class="ident">off_command</span> : str</code></dt>
+<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command"><code class="name">var <span class="ident">off_command</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>command to execute when Homeassistant triggers OFF</p></div>
+<div class="desc"><p>automation to execute when Homeassistant triggers OFF</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command"><code class="name">var <span class="ident">on_command</span> : str</code></dt>
+<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command"><code class="name">var <span class="ident">on_command</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>command to execute when Homeassistant triggers ON</p></div>
+<div class="desc"><p>automation to execute when Homeassistant triggers ON</p></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
@@ -198,8 +195,8 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
 </summary>
 <pre><code class="python">@validator(&#39;type&#39;)
 def check_platform_module(cls, v):
-    if &#34;action&#34; not in v:
-        raise ValueError(&#34;wrong type: action, is: &#34; + v)
+    if &#34;switch&#34; not in v:
+        raise ValueError(&#34;wrong type: switch, is: &#34; + v)
     return v          </code></pre>
 </details>
 </dd>
@@ -208,10 +205,9 @@ def check_platform_module(cls, v):
 <ul class="hlist">
 <li><code><b><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state">expose_state</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event">off_event</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event">on_event</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
@@ -234,11 +230,8 @@ def check_platform_module(cls, v):
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant as a binary sensor entity.&#39;&#39;&#39;
 
-    on_event: str
-    &#39;&#39;&#39;event to listen for ON&#39;&#39;&#39;
-
-    off_event: str    
-    &#39;&#39;&#39;event to listen for OFF&#39;&#39;&#39;
+    expose_state: str
+    &#39;&#39;&#39;state to listen for ON/OFF&#39;&#39;&#39;
 
     state_topic: Optional[str]
     &#39;&#39;&#39;where Homeassistant can get the state&#39;&#39;&#39;    
@@ -261,13 +254,9 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event"><code class="name">var <span class="ident">off_event</span> : str</code></dt>
+<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state"><code class="name">var <span class="ident">expose_state</span> : str</code></dt>
 <dd>
-<div class="desc"><p>event to listen for OFF</p></div>
-</dd>
-<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event"><code class="name">var <span class="ident">on_event</span> : str</code></dt>
-<dd>
-<div class="desc"><p>event to listen for ON</p></div>
+<div class="desc"><p>state to listen for ON/OFF</p></div>
 </dd>
 <dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic"><code class="name">var <span class="ident">state_topic</span> : Optional[str]</code></dt>
 <dd>
@@ -386,7 +375,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
     auto_discovery_topic: str = &#34;homeassistant&#34;
 
     &#39;&#39;&#39;Base topic for entity values &#34;home/piTomation&#34; by default&#39;&#39;&#39;
-    base_topic: str = &#34;home/piTomation&#34;</code></pre>
+    base_topic: Optional[str]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -404,7 +393,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
 <dd>
 <div class="desc"><p>Base topic for entity values "home/piTomation" by default</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.base_topic"><code class="name">var <span class="ident">base_topic</span> : str</code></dt>
+<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.base_topic"><code class="name">var <span class="ident">base_topic</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -534,8 +523,7 @@ def check_platform_module(cls, v):
 <h4><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></code></h4>
 <ul class="">
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_platform_module" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_platform_module">check_platform_module</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.off_event">off_event</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.on_event">on_event</a></code></li>
+<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state">expose_state</a></code></li>
 <li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
 </ul>
 </li>
