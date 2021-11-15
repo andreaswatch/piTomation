@@ -34,6 +34,9 @@ class BinaryActionConfiguration(ActionConfiguration):
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+class BinaryActionState(BaseState):
+    is_high = False
+
 
 class BinaryAction(BaseAction):
     '''Update the state of a GPIO pin'''
@@ -41,10 +44,11 @@ class BinaryAction(BaseAction):
     def __init__(self, parent: Platform, config: BinaryActionConfiguration) -> None:
         super().__init__(parent, config)
 
-        self.GPIO = parent.GPIO
+        self.__gpio = parent.gpio
         self.configuration = config
+        self.state = BinaryActionState()
 
-        self.output_pin = self.GPIO.DigitalOutputDevice(
+        self.output_pin = self.__gpio.DigitalOutputDevice(
             pin = self.configuration.pin,
             active_high = self.configuration.active_high,
             initial_value = self.configuration.initial_value
@@ -63,20 +67,24 @@ class BinaryAction(BaseAction):
 
         if "turn_on" == topic:
             self.output_pin.on()
+            self.state.is_high = True
             for on_high in self.on_high:
                 on_high.invoke(call_stack)
 
         if "turn_off" == topic:
             self.output_pin.off()
+            self.state.is_high = False
             for on_low in self.on_low:
                 on_low.invoke(call_stack)
 
         if "toggle" == topic:
             self.output_pin.toggle()
             if self.output_pin.is_active:
+                self.state.is_high = True
                 for on_high in self.on_high:
                     on_high.invoke(call_stack)
             else:
+                self.state.is_high = False
                 for on_low in self.on_low:
                     on_low.invoke(call_stack)
 

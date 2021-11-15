@@ -73,8 +73,8 @@ class Platform(BasePlatform, Logging):
 
         gpiozero.Device.pin_factory = factories[self.configuration.factory]()
 
-        self.GPIO = gpiozero
+        self.gpio = gpiozero
 
     def dispose(self):
-        self.GPIO.Device.close()
+        self.gpio.Device.close()
         super().dispose()
