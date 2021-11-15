@@ -14,12 +14,16 @@ class LogActionConfiguration(ActionConfiguration):
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+class LogActionState(BaseState):
+    message: str
+
 class LogAction(BaseAction):
     from plugins.web.Platform import Platform
 
     def __init__(self, parent: Platform, config: LogActionConfiguration) -> None:
         super().__init__(parent, config)
         self.platform = parent
+        self.state = LogActionState()
 
     def invoke(self, call_stack: CallStack):
         
@@ -27,6 +31,7 @@ class LogAction(BaseAction):
             call_stack.with_keys(self.configuration.variables)       
 
         message = call_stack.get("{{payload}}")
+        self.state.message = str(message)
         
         self.platform.add_log(message)
 

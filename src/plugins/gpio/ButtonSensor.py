@@ -49,11 +49,10 @@ class ButtonSensor(BaseSensor, Debuggable):
     
     def __init__(self, parent: Platform, config: ButtonSensorConfiguration) -> None:
         super().__init__(parent, config)
-        self.GPIO = parent.GPIO
         self.configuration = config
         self.state = ButtonState()
 
-        self.Button = Button(
+        self.__button = Button(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
@@ -70,14 +69,14 @@ class ButtonSensor(BaseSensor, Debuggable):
             def invoke(cls):
                 self.state.is_pressed = cls.is_pressed
                 call_stack = CallStack().with_keys({
-                    "held_time": self.Button.held_time,
-                    "hold_repeat": self.Button.hold_repeat,
-                    "hold_time": self.Button.hold_time,
-                    "is_held": self.Button.is_held,
-                    "is_active": self.Button.is_active,
-                    "pin": self.Button.pin,
-                    "pull_up": self.Button.pull_up,
-                    "value": self.Button.value,
+                    "held_time": self.__button.held_time,
+                    "hold_repeat": self.__button.hold_repeat,
+                    "hold_time": self.__button.hold_time,
+                    "is_held": self.__button.is_held,
+                    "is_active": self.__button.is_active,
+                    "pin": self.__button.pin,
+                    "pull_up": self.__button.pull_up,
+                    "value": self.__button.value,
                 })
 
                 for automation in cls.automations:
@@ -90,6 +89,6 @@ class ButtonSensor(BaseSensor, Debuggable):
         self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
         self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
         
-        self.Button.when_activated = exec(self.on_press_automations, True).invoke
-        self.Button.when_held = exec(self.on_hold_automations, True).invoke
-        self.Button.when_deactivated = exec(self.on_release_automations, False).invoke
+        self.__button.when_activated = exec(self.on_press_automations, True).invoke
+        self.__button.when_held = exec(self.on_hold_automations, True).invoke
+        self.__button.when_deactivated = exec(self.on_release_automations, False).invoke

@@ -12,7 +12,7 @@ class Platform(BasePlatform):
         self.configuration = config
         self.app = parent.get_app()
 
-        self.hass_device = self.GetDevice(parent.get_app().device)
+        self.hass_device = self.get_device(parent.get_app().device)
 
         self.base_topic = self.configuration.base_topic
         if self.base_topic is None:
@@ -23,6 +23,7 @@ class Platform(BasePlatform):
         for export in config.exports:
             self.exports.append(HassEntityAutomation(self, export))
 
+
     def start(self, call_stack: CallStack):
         self.communication = self.app.get_id(self.configuration.connection)
 
@@ -32,11 +33,12 @@ class Platform(BasePlatform):
             e = entity  # type: HassEntityAutomation
             e.start(call_stack)
 
-    def GetDevice(self, device: Device):
+
+    def get_device(self, device: Device):
         return {
-            "manufacturer": "Andreas Strauß",
+            "manufacturer": "Andreas Strauss",
             "model": "piTomation",
             "name": device.configuration.name,
             "identifiers": [device.configuration.name],
-            "sw_version": "V" + str(VERSION) + "_D" + str(device.configuration.version)
+            "sw_version": "piTomation-" + str(VERSION) + "_Config-" + str(device.configuration.version)
         }

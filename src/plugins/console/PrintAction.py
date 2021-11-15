@@ -13,12 +13,15 @@ class PrintActionConfiguration(ActionConfiguration):
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v
         
+class PrintActionState(BaseState):
+    message: str
 
 class PrintAction(BaseAction):
     '''Prints the given {{payload}} to the System Console.'''
     
     def __init__(self, parent: Stackable, config: PrintActionConfiguration) -> None:
         super().__init__(parent, config)
+        self.state = PrintActionState()
 
     def invoke(self, call_stack: CallStack):
 
@@ -28,5 +31,6 @@ class PrintAction(BaseAction):
         message = call_stack.get("{{payload}}")
 
         print("PRINT: " + str(message))
+        self.state = message
 
         super().invoke(call_stack)
