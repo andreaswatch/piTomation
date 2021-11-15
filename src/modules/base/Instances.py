@@ -39,6 +39,10 @@ class Logging():
         """Log a warning to the console"""
         print("[WARN] " + message)
 
+    def log_info(self, message):
+        """Log a info message to the console"""
+        print("[INFO] " + message)        
+
 
 class Debuggable():
     """Classes that want to log debug messages should be based on this class"""
@@ -95,7 +99,7 @@ class Stackable():
         app = self
         while (hasattr(app, "parent") and app.parent is not None):
             app = app.parent
-        return app  # types: BaseApp
+        return app
 
     def get_parents(self) -> list['Stackable']:
         parents = []
@@ -142,7 +146,7 @@ class BaseApp(Stackable, Disposeable, VariableProvider):
                 return platform
 
 
-    def get_id(self, id: str) -> Identifyable:
+    def get_id(self, id: str) -> Union['BaseScript', 'BasePlatform']:
         '''get a configured component(action/sensor/script) by id'''
         for action in self.actions:
             if action.configuration.id == id:
@@ -173,6 +177,9 @@ class BaseApp(Stackable, Disposeable, VariableProvider):
 
         super().dispose()
 
+class BaseState():
+    pass
+
 
 class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
     def __init__(self, parent: Stackable, config: ScriptConfiguration) -> None:
@@ -181,51 +188,37 @@ class BaseScript(Stackable, Identifyable, Disposeable, VariableProvider):
         Disposeable.__init__(self)
         VariableProvider.__init__(self, config)
         self.configuration = config
+        self.state = BaseState
+
+        self.variables = config.variables
+
+        self.on_state_changed_automations = Automation\
+            .create_automations(self, config.on_state_changed)        
 
     def start(self, call_stack: CallStack):
         '''is called when the configuration is loaded completely.
         Here is where we initialize and load stuff'''
-        pass        
+        pass      
 
-    def _create_automations(self, conf: Optional[list[AutomationConfiguration]]):
-        '''Creates automations for all given AutomationConfiguration's'''
-
-        automations: list[Automation] = []
-
-        if conf is not None:
-            for action_conf in conf:
-                automations.append(Automation(self, action_conf))
-
-        return automations
+    def on_state_changed(self, call_stack: CallStack):
+        '''must get called whenever the local state has changed'''
+        for automation in self.on_state_changed_automations:
+            automation.invoke(call_stack)      
 
 
 class BaseSensor(BaseScript):
     def __init__(self, parent: Stackable, config: SensorConfiguration) -> None:
         super().__init__(parent, config)
         self.configuration = config
-        self.variables = config.variables
-
-        self.on_state_changed_automations = self._create_automations(
-            config.on_state_changed)
-
-    def on_state_changed(self, call_stack: CallStack):
-        '''must get called whenever the local state has changed'''
-        for automation in self.on_state_changed_automations:
-            automation.invoke(call_stack)
-
 
 class BaseAction(BaseScript):
     def __init__(self, parent: Stackable, config: ActionConfiguration) -> None:
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_invoked_automations = self._create_automations(
-            config.on_invoked)
-
     def invoke(self, call_stack: CallStack):
         '''must get called whenever the action has been invoked'''
-        for automation in self.on_invoked_automations:
-            automation.invoke(call_stack)            
+        self.on_state_changed(call_stack) 
 
 
 class BasePlatform(Stackable, Identifyable, Disposeable):
@@ -273,6 +266,18 @@ class Automation(Stackable):
 
         for action in self._actions:
             action.invoke(call_stack)
+
+    @staticmethod
+    def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
+        '''Creates automations for all given AutomationConfiguration's'''
+
+        automations: list[Automation] = []
+
+        if conf is not None:
+            for action_conf in conf:
+                automations.append(Automation(parent, action_conf))
+
+        return automations            
 
 
 class Condition(Stackable):

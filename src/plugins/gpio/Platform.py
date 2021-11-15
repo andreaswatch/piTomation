@@ -9,11 +9,9 @@ class GpioPlatform(PlatformConfiguration):
     '''The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
     Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.'''
 
-    platform: str
-
     factory: str = "pigpio"
     '''gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html'''
-    
+
     @validator('platform')
     def check_platform_module(cls, v):
         if "plugins.gpio" not in v:
@@ -21,7 +19,7 @@ class GpioPlatform(PlatformConfiguration):
         return v
 
 
-class Platform(BasePlatform):
+class Platform(BasePlatform, Logging):
     '''GPIO platform'''
     
     def __init__(self, parent: Stackable, config: GpioPlatform) -> None:
@@ -45,6 +43,17 @@ class Platform(BasePlatform):
             return RPIOFactory()
 
         def pigpioFactory():
+            import pigpio        
+            import time
+            import os    
+            self.pi = pigpio.pi()
+
+            while not self.pi.connected:
+                self.log_warning("make sure that pigpio is installed. 'sudo apt install pigpio' ")
+                self.log_info("trying to connect to pipgio..")
+                os.system("sudo pigpiod")
+                time.sleep(1)
+
             from gpiozero.pins.pigpio import PiGPIOFactory
             return PiGPIOFactory()
 
@@ -62,7 +71,7 @@ class Platform(BasePlatform):
             "native":	nativeFactory
         }
 
-        gpiozero.Device.pin_factory = factories[self.configuration.factory]
+        gpiozero.Device.pin_factory = factories[self.configuration.factory]()
 
         self.GPIO = gpiozero
 

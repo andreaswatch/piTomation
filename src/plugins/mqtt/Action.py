@@ -25,8 +25,8 @@ class Action(BaseAction):
         call_stack = call_stack.with_element(self)
 
         state = {
-            "topic": str(call_stack.get("topic")),
-            "payload": str(call_stack.get("payload"))
+            "topic": str(call_stack.get("{{topic}}")),
+            "payload": str(call_stack.get("{{payload}}"))
         }
 
         self.platform.publish(state["topic"], state["payload"])

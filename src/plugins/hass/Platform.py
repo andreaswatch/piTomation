@@ -14,6 +14,11 @@ class Platform(BasePlatform):
 
         self.hass_device = self.GetDevice(parent.get_app().device)
 
+        self.base_topic = self.configuration.base_topic
+        if self.base_topic is None:
+            device_name = self.app.device.configuration.name
+            self.base_topic = "home/" + device_name
+
         self.exports: list[HassEntityAutomation] = []
         for export in config.exports:
             self.exports.append(HassEntityAutomation(self, export))

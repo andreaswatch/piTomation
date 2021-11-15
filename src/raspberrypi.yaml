@@ -10,9 +10,9 @@ platforms:
     host: home
     port: 1883
     availability:
-      topic: "{{id(mqtt).variables.base_topic}}/availability"
-      payload_on: on
-      payload_off: off
+      topic: "{{id(mqtt).variables.base_topic}}/connected"
+      payload_on: "yes"
+      payload_off: "no"
     on_connected:
       - actions:
         - action: print
@@ -31,7 +31,7 @@ platforms:
 
   - platform: plugins.gpio
     id: gpio
-    factory: pigpio
+    factory: rpigpio
 
   - platform: plugins.console
     id: console
@@ -45,9 +45,24 @@ platforms:
     connection: mqtt
     exports:
       - id: player
+        type: switch
+        on_command: 
+          - actions:
+            - action: player
+              values:
+                command: next_track
+        off_command: 
+          - actions:
+            - action: player
+              values:
+                topic: pause
+        expose_state: state.is_playing
+      - id: button1
         type: sensor
-        on_event: play
-        off_event: play
+        on_event: on_press
+        off_event: on_release
+        expose_state: state.is_pressed
+
 
 actions:
   - id: print
@@ -56,8 +71,11 @@ actions:
 
   - id: player
     platform: dfplayer
-#    variables: 
-#      command: play
+
+  - id: led
+    platform: gpio
+    pin: GPIO13
+    type: BinaryAction
 
 
 sensors:
@@ -69,17 +87,26 @@ sensors:
       - actions:
         - action: print
           values: 
-            payload: GPIO6 high
+            payload: button high
+        - action: led
+          values:
+            topic: turn_on
     on_release:
       - actions:
         - action: print
           values: 
-            payload: GPIO6 low
+            payload: button low
+        - action: led
+          values:
+            topic: turn_off            
     on_hold:
       - actions:
         - action: print
           values: 
             payload: GPIO6 hold
+        - action: player
+          values:
+            command: next_track        
 
 
   - id: play
@@ -92,7 +119,7 @@ sensors:
             payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
         - action: player
           values:
-            command: play 
+            command: next_track 
 
 
   - id: something

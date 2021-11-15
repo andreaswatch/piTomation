@@ -36,11 +36,8 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     '''Exposes an action or sensor to HomeAssistant as a binary sensor entity.'''
 
-    on_event: str
-    '''event to listen for ON'''
-
-    off_event: str    
-    '''event to listen for OFF'''
+    expose_state: str
+    '''state to listen for ON/OFF'''
 
     state_topic: Optional[str]
     '''where Homeassistant can get the state'''    
@@ -56,19 +53,19 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     '''Exposes an action or sensor to HomeAssistant as an action entity.'''
 
-    on_command: str     
-    '''command to execute when Homeassistant triggers ON'''
+    on_command: Optional[list[AutomationConfiguration]]
+    '''automation to execute when Homeassistant triggers ON'''
 
-    off_command: str   
-    '''command to execute when Homeassistant triggers OFF'''
+    off_command: Optional[list[AutomationConfiguration]]
+    '''automation to execute when Homeassistant triggers OFF'''
 
     command_topic: Optional[str]
     '''where Homeassistant can publish the state'''
 
     @validator('type')
     def check_platform_module(cls, v):
-        if "action" not in v:
-            raise ValueError("wrong type: action, is: " + v)
+        if "switch" not in v:
+            raise ValueError("wrong type: switch, is: " + v)
         return v          
 
 
@@ -92,5 +89,5 @@ class HassPlatformConfiguration(PlatformConfiguration):
     auto_discovery_topic: str = "homeassistant"
 
     '''Base topic for entity values "home/piTomation" by default'''
-    base_topic: str = "home/piTomation"
+    base_topic: Optional[str]
 

@@ -50,12 +50,12 @@ class BinaryAction(BaseAction):
             initial_value = self.configuration.initial_value
         )
 
-        self.on_high = self._create_automations(config.on_high)
-        self.on_low = self._create_automations(config.on_low)
+        self.on_high = Automation.create_automations(self, config.on_high)
+        self.on_low = Automation.create_automations(self, config.on_low)
 
 
     def invoke(self, call_stack: CallStack):
-        topic = call_stack.get("topic")
+        topic = call_stack.get("{{topic}}")
 
         call_stack = call_stack.with_keys({
             "is_active": self.output_pin.is_active

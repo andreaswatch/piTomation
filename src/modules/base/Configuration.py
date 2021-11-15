@@ -10,6 +10,8 @@ def configuration(cls):
     
     def __register(self):
         hasBase = False
+        base = None
+        
         for base in self.__bases__:
             hasBase = True
             if not base in __registry.keys():
@@ -17,8 +19,9 @@ def configuration(cls):
             __registry[base].append(self)
 
         if not hasBase:
-            if not base in __registry.keys():
-                __registry[self.Type] = []
+            if base is not None:
+                if not base in __registry.keys():
+                    __registry[self.Type] = []
 
     __register(cls)
 
@@ -106,6 +109,10 @@ class PlatformConfiguration(StackableConfiguration):
     platform: str
     '''plugin name of the platform'''
 
+    @validator('platform', always=False, allow_reuse=False)
+    def check_platform_module(cls, v):
+        raise ValueError("Generic PlatformConfiguration not supported for: " + v)
+
 
 @configuration
 class ScriptConfiguration(StackableConfiguration):
@@ -117,21 +124,18 @@ class ScriptConfiguration(StackableConfiguration):
     type: Optional[str]
     '''The class type of this script'''
 
+    on_state_changed: Optional[list[AutomationConfiguration]] = []
+    '''List of Automations to execute after the sensor's state has changed'''    
+
 
 @configuration
 class ActionConfiguration(ScriptConfiguration):
     '''Base clss for all script configuration classes'''
 
-    on_invoked: Optional[list[AutomationConfiguration]] = []
-    '''List of Automations to execute after this action got executed'''   
-
 
 @configuration
 class SensorConfiguration(ScriptConfiguration):
-    '''Base clss for all sensor configuration classes'''
-
-    on_state_changed: Optional[list[AutomationConfiguration]] = []
-    '''List of Automations to execute after the sensor's state has changed'''    
+    '''Base clas for all sensor configuration classes'''
 
 
 @configuration

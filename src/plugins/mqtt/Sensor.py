@@ -27,7 +27,7 @@ class Sensor(BaseSensor):
         super().__init__(parent, config)
         self.configuration = config
 
-        self.on_message_automations = self._create_automations(config.on_message)
+        self.on_message_automations = Automation.create_automations(self, config.on_message)
 
     def start(self, call_stack: CallStack):
         topic = call_stack.get(self.configuration.topic)

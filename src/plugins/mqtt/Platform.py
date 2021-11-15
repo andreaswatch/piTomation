@@ -89,7 +89,7 @@ class Platform(BasePlatform):
             self.client.subscribe(av_topic)
 
             av = self.configuration.availability
-            self.publish(av_topic, av_payload_on)
+            self.publish(av_topic, av_payload_on, retain = True)
 
 
         def loop():
@@ -171,8 +171,10 @@ class Platform(BasePlatform):
         self.client.subscribe(topic)
 
 
-    def publish(self, topic: str, payload: str, retain=True):
+    def publish(self, topic: str, payload: Any, retain: bool = False):
         if type(payload) is dict:
             payload = json.dumps(payload)
 
-        self.client.publish(topic, payload, qos=1, retain=retain)
+        self.client.publish(topic, payload, qos = 1, retain = retain)
+
+

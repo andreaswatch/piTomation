@@ -81,7 +81,6 @@ class App(BaseApp, Logging, Debuggable):
                 else:
                     raise Exception("Unknown config type: " + CONF)
 
-            from marshmallow_dataclass import class_schema
             from modules.app.AppConfiguration import AppConfiguration
 
             try:

@@ -24,7 +24,7 @@ class UpdateAction(BaseAction):
     def invoke(self, call_stack: CallStack):
         super().invoke(call_stack.with_element(self))
 
-        topic = call_stack.get("topic")
-        payload = call_stack.get("payload")
+        topic = call_stack.get("{{topic}}")
+        payload = call_stack.get("{{payload}}")
         
         self.platform.update(topic, payload)

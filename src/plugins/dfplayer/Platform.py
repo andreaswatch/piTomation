@@ -24,10 +24,27 @@ class Platform(BasePlatform, Logging):
         super().__init__(parent, config)
         self.configuration = config
 
+        tx_pin = int(str(self.configuration.tx_pin).replace("GPIO", ""))
+        
         try:
             import pigpio
-            from plugins.dfplayer.SimpleDFPlayerMini_for_RaspberryPi.dfplayer import SimpleDFPlayerMini
-            self.player = SimpleDFPlayerMini(self.configuration.tx_pin, self.configuration.baud_rate)
-        except:
+        except Exception as e:
             self.log_error("pigpio library not installed, DFPlayer Mini not initialized")
+
+        try:
+            import sys, os
+
+            #find actual path
+            realpath = os.path.realpath(__file__)
+            dirname = os.path.dirname(realpath)
+
+            #add modules & plugins
+            app_path = os.path.join(dirname, "SimpleDFPlayerMini_for_RaspberryPi")
+            sys.path.append(app_path)
+
+            from dfplayer import SimpleDFPlayerMini
+            self.player = SimpleDFPlayerMini(tx_pin, self.configuration.baud_rate)
+            
+        except Exception as e:
+            self.log_error(e)
             self.player = None

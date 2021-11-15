@@ -1,6 +1,8 @@
+import time
 from modules.base.Configuration import *
 from modules.base.Instances import *
 from plugins.dfplayer.Platform import Platform
+import threading
 
 
 @configuration
@@ -20,17 +22,24 @@ class DFPlayerActionConfiguration(ActionConfiguration):
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+class DfPlayerState(BaseState):
+    is_playing = False
 
-class Action(BaseAction):
+class Action(BaseAction, Logging):
     def __init__(self, parent: Platform, config: DFPlayerActionConfiguration) -> None:
         super().__init__(parent, config)
         self.platform = parent
         self.player = parent.player
 
+        self.state = DfPlayerState()
+
     def invoke(self, call_stack: CallStack):
 
         if self.configuration.variables is not None:
             call_stack.with_keys(self.configuration.variables)
+
+        self.state.is_playing = True
+        self.on_state_changed(call_stack) 
 
         command_name = call_stack.get("{{command}}")
 
@@ -39,17 +48,29 @@ class Action(BaseAction):
                 method = getattr(self.player, command_name)
 
                 if command_name == "set_vol":
-                    method(call_stack.get("volume"))
+                    method(call_stack.get("{{volume}}"))
                 elif command_name == "set_eq":
-                    method(call_stack.get("equalizer"))      
+                    method(call_stack.get("{{equalizer}}"))      
                 elif command_name == "set_mode":
-                    method(call_stack.get("mode"))       
+                    method(call_stack.get("{{mode}}"))       
                 elif command_name == "set_folder":
-                    method(call_stack.get("folder_index"))           
+                    method(call_stack.get("{{folder_index}}"))           
                 else:
-                    method()                                                          
+                    method()           
+            else:
+                self.log_error("Unknown command: " + command_name)
+        else:
+            self.log_error("Unknown command: " + str(command_name))
 
         super().invoke(call_stack)
+
+        def update_state_delayed():
+            time.sleep(5)
+            self.state.is_playing = False
+            self.on_state_changed(call_stack) 
+
+        loop_thread = threading.Thread(target=update_state_delayed)
+        loop_thread.start()        
 
 
 
