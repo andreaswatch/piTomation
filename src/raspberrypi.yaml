@@ -28,6 +28,7 @@ platforms:
         - action: print    
           values:
             payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
+        - action: webTable
 
   - platform: plugins.gpio
     id: gpio
@@ -64,6 +65,8 @@ platforms:
         off_event: on_release
         expose_state: state.is_pressed
 
+  - platform: plugins.web
+    id: web
 
 actions:
   - id: print
@@ -78,6 +81,9 @@ actions:
     pin: GPIO13
     type: BinaryAction
 
+  - id: webTable
+    platform: web
+    type: UpdateAction
 
 sensors:
   - id: button1

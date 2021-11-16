@@ -8,6 +8,7 @@ import threading
 from modules.base.Configuration import *
 from modules.base.Instances import *
 
+@configuration
 class WebPlatformConfiguration(PlatformConfiguration):
     '''WebApp Platform based on pywebio.'''
 

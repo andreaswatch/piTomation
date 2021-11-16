@@ -27,9 +27,9 @@ class UpdateAction(BaseAction):
         self.state = UpdateActionState()
 
     def invoke(self, call_stack: CallStack):
-        super().invoke(call_stack.with_element(self))
-
         self.state.topic = str(call_stack.get("{{topic}}"))
         self.state.payload = str(call_stack.get("{{payload}}"))
         
         self.platform.update(self.state.topic, self.state.payload)
+
+        super().invoke(call_stack.with_element(self))
