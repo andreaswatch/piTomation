@@ -62,11 +62,11 @@ class ButtonSensor(BaseSensor, Debuggable):
         )
 
         class exec():
-            def __init__(cls, automations: list[Automation], is_pressed) -> None:
+            def __init__(cls, automations: list[Automation], is_pressed) -> None: #type: ignore
                 cls.automations = automations
                 cls.is_pressed = is_pressed
 
-            def invoke(cls):
+            def invoke(cls): #type: ignore
                 self.state.is_pressed = cls.is_pressed
                 call_stack = CallStack().with_keys({
                     "held_time": self.__button.held_time,

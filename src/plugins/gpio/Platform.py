@@ -46,9 +46,9 @@ class Platform(BasePlatform, Logging):
             import pigpio        
             import time
             import os    
-            self.pi = pigpio.pi()
+            pi = pigpio.pi() #type: ignore
 
-            while not self.pi.connected:
+            while not pi.connected: #type: ignore
                 self.log_warning("make sure that pigpio is installed. 'sudo apt install pigpio' ")
                 self.log_info("trying to connect to pipgio..")
                 os.system("sudo pigpiod")
@@ -76,5 +76,5 @@ class Platform(BasePlatform, Logging):
         self.gpio = gpiozero
 
     def dispose(self):
-        self.gpio.Device.close()
+        self.gpio.Device.close() #type: ignore
         super().dispose()

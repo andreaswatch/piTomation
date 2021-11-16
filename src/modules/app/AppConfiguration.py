@@ -10,11 +10,11 @@ class AppConfiguration(BaseModel):
     device: DeviceConfiguration
     """Device configuration"""
 
-    platforms: Optional[list[WithPlugins(PlatformConfiguration)]]
+    platforms: Optional[list[WithPlugins(PlatformConfiguration)]] #type: ignore
     """List of platforms"""
 
-    actions: Optional[list[WithPlugins(ActionConfiguration)]]
+    actions: Optional[list[WithPlugins(ActionConfiguration)]] #type: ignore
     """List of actions (=outputs)"""
 
-    sensors: Optional[list[WithPlugins(SensorConfiguration)]]
+    sensors: Optional[list[WithPlugins(SensorConfiguration)]] #type: ignore
     """List of sensors (=inputs)"""

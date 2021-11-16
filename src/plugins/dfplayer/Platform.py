@@ -42,7 +42,7 @@ class Platform(BasePlatform, Logging):
             app_path = os.path.join(dirname, "SimpleDFPlayerMini_for_RaspberryPi")
             sys.path.append(app_path)
 
-            from dfplayer import SimpleDFPlayerMini
+            from dfplayer import SimpleDFPlayerMini #type: ignore
             self.player = SimpleDFPlayerMini(tx_pin, self.configuration.baud_rate)
             
         except Exception as e:
