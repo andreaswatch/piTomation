@@ -1,3 +1,5 @@
+## Caution: Early Alpha Version
+
 # piTomation
 
 piTomation is a system to control your Raspberry Pi and similar devices by simple yet powerful configuration files and control them remotely.
