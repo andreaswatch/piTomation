@@ -69,6 +69,13 @@ class CallStack(List):
         pass
 
 
+    def clone(self):
+        result = CallStack()
+        for item in self:
+            result.append(item)
+        return result
+
+
     def get_stack(self):
         stack = list(self)
         stack.reverse()
@@ -76,8 +83,9 @@ class CallStack(List):
 
 
     def with_element(self, element):
-        self.insert(0, element)
-        return self
+        c = self.clone()
+        c.insert(0, element)
+        return c
 
 
     def with_key(self, key: str, value):
@@ -91,26 +99,27 @@ class CallStack(List):
             def __repr__(self):
                 return key + "=" + value
 
-        self.insert(0, keyProvider())
-
-        return self
+        c = self.clone()
+        c.insert(0, keyProvider())
+        return c
 
 
     def with_keys(self, keys: dict):
         v = VariableProvider()
         v.variables = keys
 
-        self.insert(0, v)
-
-        return self
+        c = self.clone()
+        c.insert(0, v)
+        return c
 
 
     def with_stack(self, stack):
         i = 0
+        c = self.clone()
         for item in stack:
-            self.insert(i, item)
+            c.insert(i, item)
             i+=1
-        return self
+        return c
                 
 
     def get(self, getKey):
