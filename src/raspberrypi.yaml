@@ -25,7 +25,7 @@ platforms:
             payload: bye    
     on_message:
       - actions:
-        - action: print    
+        - action: print #display all messages in the dashboard
           values:
             payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
         - action: webTable
