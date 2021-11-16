@@ -46,6 +46,7 @@ platforms:
     exports:
       - id: player
         type: switch
+        icon: mdi:home
         on_command: 
           - actions:
             - action: player

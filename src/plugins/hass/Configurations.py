@@ -9,21 +9,24 @@ class HassEntityConfiguration(BaseModel):
     '''Exposes an action or sensor to HomeAssistant.'''
 
     id: str
-    '''script id to export'''
+    '''Script id to export'''
 
     name: Optional[str]
-    '''friendly name in Homeassistant'''
+    '''friendly name in HomeAssistant'''
 
     type: str
-    '''Homeassistant type''' 
+    '''HomeAssistant type''' 
+
+    icon: Optional[str]
+    '''Icon to show in HomeAssistant'''
 
 
 @configuration
 class HassTriggerEntityConfiguration(HassEntityConfiguration):
-    '''Exposes an action or sensor to HomeAssistant as a trigger entity.'''
+    '''Exposes an Action or Sensor to HomeAssistant as a trigger entity.'''
 
     event: str
-    '''event to listen for the state'''
+    '''Event to listen for the State'''
 
     @validator('type')
     def check_platform_module(cls, v):
@@ -37,10 +40,10 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     '''Exposes an action or sensor to HomeAssistant as a binary sensor entity.'''
 
     expose_state: str
-    '''state to listen for ON/OFF'''
+    '''State to listen for ON/OFF'''
 
     state_topic: Optional[str]
-    '''where Homeassistant can get the state'''    
+    '''Where Homeassistant can get the state'''    
 
     @validator('type')
     def check_platform_module(cls, v):
@@ -54,13 +57,13 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     '''Exposes an action or sensor to HomeAssistant as an action entity.'''
 
     on_command: Optional[list[AutomationConfiguration]]
-    '''automation to execute when Homeassistant triggers ON'''
+    '''Automation to execute when HomeAssistant triggers ON'''
 
     off_command: Optional[list[AutomationConfiguration]]
-    '''automation to execute when Homeassistant triggers OFF'''
+    '''Automation to execute when HomeAssistant triggers OFF'''
 
     command_topic: Optional[str]
-    '''where Homeassistant can publish the state'''
+    '''Where HomeAssistant can publish the state'''
 
     @validator('type')
     def check_platform_module(cls, v):
@@ -79,15 +82,15 @@ class HassPlatformConfiguration(PlatformConfiguration):
             raise ValueError("wrong platform: plugins.hass, is: " + v)
         return v
 
-    '''(mqtt) platform used for connection to hass'''
     connection: str
+    '''(MQTT) Platform used for connection to HomeAssistant'''
 
-    '''scripts to display in the dashboard'''
     exports: list[Union[HassActionEntityConfiguration, HassBinarySensorEntityConfiguration, HassTriggerEntityConfiguration]]
+    '''Scripts to export to HomeAssistant'''
 
-    '''Homeassistant Autodiscovery topic "homeassistant" by default'''
     auto_discovery_topic: str = "homeassistant"
+    '''HomeAssistant Autodiscovery topic "homeassistant" by default'''
 
-    '''Base topic for entity values "home/piTomation" by default'''
     base_topic: Optional[str]
+    '''Base topic for entity values "home/piTomation" by default'''
 

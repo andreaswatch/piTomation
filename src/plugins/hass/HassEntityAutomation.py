@@ -69,9 +69,12 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         wrapped_id = self.app.get_id(self.configuration.id)
 
         entity = {}
+        
         entity["device"] = self.platform.hass_device
         entity["name"] = self.configuration.id
-        #entity["friendly_name"] = self.configuration.name
+
+        if self.configuration.icon:
+            entity["icon"] = self.configuration.icon
 
         def get_unique_id():
             return "" \
