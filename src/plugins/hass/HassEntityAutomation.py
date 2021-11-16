@@ -48,7 +48,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
         elif type(config) is HassTriggerEntityConfiguration:
             self.hass_type = HassType.TRIGGER
-            if config.command_topic is None:
+            if config.command_topic is None: #type: ignore
                 config.command_topic = self.base_topic + "/" + config.id + "/command"
             
         self.auto_discovery_topic = self.platform.configuration.auto_discovery_topic \
@@ -62,7 +62,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
         from plugins.mqtt.Platform import Platform as mqtt_platform
         def get_mqtt_platform() -> mqtt_platform:
-            return self.platform.communication
+            return self.platform.communication #type: ignore
         self.mqtt = get_mqtt_platform()
 
         state_topic = self.base_topic + "/" + self.configuration.id + "/state"
@@ -89,7 +89,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
 
         if self.hass_type == HassType.TRIGGER and type(self.configuration) is HassTriggerEntityConfiguration:
-            entity["topic"] = self.configuration.command_topic
+            entity["topic"] = self.configuration.command_topic #type: ignore
             entity["type"] = "button_short_press"
             entity["subtype"] = self.configuration.id
 
@@ -115,7 +115,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                         for automation in self.off_command_automations:
                             automation.invoke(call_stack)                            
 
-            self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand)
+            self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
         
         elif self.hass_type == HassType.SENSOR and type(self.configuration) is HassBinarySensorEntityConfiguration:
             entity["unique_id"] = get_unique_id()
@@ -125,7 +125,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
 
         def get_state():
-            path = str(self.configuration.expose_state).split('.')
+            path = str(self.configuration.expose_state).split('.') #type: ignore
             act = wrapped_id
             for path_element in path:
                 act = getattr(act, path_element)
@@ -133,14 +133,14 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
         if self.hass_type == HassType.SENSOR or self.hass_type == HassType.ACTION:
             class UpdateHassState(Automation):
-                def invoke(_, call_stack: CallStack):
+                def invoke(_, call_stack: CallStack): #type: ignore
                     act_state = get_state()
                     if act_state:
                         self.mqtt.publish(state_topic, entity["payload_on"])
                     else:
                         self.mqtt.publish(state_topic, entity["payload_off"])
 
-            wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration()))       
+            wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
 
             UpdateHassState(self, AutomationConfiguration()).invoke(call_stack)         
 

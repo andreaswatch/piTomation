@@ -99,7 +99,7 @@ class Stackable():
         app = self
         while (hasattr(app, "parent") and app.parent is not None):
             app = app.parent
-        return app
+        return app #type: ignore
 
     def get_parents(self) -> list['Stackable']:
         parents = []
@@ -292,7 +292,7 @@ class Condition(Stackable):
         invert_result = not call_stack.get(self.configuration.inverted)
 
         if "contains" == functionName:
-            result = (expected_value in actual_value) == invert_result
+            result = (expected_value in actual_value) == invert_result #type: ignore
             return result
 
         if "equals" == functionName:
@@ -300,11 +300,11 @@ class Condition(Stackable):
             return result
 
         if "startsWith" == functionName:
-            result = (actual_value.startswith(expected_value)) == invert_result
+            result = (actual_value.startswith(expected_value)) == invert_result #type: ignore
             return result
 
         if "endsWith" == functionName:
-            result = (actual_value.endswith(expected_value)) == invert_result
+            result = (actual_value.endswith(expected_value)) == invert_result #type: ignore
             return result
 
         return False
@@ -319,7 +319,7 @@ class ActionTrigger(Stackable, Logging):
 
     def invoke(self, call_stack: CallStack):
         app = self.get_app()
-        id: BaseAction = app.get_id(self.configuration.action)
+        id: BaseAction = app.get_id(self.configuration.action) #type: ignore
 
         if id is None:
             self.log_error("Id '" + self.configuration.action + "' not found")

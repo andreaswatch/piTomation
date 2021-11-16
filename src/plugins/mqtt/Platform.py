@@ -71,7 +71,7 @@ class Platform(BasePlatform):
 
         app_id = str(self.app.get_variable_value("id"))
 
-        self.client = mqtt.Client(app_id + "_" + render(self.app.get_id("device").configuration.name))
+        self.client = mqtt.Client(app_id + "_" + render(self.app.get_id("device").configuration.name)) #type: ignore
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()

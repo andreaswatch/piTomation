@@ -31,7 +31,7 @@ def configuration(cls):
 def WithPlugins(t: type):
     if t in __registry.keys():
         classes = list(__registry[t])
-        return Union[tuple(classes)]
+        return Union[tuple(classes)] #type: ignore
     return t
 
 
