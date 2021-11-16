@@ -33,6 +33,13 @@ class BinarySensorConfiguration(SensorConfiguration):
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+    @validator('type')
+    def check_type(cls, v):
+        type_name = "BinarySensor"
+        if v != type_name:
+            raise ValueError("wrong type: " + type_name + ", is: " + v)
+        return v          
+
 class BinaryState(BaseState):
     is_high = False
 
