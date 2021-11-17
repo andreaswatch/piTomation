@@ -90,6 +90,7 @@ sensors:
     platform: gpio
     pin: GPIO6
     type: ButtonSensor
+    check_state_delay: 0.01
     on_press:
       - actions:
         - action: print

@@ -3,8 +3,7 @@ from gpiozero.input_devices import Button
 from modules.base.Configuration import *
 from modules.base.Instances import *
 from plugins.gpio.Platform import Platform
-from dataclasses import dataclass
-
+import time
 
 @configuration
 class ButtonSensorConfiguration(SensorConfiguration):
@@ -34,13 +33,14 @@ class ButtonSensorConfiguration(SensorConfiguration):
     
     on_release: list[AutomationConfiguration] = []
 
+    check_state_delay: Optional[float]
+
     @validator('platform')
     def check_platform_module(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
-
 
     @validator('type')
     def check_type(cls, v):
@@ -49,8 +49,10 @@ class ButtonSensorConfiguration(SensorConfiguration):
             raise ValueError("wrong type: " + type_name + ", is: " + v)
         return v                 
 
+
 class ButtonState(BaseState):
     is_pressed = False
+
 
 class ButtonSensor(BaseSensor, Debuggable):
     '''Read the state of a GPIO pin'''
@@ -69,6 +71,11 @@ class ButtonSensor(BaseSensor, Debuggable):
             hold_repeat = self.configuration.hold_repeat
         )
 
+        if self.configuration.check_state_delay:
+            self.check_state_delay = self.configuration.check_state_delay
+        else:
+            self.check_state_delay = 0
+
         class exec():
             def __init__(cls, automations: list[Automation], is_pressed) -> None: #type: ignore
                 cls.automations = automations
@@ -76,6 +83,12 @@ class ButtonSensor(BaseSensor, Debuggable):
 
             def invoke(cls): #type: ignore
                 self.state.is_pressed = cls.is_pressed
+                if self.check_state_delay is not None:
+                    time.sleep(self.check_state_delay)
+                    if self.__button.is_active is not cls.is_pressed:
+                        self.log_debug("Not pressed anymore, cancelling ..")
+                        return 
+
                 call_stack = CallStack().with_keys({
                     "held_time": self.__button.held_time,
                     "hold_repeat": self.__button.hold_repeat,
