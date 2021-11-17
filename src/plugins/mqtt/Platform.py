@@ -27,7 +27,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     '''Configuration settings for the MQTT platform.'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "plugins.mqtt" not in v:
             raise ValueError("wrong platform: plugins.mqtt, is: " + v)
         return v

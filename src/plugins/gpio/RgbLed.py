@@ -1,20 +1,12 @@
-from enum import auto
+from enum import Enum
 from colorzero import Color
-import colorzero
 from plugins.gpio.Platform import Platform
 from modules.base.Configuration import *
 from modules.base.Instances import *
 
-
 @configuration
 class RgbLedConfiguration(ActionConfiguration):
-    '''Action to control the color of a RGB Led, use {{topic}} to invoke
-    actions like on, off or toggle.
-    To change the color, call:
-    values:
-      topic: set_color
-      payload: green
-    '''
+    '''Configuration settings for a RGB LED'''
 
     pin_red: str
     '''GPIO PIN name for the red led. e.g. GPIO22'''
@@ -44,27 +36,50 @@ class RgbLedConfiguration(ActionConfiguration):
     '''enable PWM for the led'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
-class RbgLedState(BaseState):
-    color: str 
-    is_active: bool
 
-class RgbLed(BaseAction, Debuggable):
+class RbgLedState(BaseState):
+    '''Represents the state of the LED'''
+
+    color: str 
+    '''Returns the actual configured color of the LED'''
+
+    is_active: bool
+    '''Returns if the LED is on(True) or off(False)'''
+
+
+class RgbLedCommands(Enum):
+    '''Available commands to control the LED'''
+
+    on = "on"
+    '''Turn the LED on'''
+
+    off = "off"
+    '''Turn the LED off'''
+
+    toggle = "toggle"
+    '''Toggle on/off'''
+
+    set_color = "set_color"
+    '''Change the color of the led, use payload needs to contain a color (red/green/yellow/..)'''
+
+
+class RgbLed(BaseAction, Debuggable, Logging):
     '''Control the state of a RGB led'''
 
     def __init__(self, platform: Platform, config: RgbLedConfiguration) -> None:
         super().__init__(platform, config)
-        self.__gpio = platform.gpio
+
+        self.gpio = platform.gpio
         self.configuration = config
         self.state = RbgLedState()
-        self.state.color = self.configuration.initial_color
 
-        self.__led = self.__gpio.RGBLED(
+        self.led = self.gpio.RGBLED(
             red = self.configuration.pin_red,
             green = self.configuration.pin_green,
             blue = self.configuration.pin_blue,
@@ -73,7 +88,8 @@ class RgbLed(BaseAction, Debuggable):
             initial_value = Color(self.configuration.initial_color)
         )
 
-        self.state.is_active = self.__led.is_active
+        self.state.is_active = self.led.is_active
+        self.state.color = self.led.color.html
 
         self.on_high = Automation.create_automations(self, self.configuration.on_high)
         self.on_low = Automation.create_automations(self, self.configuration.on_low)
@@ -81,43 +97,52 @@ class RgbLed(BaseAction, Debuggable):
 
 
     def invoke(self, call_stack: CallStack):
-        topic = call_stack.get("{{topic}}")
+        topic = str(call_stack.get("{{topic}}"))
+        self.log_debug("Command: " + topic)
 
-        last_state = self.__led.is_active
-
-        call_stack = call_stack.with_keys({
-            "is_active": self.__led.is_active,
-            "color": self.__led.color
-            })
+        call_stack = call_stack.with_element(self)
+        last_state = self.led.is_active
 
         self.log_debug(str(topic))
 
-        if "toggle" == topic:
-            self.__led.toggle()
-            if not last_state == self.__led.is_active:
-                if self.__led.is_active:
+        if RgbLedCommands.toggle.name == topic:
+            self.led.toggle()
+            self.state.color = self.led.color.html
+            self.state.is_active = self.led.is_active
+            if not last_state == self.led.is_active:                
+                if self.led.is_active:
                     for automation in self.on_high:
                         automation.invoke(call_stack)
                 else:
                     for automation in self.on_low:
                         automation.invoke(call_stack)            
 
-        if "on" == topic:
-            self.__led.on()
+        elif RgbLedCommands.on.name == topic:
+            self.led.on()
+            self.state.color = self.led.color.html
+            self.state.is_active = self.led.is_active            
             for automation in self.on_high:
                 automation.invoke(call_stack)
 
-        if "off" == topic:
-            self.__led.off()
+        elif RgbLedCommands.off.name == topic:
+            self.led.off()
+            self.state.color = self.led.color.html
+            self.state.is_active = self.led.is_active            
             for automation in self.on_low:
                 automation.invoke(call_stack)
 
-        if "set_color" == topic:
+        elif RgbLedCommands.set_color.name == topic:
             payload = call_stack.get("{{payload}}")
-            self.__led.color = Color(payload)
+            self.led.color = Color(payload)
+            self.state.color = self.led.color.html
+            self.state.is_active = self.led.is_active            
             for automation in self.on_color_changed:
                 automation.invoke(call_stack)
 
-        self.state.is_active = self.__led.is_active
+        else:
+            self.log_error("Unknown command: {{" + topic + "}}")
+
+        self.state.is_active = self.led.is_active
 
         super().invoke(call_stack)
+

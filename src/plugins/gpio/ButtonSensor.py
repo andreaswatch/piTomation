@@ -67,7 +67,7 @@ class ButtonSensor(BaseSensor, Debuggable):
         self.configuration = config
         self.state = ButtonState()
 
-        self.__button = Button(
+        self.button = Button(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
@@ -80,42 +80,52 @@ class ButtonSensor(BaseSensor, Debuggable):
             self.check_state_delay = self.configuration.check_state_delay
         else:
             self.check_state_delay = 0
-
-        class exec():
-            def __init__(cls, automations: list[Automation], is_pressed) -> None: #type: ignore
-                cls.automations = automations
-                cls.is_pressed = is_pressed
-
-            def invoke(cls): #type: ignore
-                if self.check_state_delay is not None:
-                    time.sleep(self.check_state_delay)
-                    if self.__button.is_active is not cls.is_pressed:
-                        self.log_debug("Not pressed anymore, cancelling ..")
-                        return 
-
-                self.state.is_pressed = cls.is_pressed
-
-                call_stack = CallStack().with_keys({
-                    "held_time": self.__button.held_time,
-                    "hold_repeat": self.__button.hold_repeat,
-                    "hold_time": self.__button.hold_time,
-                    "is_held": self.__button.is_held,
-                    "is_active": self.__button.is_active,
-                    "pin": self.__button.pin,
-                    "pull_up": self.__button.pull_up,
-                    "value": self.__button.value,
-                })
-
-                for automation in cls.automations:
-                    automation.invoke(call_stack)
-
-                self.on_state_changed(call_stack)
+        self.press_canceled = False
 
 
         self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
         self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
         self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
         
-        self.__button.when_activated = exec(self.on_press_automations, True).invoke
-        self.__button.when_held = exec(self.on_hold_automations, True).invoke
-        self.__button.when_deactivated = exec(self.on_release_automations, False).invoke
+
+        self.button.when_activated = Handler(self, self.on_press_automations, True).__invoke
+        self.button.when_held = Handler(self, self.on_hold_automations, True).__invoke
+        self.button.when_deactivated = Handler(self, self.on_release_automations, False).__invoke
+
+
+
+class Handler():
+    def __init__(self, button_sensor: ButtonSensor, automations: list[Automation], expected_state) -> None: 
+        self.automations = automations
+        self.expected_state = expected_state
+        self.button_sensor = button_sensor
+
+    def press(self):
+        if self.button_sensor.check_state_delay is not None:
+            time.sleep(self.button_sensor.check_state_delay)
+            if self.button_sensor.button.is_active is not self.expected_state:
+                self.press_canceled = True
+                self.button_sensor.log_debug("Not pressed anymore, cancelling ..")
+                return 
+        self.press_canceled = False
+        self.__invoke()
+
+    def hold(self):
+        if self.press_canceled:
+            return
+        self.__invoke()
+
+    def release(self):
+        if self.press_canceled:
+            return
+        self.__invoke()
+
+    def __invoke(self): 
+        self.button_sensor.state.is_pressed = self.expected_state
+        call_stack = CallStack().with_element(self)
+
+        for automation in self.automations:
+            automation.invoke(call_stack)
+
+        self.button_sensor.on_state_changed(call_stack)
+

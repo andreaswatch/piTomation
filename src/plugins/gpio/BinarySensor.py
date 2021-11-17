@@ -29,21 +29,25 @@ class BinarySensorConfiguration(SensorConfiguration):
     '''Automations to invoke when the GPIO is set to HIGH'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
     @validator('type')
-    def check_type(cls, v):
+    def __check_type(cls, v):
         type_name = "BinarySensor"
         if v != type_name:
             raise ValueError("wrong type: " + type_name + ", is: " + v)
         return v          
 
 class BinaryState(BaseState):
+    '''Represents the state of the GPIO pin'''
+
     is_high = False
+    '''Returns if the GPIO pin is HIGH(True) or LOW(False)'''
+
 
 class BinarySensor(BaseSensor, Debuggable):
     '''Read the state of a GPIO pin'''
@@ -53,35 +57,30 @@ class BinarySensor(BaseSensor, Debuggable):
         self.configuration = config
         self.state = BinaryState()
 
-        self.__input_device = DigitalInputDevice(
+        self.input_device = DigitalInputDevice(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
             bounce_time = self.configuration.bounce_time,
         )
 
-        class exec():
-            def __init__(cls, automations: list[Automation], is_pressed) -> None: #type: ignore
-                cls.automations = automations
-                cls.is_pressed = is_pressed
-
-            def invoke(cls): #type: ignore
-                self.state.is_high = cls.is_pressed
-                call_stack = CallStack().with_keys({
-                    "is_active": self.__input_device.is_active,
-                    "pin": self.__input_device.pin,
-                    "pull_up": self.__input_device.pull_up,
-                    "value": self.__input_device.value,
-                })
-
-                for automation in cls.automations:
-                    automation.invoke(call_stack)
-
-                self.on_state_changed(call_stack)
-
-
         self.on_high_automations = Automation.create_automations(self, self.configuration.on_high)
         self.on_low_automations = Automation.create_automations(self, self.configuration.on_low)
         
-        self.__input_device.when_activated = exec(self.on_high_automations, True).invoke
-        self.__input_device.when_deactivated = exec(self.on_low_automations, False).invoke
+        self.input_device.when_activated = Handler(self, self.on_high_automations, True).invoke
+        self.input_device.when_deactivated = Handler(self, self.on_low_automations, False).invoke
+
+class Handler():
+    def __init__(self, binary_sensor: BinarySensor, automations: list[Automation], is_pressed) -> None: #type: ignore
+        self.automations = automations
+        self.is_pressed = is_pressed
+        self.binary_sensor = binary_sensor
+
+    def invoke(self):
+        self.binary_sensor.state.is_high = self.is_pressed
+        call_stack = CallStack().with_element(self)
+
+        for automation in self.automations:
+            automation.invoke(call_stack)
+
+        self.binary_sensor.on_state_changed(call_stack)

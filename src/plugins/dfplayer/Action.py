@@ -7,6 +7,23 @@ import threading
 
 @configuration
 class DFPlayerActionConfiguration(ActionConfiguration):
+    '''Configuration settings for the DFPlayer'''
+
+    @validator('platform')
+    def __check_platform(cls, v):
+        platform_name = "dfplayer"
+        if v != platform_name:
+            raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
+        return v    
+
+class DfPlayerState(BaseState):
+    '''Represents the state of the DFPlayer'''
+
+    is_playing = False
+    '''Actually, there is only a TX connection implemented, paytime is hardcoded to 5s'''
+
+
+class Action(BaseAction, Logging):
     '''To invoke this action, pass this values:
     values:
         - command: set_vol
@@ -15,17 +32,6 @@ class DFPlayerActionConfiguration(ActionConfiguration):
         - command: next_track
     '''
 
-    @validator('platform')
-    def check_platform_module(cls, v):
-        platform_name = "dfplayer"
-        if v != platform_name:
-            raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
-        return v    
-
-class DfPlayerState(BaseState):
-    is_playing = False
-
-class Action(BaseAction, Logging):
     def __init__(self, parent: Platform, config: DFPlayerActionConfiguration) -> None:
         super().__init__(parent, config)
         self.platform = parent

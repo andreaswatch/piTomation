@@ -3,8 +3,7 @@ from modules.base.Instances import *
 
 @configuration
 class PrintActionConfiguration(ActionConfiguration):
-    '''Invoke this Action to output text to the local Console.
-    The text is received from {{payload}}.'''
+    '''Configuration settings for a GPIO output'''
     
     @validator('platform')
     def check_platform_module(cls, v):
@@ -12,9 +11,14 @@ class PrintActionConfiguration(ActionConfiguration):
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v
+
         
 class PrintActionState(BaseState):
+    '''Represents the state of the Print Action'''
+
     message: str
+    '''Last message'''
+
 
 class PrintAction(BaseAction):
     '''Prints the given {{payload}} to the System Console.'''

@@ -90,7 +90,8 @@ sensors:
     platform: gpio
     pin: GPIO6
     type: ButtonSensor
-    check_state_delay: 0.01
+    debug: True
+    check_state_delay: 0.03
     on_press:
       - actions:
         - action: print
@@ -98,15 +99,15 @@ sensors:
             payload: button high
         - action: led
           values:
-            topic: turn_on
+            topic: toggle
     on_release:
       - actions:
         - action: print
           values: 
             payload: button low
-        - action: led
-          values:
-            topic: turn_off            
+        #- action: led
+        #  values:
+        #    topic: turn_off            
     on_hold:
       - actions:
         - action: print

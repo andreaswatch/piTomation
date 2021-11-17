@@ -3,21 +3,28 @@ from modules.base.Configuration import *
 
 @configuration
 class UpdateActionConfiguration(ActionConfiguration):
-    '''Writes a given {{payload}} into the table row {{topic}}.'''
+    '''Configuration settings for the Update Action'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = "web"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+
 class UpdateActionState(BaseState):
+    '''Represents the state of the Update Action'''
+
     topic: str
+    '''Last updated topic'''
+
     payload: str
+    '''Last payload'''
+
 
 class UpdateAction(BaseAction):
-    '''Writes a given {{payload}} into the table row {{topic}}.'''
+    '''Write a given {{payload}} into the table row {{topic}}.'''
 
     from plugins.web.Platform import Platform
 

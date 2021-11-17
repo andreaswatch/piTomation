@@ -10,16 +10,17 @@ from modules.base.Instances import *
 
 @configuration
 class WebPlatformConfiguration(PlatformConfiguration):
-    '''WebApp Platform based on pywebio.'''
+    '''Configuration setting for the pywebio Dashboard'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "plugins.web" not in v:
             raise ValueError("wrong platform: plugins.web, is: " + v)
         return v
 
+
 class Platform(BasePlatform):
-    '''WebApp Platform based on pywebio.'''
+    '''Web Dashboard based on pywebio.'''
 
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -> None:
         super().__init__(parent, config)

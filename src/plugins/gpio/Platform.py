@@ -13,7 +13,7 @@ class GpioPlatform(PlatformConfiguration):
     '''gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "plugins.gpio" not in v:
             raise ValueError("wrong platform: plugins.gpio, is: " + v)
         return v

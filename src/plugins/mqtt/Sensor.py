@@ -10,7 +10,7 @@ class MqttSensorConfiguration(SensorConfiguration):
     topic: str
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = "mqtt"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -18,9 +18,16 @@ class MqttSensorConfiguration(SensorConfiguration):
 
     on_message: Optional[list[AutomationConfiguration]] = [] 
 
+
 class MqttSensorState(BaseState):
+    '''Represents the state of the GPIO pin'''
+
     topic: str
+    '''Last received topic'''
+
     payload: str
+    '''Last received payload'''
+
 
 class Sensor(BaseSensor):
     '''Allows to listen to a given MQTT topic.'''
@@ -33,13 +40,15 @@ class Sensor(BaseSensor):
 
         self.on_message_automations = Automation.create_automations(self, config.on_message)
 
+
     def start(self, call_stack: CallStack):
         topic = call_stack.get(self.configuration.topic)
         self.parent.subscribe(topic, self.on_message)
 
+
     def on_message(self, call_stack: CallStack):
-        self.state.topic = str(call_stack.get("{{topic"))
-        self.state.payload = str(call_stack.get("{{payload"))
+        self.state.topic = str(call_stack.get("{{topic}}"))
+        self.state.payload = str(call_stack.get("{{payload}}"))
 
         for automation in self.on_message_automations:
             automation.invoke(call_stack)

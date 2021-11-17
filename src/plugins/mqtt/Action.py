@@ -6,20 +6,32 @@ from modules.base.Instances import *
 @configuration
 class MqttActionConfiguration(ActionConfiguration):
     '''Mqtt action to send a message through the mqtt client.'''
+
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = "mqtt"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+
 class MqttActionState(BaseState):
+    '''Represents the state of the MQTT Action'''
+
     topic: str
+    '''Last topic'''
+
     payload: str
+    '''Last payload'''
+
     retain: bool
+    '''Returns true, if the last message was retained'''
+
 
 class Action(BaseAction):
-    '''Mqtt action to send a message through the mqtt client.'''
+    '''Mqtt action to send a message through the mqtt client.
+    Use the variables {{topic}}, {{payload}} and optionally {{retain}}.
+    '''
     from plugins.mqtt.Platform import Platform as MqttPlatform
 
     def __init__(self, parent: MqttPlatform, config: MqttActionConfiguration) -> None:

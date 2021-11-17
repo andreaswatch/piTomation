@@ -8,16 +8,23 @@ class LogActionConfiguration(ActionConfiguration):
     '''Log a message to the web app. Pass the text in {{payload}}.'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = "web"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
+
 class LogActionState(BaseState):
+    '''Represents the state of the Log Action'''
+
     message: str
+    '''Last logged message'''
+
 
 class LogAction(BaseAction):
+    '''Add a message from {{payload}} to the dashboard'''
+
     from plugins.web.Platform import Platform
 
     def __init__(self, parent: Platform, config: LogActionConfiguration) -> None:

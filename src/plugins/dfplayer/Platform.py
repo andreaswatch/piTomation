@@ -3,12 +3,10 @@ from modules.base.Instances import *
 
 @configuration
 class DFPlayerPlatformConfiguration(PlatformConfiguration):
-    '''This platform opens a serial console through the tx_pin to the DFPlayer.
-    Use the Action to invoke commands like 'play'. 
-    '''
+    '''Configuration settings for the DFPlayer'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "plugins.dfplayer" not in v:
             raise ValueError("wrong platform: plugins.dfplayer, is: " + v)
         return v
@@ -19,7 +17,12 @@ class DFPlayerPlatformConfiguration(PlatformConfiguration):
     baud_rate: Optional[int] = 9600
     '''Baudrate for the serial interface, 9600 by default'''
 
+
 class Platform(BasePlatform, Logging):
+    '''This platform opens a serial console through the tx_pin to the DFPlayer.
+    Use the Action to invoke commands like 'play'. 
+    '''
+
     def __init__(self, parent: Stackable, config: DFPlayerPlatformConfiguration) -> None:
         super().__init__(parent, config)
         self.configuration = config

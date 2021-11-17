@@ -8,7 +8,7 @@ class ConsolePlatformConfiguration(PlatformConfiguration):
     '''Allows to output text to the Console, no configuration needed'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "plugins.console" not in v:
             raise ValueError("wrong platform: plugins.console, is: " + v)
         return v
