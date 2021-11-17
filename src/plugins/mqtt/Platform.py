@@ -1,7 +1,7 @@
 import json
 from sys import platform
 import threading
-from typing import Optional
+from typing import Any, Optional
 import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
 from pydantic.main import BaseModel

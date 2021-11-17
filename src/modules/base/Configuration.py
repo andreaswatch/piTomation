@@ -1,17 +1,18 @@
 from pydantic import BaseModel
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from pydantic.class_validators import validator
 
 __registry: dict[type, list[type]] = {}
 '''Contains all @configuration class types, key is the base type'''
 
+
 def configuration(cls):
-    
+    '''All configurations in the configuration file must be tagged with @configuration, so that the __registry is aware about the classes.'''
     def __register(self):
         hasBase = False
         base = None
-        
+
         for base in self.__bases__:
             hasBase = True
             if not base in __registry.keys():
@@ -31,9 +32,8 @@ def configuration(cls):
 def WithPlugins(t: type):
     if t in __registry.keys():
         classes = list(__registry[t])
-        return Union[tuple(classes)] #type: ignore
+        return Union[tuple(classes)]  # type: ignore
     return t
-
 
 
 @configuration
@@ -41,7 +41,7 @@ class Configuration(BaseModel):
     '''Base class for all configuration classes'''
 
     debug: Optional[bool] = False
-    '''Enable additional debugging output for this instance'''  
+    '''Enable additional debugging output for this instance'''
 
 
 @configuration
@@ -50,6 +50,7 @@ class IdConfiguration(Configuration):
 
     id: str
     '''Own reference'''
+
 
 @configuration
 class VariablesConfiguration(Configuration):
@@ -67,7 +68,7 @@ class ConditionConfiguration(Configuration):
 
     inverted: Optional[bool] = False
     '''Invert result'''
-    
+
     expected: str
     '''Expected value'''
 
@@ -111,7 +112,8 @@ class PlatformConfiguration(StackableConfiguration):
 
     @validator('platform', always=False, allow_reuse=False)
     def check_platform_module(cls, v):
-        raise ValueError("Generic PlatformConfiguration not supported for: " + v)
+        raise ValueError(
+            "Generic PlatformConfiguration not supported for: " + v)
 
 
 @configuration
@@ -125,7 +127,7 @@ class ScriptConfiguration(StackableConfiguration):
     '''The class type of this script'''
 
     on_state_changed: Optional[list[AutomationConfiguration]] = []
-    '''List of Automations to execute after the sensor's state has changed'''    
+    '''List of Automations to execute after the sensor's state has changed'''
 
 
 @configuration
@@ -148,4 +150,3 @@ class DeviceConfiguration(VariablesConfiguration):
 
     on_init: Optional[list[ActionTriggerConfiguration]] = []
     '''Actions to execute after init is done'''
-

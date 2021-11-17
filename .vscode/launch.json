@@ -11,6 +11,13 @@
             "program": "src/__main__.py",
             "args": [ "src/raspberrypi.yaml" ],
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "Python: piTomation docs",
+            "type": "python",
+            "request": "launch",
+            "program": "build_docs.py",
+            "console": "integratedTerminal"
+        },        
     ]
 }

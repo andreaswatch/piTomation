@@ -16,7 +16,7 @@ class App(BaseApp, Logging, Debuggable):
     def __init__(self) -> None:
         super().__init__()
 
-        init_renderer()
+        init_renderer(self)
 
         self.__read_configuration()
 

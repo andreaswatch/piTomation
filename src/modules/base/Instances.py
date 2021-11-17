@@ -53,9 +53,10 @@ class Debuggable():
     def log_debug(self, message):
         """Log a debug message to the console (if configuration.debug == True)"""
 
-        if hasattr(self.configuration, "debug"):
-            if self.configuration.debug:
-                print("[DEBUG] " + message)
+        if hasattr(self, "configuration"):
+            if hasattr(self.configuration, "debug"):
+                if self.configuration.debug:
+                    print("[DEBUG] " + message)
 
 
 class Identifyable():
