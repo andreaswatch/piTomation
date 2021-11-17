@@ -57,21 +57,25 @@ class BinarySensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;Automations to invoke when the GPIO is set to HIGH&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = &#34;gpio&#34;
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
         return v    
 
     @validator(&#39;type&#39;)
-    def check_type(cls, v):
+    def __check_type(cls, v):
         type_name = &#34;BinarySensor&#34;
         if v != type_name:
             raise ValueError(&#34;wrong type: &#34; + type_name + &#34;, is: &#34; + v)
         return v          
 
 class BinaryState(BaseState):
+    &#39;&#39;&#39;Represents the state of the GPIO pin&#39;&#39;&#39;
+
     is_high = False
+    &#39;&#39;&#39;Returns if the GPIO pin is HIGH(True) or LOW(False)&#39;&#39;&#39;
+
 
 class BinarySensor(BaseSensor, Debuggable):
     &#39;&#39;&#39;Read the state of a GPIO pin&#39;&#39;&#39;
@@ -81,38 +85,33 @@ class BinarySensor(BaseSensor, Debuggable):
         self.configuration = config
         self.state = BinaryState()
 
-        self.__input_device = DigitalInputDevice(
+        self.input_device = DigitalInputDevice(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
             bounce_time = self.configuration.bounce_time,
         )
 
-        class exec():
-            def __init__(cls, automations: list[Automation], is_pressed) -&gt; None: #type: ignore
-                cls.automations = automations
-                cls.is_pressed = is_pressed
-
-            def invoke(cls): #type: ignore
-                self.state.is_high = cls.is_pressed
-                call_stack = CallStack().with_keys({
-                    &#34;is_active&#34;: self.__input_device.is_active,
-                    &#34;pin&#34;: self.__input_device.pin,
-                    &#34;pull_up&#34;: self.__input_device.pull_up,
-                    &#34;value&#34;: self.__input_device.value,
-                })
-
-                for automation in cls.automations:
-                    automation.invoke(call_stack)
-
-                self.on_state_changed(call_stack)
-
-
         self.on_high_automations = Automation.create_automations(self, self.configuration.on_high)
         self.on_low_automations = Automation.create_automations(self, self.configuration.on_low)
         
-        self.__input_device.when_activated = exec(self.on_high_automations, True).invoke
-        self.__input_device.when_deactivated = exec(self.on_low_automations, False).invoke</code></pre>
+        self.input_device.when_activated = Handler(self, self.on_high_automations, True).invoke
+        self.input_device.when_deactivated = Handler(self, self.on_low_automations, False).invoke
+
+class Handler():
+    def __init__(self, binary_sensor: BinarySensor, automations: list[Automation], is_pressed) -&gt; None: #type: ignore
+        self.automations = automations
+        self.is_pressed = is_pressed
+        self.binary_sensor = binary_sensor
+
+    def invoke(self):
+        self.binary_sensor.state.is_high = self.is_pressed
+        call_stack = CallStack().with_element(self)
+
+        for automation in self.automations:
+            automation.invoke(call_stack)
+
+        self.binary_sensor.on_state_changed(call_stack)</code></pre>
 </details>
 </section>
 <section>
@@ -142,38 +141,18 @@ class BinarySensor(BaseSensor, Debuggable):
         self.configuration = config
         self.state = BinaryState()
 
-        self.__input_device = DigitalInputDevice(
+        self.input_device = DigitalInputDevice(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
             bounce_time = self.configuration.bounce_time,
         )
 
-        class exec():
-            def __init__(cls, automations: list[Automation], is_pressed) -&gt; None: #type: ignore
-                cls.automations = automations
-                cls.is_pressed = is_pressed
-
-            def invoke(cls): #type: ignore
-                self.state.is_high = cls.is_pressed
-                call_stack = CallStack().with_keys({
-                    &#34;is_active&#34;: self.__input_device.is_active,
-                    &#34;pin&#34;: self.__input_device.pin,
-                    &#34;pull_up&#34;: self.__input_device.pull_up,
-                    &#34;value&#34;: self.__input_device.value,
-                })
-
-                for automation in cls.automations:
-                    automation.invoke(call_stack)
-
-                self.on_state_changed(call_stack)
-
-
         self.on_high_automations = Automation.create_automations(self, self.configuration.on_high)
         self.on_low_automations = Automation.create_automations(self, self.configuration.on_low)
         
-        self.__input_device.when_activated = exec(self.on_high_automations, True).invoke
-        self.__input_device.when_deactivated = exec(self.on_low_automations, False).invoke</code></pre>
+        self.input_device.when_activated = Handler(self, self.on_high_automations, True).invoke
+        self.input_device.when_deactivated = Handler(self, self.on_low_automations, False).invoke</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -221,14 +200,14 @@ class BinarySensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;Automations to invoke when the GPIO is set to HIGH&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = &#34;gpio&#34;
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
         return v    
 
     @validator(&#39;type&#39;)
-    def check_type(cls, v):
+    def __check_type(cls, v):
         type_name = &#34;BinarySensor&#34;
         if v != type_name:
             raise ValueError(&#34;wrong type: &#34; + type_name + &#34;, is: &#34; + v)
@@ -272,55 +251,21 @@ class BinarySensorConfiguration(SensorConfiguration):
 <div class="desc"><p>True=enable software pull up, False=enable software pulldown, None=disabled(floating)</p></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_platform_module"><code class="name flex">
-<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@validator(&#39;platform&#39;)
-def check_platform_module(cls, v):
-    platform_name = &#34;gpio&#34;
-    if v != platform_name:
-        raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
-    return v    </code></pre>
-</details>
-</dd>
-<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_type"><code class="name flex">
-<span>def <span class="ident">check_type</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@validator(&#39;type&#39;)
-def check_type(cls, v):
-    type_name = &#34;BinarySensor&#34;
-    if v != type_name:
-        raise ValueError(&#34;wrong type: &#34; + type_name + &#34;, is: &#34; + v)
-    return v          </code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="src.plugins.gpio.BinarySensor.BinaryState"><code class="flex name class">
 <span>class <span class="ident">BinaryState</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Represents the state of the GPIO pin</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BinaryState(BaseState):
-    is_high = False</code></pre>
+    &#39;&#39;&#39;Represents the state of the GPIO pin&#39;&#39;&#39;
+
+    is_high = False
+    &#39;&#39;&#39;Returns if the GPIO pin is HIGH(True) or LOW(False)&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -330,7 +275,55 @@ def check_type(cls, v):
 <dl>
 <dt id="src.plugins.gpio.BinarySensor.BinaryState.is_high"><code class="name">var <span class="ident">is_high</span></code></dt>
 <dd>
+<div class="desc"><p>Returns if the GPIO pin is HIGH(True) or LOW(False)</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="src.plugins.gpio.BinarySensor.Handler"><code class="flex name class">
+<span>class <span class="ident">Handler</span></span>
+<span>(</span><span>binary_sensor: <a title="src.plugins.gpio.BinarySensor.BinarySensor" href="#src.plugins.gpio.BinarySensor.BinarySensor">BinarySensor</a>, automations: list, is_pressed)</span>
+</code></dt>
+<dd>
 <div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Handler():
+    def __init__(self, binary_sensor: BinarySensor, automations: list[Automation], is_pressed) -&gt; None: #type: ignore
+        self.automations = automations
+        self.is_pressed = is_pressed
+        self.binary_sensor = binary_sensor
+
+    def invoke(self):
+        self.binary_sensor.state.is_high = self.is_pressed
+        call_stack = CallStack().with_element(self)
+
+        for automation in self.automations:
+            automation.invoke(call_stack)
+
+        self.binary_sensor.on_state_changed(call_stack)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="src.plugins.gpio.BinarySensor.Handler.invoke"><code class="name flex">
+<span>def <span class="ident">invoke</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def invoke(self):
+    self.binary_sensor.state.is_high = self.is_pressed
+    call_stack = CallStack().with_element(self)
+
+    for automation in self.automations:
+        automation.invoke(call_stack)
+
+    self.binary_sensor.on_state_changed(call_stack)</code></pre>
+</details>
 </dd>
 </dl>
 </dd>
@@ -355,11 +348,9 @@ def check_type(cls, v):
 </li>
 <li>
 <h4><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration">BinarySensorConfiguration</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.active_state" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.active_state">active_state</a></code></li>
 <li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.bounce_time" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.bounce_time">bounce_time</a></code></li>
-<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_platform_module" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_platform_module">check_platform_module</a></code></li>
-<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_type" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_type">check_type</a></code></li>
 <li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_high" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_high">on_high</a></code></li>
 <li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_low" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_low">on_low</a></code></li>
 <li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pin" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pin">pin</a></code></li>
@@ -370,6 +361,12 @@ def check_type(cls, v):
 <h4><code><a title="src.plugins.gpio.BinarySensor.BinaryState" href="#src.plugins.gpio.BinarySensor.BinaryState">BinaryState</a></code></h4>
 <ul class="">
 <li><code><a title="src.plugins.gpio.BinarySensor.BinaryState.is_high" href="#src.plugins.gpio.BinarySensor.BinaryState.is_high">is_high</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="src.plugins.gpio.BinarySensor.Handler" href="#src.plugins.gpio.BinarySensor.Handler">Handler</a></code></h4>
+<ul class="">
+<li><code><a title="src.plugins.gpio.BinarySensor.Handler.invoke" href="#src.plugins.gpio.BinarySensor.Handler.invoke">invoke</a></code></li>
 </ul>
 </li>
 </ul>

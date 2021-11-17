@@ -55,7 +55,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;Configuration settings for the MQTT platform.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if &#34;plugins.mqtt&#34; not in v:
             raise ValueError(&#34;wrong platform: plugins.mqtt, is: &#34; + v)
         return v
@@ -277,7 +277,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;Configuration settings for the MQTT platform.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if &#34;plugins.mqtt&#34; not in v:
             raise ValueError(&#34;wrong platform: plugins.mqtt, is: &#34; + v)
         return v
@@ -342,25 +342,6 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 <dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.port"><code class="name">var <span class="ident">port</span> : int</code></dt>
 <dd>
 <div class="desc"><p>MQTT server port</p></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="src.plugins.mqtt.Platform.MqttPlatformConfiguration.check_platform_module"><code class="name flex">
-<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@validator(&#39;platform&#39;)
-def check_platform_module(cls, v):
-    if &#34;plugins.mqtt&#34; not in v:
-        raise ValueError(&#34;wrong platform: plugins.mqtt, is: &#34; + v)
-    return v</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -627,9 +608,8 @@ Here is where we initialize and load stuff</p></div>
 </li>
 <li>
 <h4><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration">MqttPlatformConfiguration</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.availability" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.availability">availability</a></code></li>
-<li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.check_platform_module" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.host" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.host">host</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.keep_alive" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.keep_alive">keep_alive</a></code></li>
 <li><code><a title="src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_connected" href="#src.plugins.mqtt.Platform.MqttPlatformConfiguration.on_connected">on_connected</a></code></li>

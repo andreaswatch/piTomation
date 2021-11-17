@@ -31,21 +31,28 @@ from modules.base.Configuration import *
 
 @configuration
 class UpdateActionConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for the Update Action&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = &#34;web&#34;
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
         return v    
 
+
 class UpdateActionState(BaseState):
+    &#39;&#39;&#39;Represents the state of the Update Action&#39;&#39;&#39;
+
     topic: str
+    &#39;&#39;&#39;Last updated topic&#39;&#39;&#39;
+
     payload: str
+    &#39;&#39;&#39;Last payload&#39;&#39;&#39;
+
 
 class UpdateAction(BaseAction):
-    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+    &#39;&#39;&#39;Write a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
 
     from plugins.web.Platform import Platform
 
@@ -77,13 +84,13 @@ class UpdateAction(BaseAction):
 <span>(</span><span>parent: plugins.web.Platform.Platform, config: <a title="src.plugins.web.UpdateAction.UpdateActionConfiguration" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration">UpdateActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Writes a given {{payload}} into the table row {{topic}}.</p></div>
+<div class="desc"><p>Write a given {{payload}} into the table row {{topic}}.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UpdateAction(BaseAction):
-    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+    &#39;&#39;&#39;Write a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
 
     from plugins.web.Platform import Platform
 
@@ -113,7 +120,7 @@ class UpdateAction(BaseAction):
 <dl>
 <dt id="src.plugins.web.UpdateAction.UpdateAction.Platform"><code class="name">var <span class="ident">Platform</span></code></dt>
 <dd>
-<div class="desc"><p>WebApp Platform based on pywebio.</p></div>
+<div class="desc"><p>Web Dashboard based on pywebio.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -143,7 +150,7 @@ class UpdateAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Writes a given {{payload}} into the table row {{topic}}.</p>
+<div class="desc"><p>Configuration settings for the Update Action</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -152,10 +159,10 @@ class UpdateAction(BaseAction):
 </summary>
 <pre><code class="python">@configuration
 class UpdateActionConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;Writes a given {{payload}} into the table row {{topic}}.&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for the Update Action&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = &#34;web&#34;
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
@@ -187,39 +194,24 @@ class UpdateActionConfiguration(ActionConfiguration):
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="src.plugins.web.UpdateAction.UpdateActionConfiguration.check_platform_module"><code class="name flex">
-<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@validator(&#39;platform&#39;)
-def check_platform_module(cls, v):
-    platform_name = &#34;web&#34;
-    if v != platform_name:
-        raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
-    return v    </code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="src.plugins.web.UpdateAction.UpdateActionState"><code class="flex name class">
 <span>class <span class="ident">UpdateActionState</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Represents the state of the Update Action</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UpdateActionState(BaseState):
+    &#39;&#39;&#39;Represents the state of the Update Action&#39;&#39;&#39;
+
     topic: str
-    payload: str</code></pre>
+    &#39;&#39;&#39;Last updated topic&#39;&#39;&#39;
+
+    payload: str
+    &#39;&#39;&#39;Last payload&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -229,11 +221,11 @@ def check_platform_module(cls, v):
 <dl>
 <dt id="src.plugins.web.UpdateAction.UpdateActionState.payload"><code class="name">var <span class="ident">payload</span> : str</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Last payload</p></div>
 </dd>
 <dt id="src.plugins.web.UpdateAction.UpdateActionState.topic"><code class="name">var <span class="ident">topic</span> : str</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Last updated topic</p></div>
 </dd>
 </dl>
 </dd>
@@ -263,7 +255,6 @@ def check_platform_module(cls, v):
 <li>
 <h4><code><a title="src.plugins.web.UpdateAction.UpdateActionConfiguration" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration">UpdateActionConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.web.UpdateAction.UpdateActionConfiguration.check_platform_module" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.web.UpdateAction.UpdateActionConfiguration.on_state_changed" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration.on_state_changed">on_state_changed</a></code></li>
 <li><code><a title="src.plugins.web.UpdateAction.UpdateActionConfiguration.platform" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration.platform">platform</a></code></li>
 <li><code><a title="src.plugins.web.UpdateAction.UpdateActionConfiguration.type" href="#src.plugins.web.UpdateAction.UpdateActionConfiguration.type">type</a></code></li>

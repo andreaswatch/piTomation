@@ -31,8 +31,7 @@ from modules.base.Instances import *
 
 @configuration
 class PrintActionConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;Invoke this Action to output text to the local Console.
-    The text is received from {{payload}}.&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for a GPIO output&#39;&#39;&#39;
     
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -40,9 +39,14 @@ class PrintActionConfiguration(ActionConfiguration):
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
         return v
+
         
 class PrintActionState(BaseState):
+    &#39;&#39;&#39;Represents the state of the Print Action&#39;&#39;&#39;
+
     message: str
+    &#39;&#39;&#39;Last message&#39;&#39;&#39;
+
 
 class PrintAction(BaseAction):
     &#39;&#39;&#39;Prints the given {{payload}} to the System Console.&#39;&#39;&#39;
@@ -142,8 +146,7 @@ class PrintAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Invoke this Action to output text to the local Console.
-The text is received from {{payload}}.</p>
+<div class="desc"><p>Configuration settings for a GPIO output</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -152,8 +155,7 @@ The text is received from {{payload}}.</p>
 </summary>
 <pre><code class="python">@configuration
 class PrintActionConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;Invoke this Action to output text to the local Console.
-    The text is received from {{payload}}.&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for a GPIO output&#39;&#39;&#39;
     
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -213,13 +215,16 @@ def check_platform_module(cls, v):
 <span>class <span class="ident">PrintActionState</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Represents the state of the Print Action</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PrintActionState(BaseState):
-    message: str</code></pre>
+    &#39;&#39;&#39;Represents the state of the Print Action&#39;&#39;&#39;
+
+    message: str
+    &#39;&#39;&#39;Last message&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -229,7 +234,7 @@ def check_platform_module(cls, v):
 <dl>
 <dt id="src.plugins.console.PrintAction.PrintActionState.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Last message</p></div>
 </dd>
 </dl>
 </dd>

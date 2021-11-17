@@ -26,19 +26,14 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from modules.base.Configuration import *
+<pre><code class="python">from enum import Enum
+from modules.base.Configuration import *
 from modules.base.Instances import *
 from plugins.gpio.Platform import Platform
 
-
 @configuration
 class BinaryActionConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;Action that allows to update the state of a GPIO pin. 
-    Available commands: turn_on, turn_off &amp; toggle.
-    Use {{topic}} for the command, like:
-    values:
-      topic: toggle
-    &#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for a GPIO output&#39;&#39;&#39;
 
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
@@ -56,27 +51,43 @@ class BinaryActionConfiguration(ActionConfiguration):
     &#39;&#39;&#39;expected initial value&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = &#34;gpio&#34;
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
         return v    
 
 class BinaryActionState(BaseState):
+    &#39;&#39;&#39;Represents the state of the GPIO pin&#39;&#39;&#39;
+
     is_high = False
+    &#39;&#39;&#39;Returns if the LED is HIGH(True) or LOW(False)&#39;&#39;&#39;
 
 
-class BinaryAction(BaseAction):
-    &#39;&#39;&#39;Update the state of a GPIO pin&#39;&#39;&#39;
+class BinaryActionCommands(Enum):
+    &#39;&#39;&#39;Available commands to control the GPIO Pin&#39;&#39;&#39;
+
+    on = &#34;on&#34;
+    &#39;&#39;&#39;Turn the LED on&#39;&#39;&#39;
+
+    off = &#34;off&#34;
+    &#39;&#39;&#39;Turn the LED off&#39;&#39;&#39;
+
+    toggle = &#34;toggle&#34;
+    &#39;&#39;&#39;Toggle on/off&#39;&#39;&#39;
+
+
+class BinaryAction(BaseAction, Debuggable, Logging):
+    &#39;&#39;&#39;Control the state of a GPIO pin&#39;&#39;&#39;
 
     def __init__(self, parent: Platform, config: BinaryActionConfiguration) -&gt; None:
         super().__init__(parent, config)
 
-        self.__gpio = parent.gpio
+        self.gpio = parent.gpio
         self.configuration = config
         self.state = BinaryActionState()
 
-        self.output_pin = self.__gpio.DigitalOutputDevice(
+        self.output_pin = self.gpio.DigitalOutputDevice(
             pin = self.configuration.pin,
             active_high = self.configuration.active_high,
             initial_value = self.configuration.initial_value
@@ -87,25 +98,24 @@ class BinaryAction(BaseAction):
 
 
     def invoke(self, call_stack: CallStack):
-        topic = call_stack.get(&#34;{{topic}}&#34;)
+        topic = str(call_stack.get(&#34;{{topic}}&#34;))
+        self.log_debug(&#34;Command: &#34; + topic)
 
-        call_stack = call_stack.with_keys({
-            &#34;is_active&#34;: self.output_pin.is_active
-        })
+        call_stack = call_stack.with_element(self)
 
-        if &#34;turn_on&#34; == topic:
+        if BinaryActionCommands.on.name == topic:
             self.output_pin.on()
             self.state.is_high = True
             for on_high in self.on_high:
                 on_high.invoke(call_stack)
 
-        if &#34;turn_off&#34; == topic:
+        elif BinaryActionCommands.off.name == topic:
             self.output_pin.off()
             self.state.is_high = False
             for on_low in self.on_low:
                 on_low.invoke(call_stack)
 
-        if &#34;toggle&#34; == topic:
+        elif BinaryActionCommands.toggle.name == topic:
             self.output_pin.toggle()
             if self.output_pin.is_active:
                 self.state.is_high = True
@@ -115,6 +125,9 @@ class BinaryAction(BaseAction):
                 self.state.is_high = False
                 for on_low in self.on_low:
                     on_low.invoke(call_stack)
+
+        else:
+            self.log_error(&#34;Unknown command: {{&#34; + topic + &#34;}}&#34;)
 
         super().invoke(call_stack)</code></pre>
 </details>
@@ -133,22 +146,22 @@ class BinaryAction(BaseAction):
 <span>(</span><span>parent: plugins.gpio.Platform.Platform, config: <a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration">BinaryActionConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Update the state of a GPIO pin</p></div>
+<div class="desc"><p>Control the state of a GPIO pin</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BinaryAction(BaseAction):
-    &#39;&#39;&#39;Update the state of a GPIO pin&#39;&#39;&#39;
+<pre><code class="python">class BinaryAction(BaseAction, Debuggable, Logging):
+    &#39;&#39;&#39;Control the state of a GPIO pin&#39;&#39;&#39;
 
     def __init__(self, parent: Platform, config: BinaryActionConfiguration) -&gt; None:
         super().__init__(parent, config)
 
-        self.__gpio = parent.gpio
+        self.gpio = parent.gpio
         self.configuration = config
         self.state = BinaryActionState()
 
-        self.output_pin = self.__gpio.DigitalOutputDevice(
+        self.output_pin = self.gpio.DigitalOutputDevice(
             pin = self.configuration.pin,
             active_high = self.configuration.active_high,
             initial_value = self.configuration.initial_value
@@ -159,25 +172,24 @@ class BinaryAction(BaseAction):
 
 
     def invoke(self, call_stack: CallStack):
-        topic = call_stack.get(&#34;{{topic}}&#34;)
+        topic = str(call_stack.get(&#34;{{topic}}&#34;))
+        self.log_debug(&#34;Command: &#34; + topic)
 
-        call_stack = call_stack.with_keys({
-            &#34;is_active&#34;: self.output_pin.is_active
-        })
+        call_stack = call_stack.with_element(self)
 
-        if &#34;turn_on&#34; == topic:
+        if BinaryActionCommands.on.name == topic:
             self.output_pin.on()
             self.state.is_high = True
             for on_high in self.on_high:
                 on_high.invoke(call_stack)
 
-        if &#34;turn_off&#34; == topic:
+        elif BinaryActionCommands.off.name == topic:
             self.output_pin.off()
             self.state.is_high = False
             for on_low in self.on_low:
                 on_low.invoke(call_stack)
 
-        if &#34;toggle&#34; == topic:
+        elif BinaryActionCommands.toggle.name == topic:
             self.output_pin.toggle()
             if self.output_pin.is_active:
                 self.state.is_high = True
@@ -187,6 +199,9 @@ class BinaryAction(BaseAction):
                 self.state.is_high = False
                 for on_low in self.on_low:
                     on_low.invoke(call_stack)
+
+        else:
+            self.log_error(&#34;Unknown command: {{&#34; + topic + &#34;}}&#34;)
 
         super().invoke(call_stack)</code></pre>
 </details>
@@ -198,6 +213,8 @@ class BinaryAction(BaseAction):
 <li>modules.base.Instances.Identifyable</li>
 <li>modules.base.Instances.Disposeable</li>
 <li>modules.base.Instances.VariableProvider</li>
+<li>modules.base.Instances.Debuggable</li>
+<li>modules.base.Instances.Logging</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -211,25 +228,24 @@ class BinaryAction(BaseAction):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
-    topic = call_stack.get(&#34;{{topic}}&#34;)
+    topic = str(call_stack.get(&#34;{{topic}}&#34;))
+    self.log_debug(&#34;Command: &#34; + topic)
 
-    call_stack = call_stack.with_keys({
-        &#34;is_active&#34;: self.output_pin.is_active
-    })
+    call_stack = call_stack.with_element(self)
 
-    if &#34;turn_on&#34; == topic:
+    if BinaryActionCommands.on.name == topic:
         self.output_pin.on()
         self.state.is_high = True
         for on_high in self.on_high:
             on_high.invoke(call_stack)
 
-    if &#34;turn_off&#34; == topic:
+    elif BinaryActionCommands.off.name == topic:
         self.output_pin.off()
         self.state.is_high = False
         for on_low in self.on_low:
             on_low.invoke(call_stack)
 
-    if &#34;toggle&#34; == topic:
+    elif BinaryActionCommands.toggle.name == topic:
         self.output_pin.toggle()
         if self.output_pin.is_active:
             self.state.is_high = True
@@ -240,8 +256,53 @@ class BinaryAction(BaseAction):
             for on_low in self.on_low:
                 on_low.invoke(call_stack)
 
+    else:
+        self.log_error(&#34;Unknown command: {{&#34; + topic + &#34;}}&#34;)
+
     super().invoke(call_stack)</code></pre>
 </details>
+</dd>
+</dl>
+</dd>
+<dt id="src.plugins.gpio.BinaryAction.BinaryActionCommands"><code class="flex name class">
+<span>class <span class="ident">BinaryActionCommands</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Available commands to control the GPIO Pin</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BinaryActionCommands(Enum):
+    &#39;&#39;&#39;Available commands to control the GPIO Pin&#39;&#39;&#39;
+
+    on = &#34;on&#34;
+    &#39;&#39;&#39;Turn the LED on&#39;&#39;&#39;
+
+    off = &#34;off&#34;
+    &#39;&#39;&#39;Turn the LED off&#39;&#39;&#39;
+
+    toggle = &#34;toggle&#34;
+    &#39;&#39;&#39;Toggle on/off&#39;&#39;&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.plugins.gpio.BinaryAction.BinaryActionCommands.off"><code class="name">var <span class="ident">off</span></code></dt>
+<dd>
+<div class="desc"><p>Turn the LED off</p></div>
+</dd>
+<dt id="src.plugins.gpio.BinaryAction.BinaryActionCommands.on"><code class="name">var <span class="ident">on</span></code></dt>
+<dd>
+<div class="desc"><p>Turn the LED on</p></div>
+</dd>
+<dt id="src.plugins.gpio.BinaryAction.BinaryActionCommands.toggle"><code class="name">var <span class="ident">toggle</span></code></dt>
+<dd>
+<div class="desc"><p>Toggle on/off</p></div>
 </dd>
 </dl>
 </dd>
@@ -250,11 +311,7 @@ class BinaryAction(BaseAction):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Action that allows to update the state of a GPIO pin.
-Available commands: turn_on, turn_off &amp; toggle.
-Use {{topic}} for the command, like:
-values:
-topic: toggle</p>
+<div class="desc"><p>Configuration settings for a GPIO output</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -263,12 +320,7 @@ topic: toggle</p>
 </summary>
 <pre><code class="python">@configuration
 class BinaryActionConfiguration(ActionConfiguration):
-    &#39;&#39;&#39;Action that allows to update the state of a GPIO pin. 
-    Available commands: turn_on, turn_off &amp; toggle.
-    Use {{topic}} for the command, like:
-    values:
-      topic: toggle
-    &#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for a GPIO output&#39;&#39;&#39;
 
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
@@ -286,7 +338,7 @@ class BinaryActionConfiguration(ActionConfiguration):
     &#39;&#39;&#39;expected initial value&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         platform_name = &#34;gpio&#34;
         if v != platform_name:
             raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
@@ -326,38 +378,21 @@ class BinaryActionConfiguration(ActionConfiguration):
 <div class="desc"><p>GPIO PIN name. e.g. GPIO22</p></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="src.plugins.gpio.BinaryAction.BinaryActionConfiguration.check_platform_module"><code class="name flex">
-<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@validator(&#39;platform&#39;)
-def check_platform_module(cls, v):
-    platform_name = &#34;gpio&#34;
-    if v != platform_name:
-        raise ValueError(&#34;wrong script platform: &#34; + platform_name + &#34;, is: &#34; + v)
-    return v    </code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="src.plugins.gpio.BinaryAction.BinaryActionState"><code class="flex name class">
 <span>class <span class="ident">BinaryActionState</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Represents the state of the GPIO pin</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BinaryActionState(BaseState):
-    is_high = False</code></pre>
+    &#39;&#39;&#39;Represents the state of the GPIO pin&#39;&#39;&#39;
+
+    is_high = False
+    &#39;&#39;&#39;Returns if the LED is HIGH(True) or LOW(False)&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -367,7 +402,7 @@ def check_platform_module(cls, v):
 <dl>
 <dt id="src.plugins.gpio.BinaryAction.BinaryActionState.is_high"><code class="name">var <span class="ident">is_high</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Returns if the LED is HIGH(True) or LOW(False)</p></div>
 </dd>
 </dl>
 </dd>
@@ -394,10 +429,17 @@ def check_platform_module(cls, v):
 </ul>
 </li>
 <li>
+<h4><code><a title="src.plugins.gpio.BinaryAction.BinaryActionCommands" href="#src.plugins.gpio.BinaryAction.BinaryActionCommands">BinaryActionCommands</a></code></h4>
+<ul class="">
+<li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionCommands.off" href="#src.plugins.gpio.BinaryAction.BinaryActionCommands.off">off</a></code></li>
+<li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionCommands.on" href="#src.plugins.gpio.BinaryAction.BinaryActionCommands.on">on</a></code></li>
+<li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionCommands.toggle" href="#src.plugins.gpio.BinaryAction.BinaryActionCommands.toggle">toggle</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration">BinaryActionConfiguration</a></code></h4>
 <ul class="">
 <li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration.active_high" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration.active_high">active_high</a></code></li>
-<li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration.check_platform_module" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration.check_platform_module">check_platform_module</a></code></li>
 <li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration.initial_value" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration.initial_value">initial_value</a></code></li>
 <li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration.on_high" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration.on_high">on_high</a></code></li>
 <li><code><a title="src.plugins.gpio.BinaryAction.BinaryActionConfiguration.on_low" href="#src.plugins.gpio.BinaryAction.BinaryActionConfiguration.on_low">on_low</a></code></li>
