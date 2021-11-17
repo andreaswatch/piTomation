@@ -22,9 +22,11 @@ class BinarySensorConfiguration(SensorConfiguration):
     bounce_time: Optional[int] = None
     '''Length of time (in seconds) to ignore changes after initial change'''
 
-    on_press: list[AutomationConfiguration] = []
+    on_high: list[AutomationConfiguration] = []
+    '''Automations to invoke when the GPIO is set to HIGH'''
     
-    on_release: list[AutomationConfiguration] = []
+    on_low: list[AutomationConfiguration] = []
+    '''Automations to invoke when the GPIO is set to HIGH'''
 
     @validator('platform')
     def check_platform_module(cls, v):
@@ -78,8 +80,8 @@ class BinarySensor(BaseSensor, Debuggable):
                 self.on_state_changed(call_stack)
 
 
-        self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
-        self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
+        self.on_high_automations = Automation.create_automations(self, self.configuration.on_high)
+        self.on_low_automations = Automation.create_automations(self, self.configuration.on_low)
         
-        self.__input_device.when_activated = exec(self.on_press_automations, True).invoke
-        self.__input_device.when_deactivated = exec(self.on_release_automations, False).invoke
+        self.__input_device.when_activated = exec(self.on_high_automations, True).invoke
+        self.__input_device.when_deactivated = exec(self.on_low_automations, False).invoke

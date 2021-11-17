@@ -81,9 +81,10 @@ class Debuggable():
     def log_debug(self, message):
         &#34;&#34;&#34;Log a debug message to the console (if configuration.debug == True)&#34;&#34;&#34;
 
-        if hasattr(self.configuration, &#34;debug&#34;):
-            if self.configuration.debug:
-                print(&#34;[DEBUG] &#34; + message)
+        if hasattr(self, &#34;configuration&#34;):
+            if hasattr(self.configuration, &#34;debug&#34;):
+                if self.configuration.debug:
+                    print(&#34;[DEBUG] &#34; + message)
 
 
 class Identifyable():
@@ -127,7 +128,7 @@ class Stackable():
         app = self
         while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
             app = app.parent
-        return app
+        return app #type: ignore
 
     def get_parents(self) -&gt; list[&#39;Stackable&#39;]:
         parents = []
@@ -320,7 +321,7 @@ class Condition(Stackable):
         invert_result = not call_stack.get(self.configuration.inverted)
 
         if &#34;contains&#34; == functionName:
-            result = (expected_value in actual_value) == invert_result
+            result = (expected_value in actual_value) == invert_result #type: ignore
             return result
 
         if &#34;equals&#34; == functionName:
@@ -328,11 +329,11 @@ class Condition(Stackable):
             return result
 
         if &#34;startsWith&#34; == functionName:
-            result = (actual_value.startswith(expected_value)) == invert_result
+            result = (actual_value.startswith(expected_value)) == invert_result #type: ignore
             return result
 
         if &#34;endsWith&#34; == functionName:
-            result = (actual_value.endswith(expected_value)) == invert_result
+            result = (actual_value.endswith(expected_value)) == invert_result #type: ignore
             return result
 
         return False
@@ -347,7 +348,7 @@ class ActionTrigger(Stackable, Logging):
 
     def invoke(self, call_stack: CallStack):
         app = self.get_app()
-        id: BaseAction = app.get_id(self.configuration.action)
+        id: BaseAction = app.get_id(self.configuration.action) #type: ignore
 
         if id is None:
             self.log_error(&#34;Id &#39;&#34; + self.configuration.action + &#34;&#39; not found&#34;)
@@ -389,7 +390,7 @@ class ActionTrigger(Stackable, Logging):
 
     def invoke(self, call_stack: CallStack):
         app = self.get_app()
-        id: BaseAction = app.get_id(self.configuration.action)
+        id: BaseAction = app.get_id(self.configuration.action) #type: ignore
 
         if id is None:
             self.log_error(&#34;Id &#39;&#34; + self.configuration.action + &#34;&#39; not found&#34;)
@@ -420,7 +421,7 @@ class ActionTrigger(Stackable, Logging):
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
     app = self.get_app()
-    id: BaseAction = app.get_id(self.configuration.action)
+    id: BaseAction = app.get_id(self.configuration.action) #type: ignore
 
     if id is None:
         self.log_error(&#34;Id &#39;&#34; + self.configuration.action + &#34;&#39; not found&#34;)
@@ -982,7 +983,7 @@ Here is where we initialize and load stuff</p></div>
         invert_result = not call_stack.get(self.configuration.inverted)
 
         if &#34;contains&#34; == functionName:
-            result = (expected_value in actual_value) == invert_result
+            result = (expected_value in actual_value) == invert_result #type: ignore
             return result
 
         if &#34;equals&#34; == functionName:
@@ -990,11 +991,11 @@ Here is where we initialize and load stuff</p></div>
             return result
 
         if &#34;startsWith&#34; == functionName:
-            result = (actual_value.startswith(expected_value)) == invert_result
+            result = (actual_value.startswith(expected_value)) == invert_result #type: ignore
             return result
 
         if &#34;endsWith&#34; == functionName:
-            result = (actual_value.endswith(expected_value)) == invert_result
+            result = (actual_value.endswith(expected_value)) == invert_result #type: ignore
             return result
 
         return False</code></pre>
@@ -1021,7 +1022,7 @@ Here is where we initialize and load stuff</p></div>
     invert_result = not call_stack.get(self.configuration.inverted)
 
     if &#34;contains&#34; == functionName:
-        result = (expected_value in actual_value) == invert_result
+        result = (expected_value in actual_value) == invert_result #type: ignore
         return result
 
     if &#34;equals&#34; == functionName:
@@ -1029,11 +1030,11 @@ Here is where we initialize and load stuff</p></div>
         return result
 
     if &#34;startsWith&#34; == functionName:
-        result = (actual_value.startswith(expected_value)) == invert_result
+        result = (actual_value.startswith(expected_value)) == invert_result #type: ignore
         return result
 
     if &#34;endsWith&#34; == functionName:
-        result = (actual_value.endswith(expected_value)) == invert_result
+        result = (actual_value.endswith(expected_value)) == invert_result #type: ignore
         return result
 
     return False</code></pre>
@@ -1060,9 +1061,10 @@ Here is where we initialize and load stuff</p></div>
     def log_debug(self, message):
         &#34;&#34;&#34;Log a debug message to the console (if configuration.debug == True)&#34;&#34;&#34;
 
-        if hasattr(self.configuration, &#34;debug&#34;):
-            if self.configuration.debug:
-                print(&#34;[DEBUG] &#34; + message)</code></pre>
+        if hasattr(self, &#34;configuration&#34;):
+            if hasattr(self.configuration, &#34;debug&#34;):
+                if self.configuration.debug:
+                    print(&#34;[DEBUG] &#34; + message)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -1078,9 +1080,10 @@ Here is where we initialize and load stuff</p></div>
 <pre><code class="python">def log_debug(self, message):
     &#34;&#34;&#34;Log a debug message to the console (if configuration.debug == True)&#34;&#34;&#34;
 
-    if hasattr(self.configuration, &#34;debug&#34;):
-        if self.configuration.debug:
-            print(&#34;[DEBUG] &#34; + message)</code></pre>
+    if hasattr(self, &#34;configuration&#34;):
+        if hasattr(self.configuration, &#34;debug&#34;):
+            if self.configuration.debug:
+                print(&#34;[DEBUG] &#34; + message)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1284,7 +1287,7 @@ Here is where we initialize and load stuff</p></div>
         app = self
         while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
             app = app.parent
-        return app
+        return app #type: ignore
 
     def get_parents(self) -&gt; list[&#39;Stackable&#39;]:
         parents = []
@@ -1319,7 +1322,7 @@ Here is where we initialize and load stuff</p></div>
     app = self
     while (hasattr(app, &#34;parent&#34;) and app.parent is not None):
         app = app.parent
-    return app</code></pre>
+    return app #type: ignore</code></pre>
 </details>
 </dd>
 <dt id="src.modules.base.Instances.Stackable.get_full_stack"><code class="name flex">

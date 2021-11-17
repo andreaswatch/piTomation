@@ -29,7 +29,7 @@
 <pre><code class="python">import json
 from sys import platform
 import threading
-from typing import Optional
+from typing import Any, Optional
 import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
 from pydantic.main import BaseModel
@@ -99,7 +99,7 @@ class Platform(BasePlatform):
 
         app_id = str(self.app.get_variable_value(&#34;id&#34;))
 
-        self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name))
+        self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name)) #type: ignore
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()
@@ -391,7 +391,7 @@ def check_platform_module(cls, v):
 
         app_id = str(self.app.get_variable_value(&#34;id&#34;))
 
-        self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name))
+        self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name)) #type: ignore
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()
@@ -553,7 +553,7 @@ Here is where we initialize and load stuff</p></div>
 
     app_id = str(self.app.get_variable_value(&#34;id&#34;))
 
-    self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name))
+    self.client = mqtt.Client(app_id + &#34;_&#34; + render(self.app.get_id(&#34;device&#34;).configuration.name)) #type: ignore
     self.client.on_connect = self.__init_on_connect()
     self.client.on_disconnect = self.__init_on_disconnect()
     self.client.on_message = self.__init_on_message()

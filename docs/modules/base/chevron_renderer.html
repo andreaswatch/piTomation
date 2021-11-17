@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>src.modules.base API documentation</title>
+<title>src.modules.base.chevron_renderer API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,34 +19,137 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Namespace <code>src.modules.base</code></h1>
+<h1 class="title">Module <code>src.modules.base.chevron_renderer</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import chevron
+from modules.base.CallStack import CallStack
+from modules.base.Instances import Logging
+
+
+def init_renderer(app):
+    &#39;&#39;&#39;Initialize the chevron renderer&#39;&#39;&#39;
+
+    __logger = Logging()
+
+    def __get_string(key: str, scopes, warn: bool = False):
+
+        for scope in scopes:
+            #walk up the scopes, try to get the desired key and return if found
+            if hasattr(scope, &#34;get_variable_value&#34;):
+                value = scope.get_variable_value(key)
+                if value is not None:
+                    sub_scopes = CallStack().with_stack(scopes)
+                    sub_scopes.pop(0)
+                    return chevron.render(value, scopes=sub_scopes)
+
+        if key.startswith(&#34;id(&#34;):
+            #Special mode, e.g. id(**).field.subfield allows to access the instances directly.
+            #The concept is to find the id in the app and then follow the path (splitted by .) until the last element.
+            end = key.index(&#39;)&#39;)
+            id = key[3:end]
+            act = app.get_id(id)
+            rest = key[end+2:]
+            path = rest.split(&#39;.&#39;)
+            return_act = False
+            for path_element in path:
+                if act is None:
+                    return_act = False
+                    break
+                if hasattr(act, path_element):
+                    return_act = True
+                    act = getattr(act, path_element)
+                elif type(act) is dict and path_element in act:
+                    return_act = True
+                    act = act[path_element]
+                else:
+                    print((type(act).__name__))
+                    break
+            if return_act:
+                if type(act) is str:
+                    return scopes.get(act)
+                return act
+
+        #Fallback: return {{given key}} to indicate they key was not found to the user
+        result = &#34;{{&#34; + key + &#34;}}&#34;
+        __logger.log_warning(&#34;Can not render key &#39;&#34; + key + &#34;&#39;, returning {{&#34; + key + &#34;}}&#34; )
+        return result
+
+    chevron.renderer._get_key = __get_string</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="src.modules.base.CallStack" href="CallStack.html">src.modules.base.CallStack</a></code></dt>
+<dt id="src.modules.base.chevron_renderer.init_renderer"><code class="name flex">
+<span>def <span class="ident">init_renderer</span></span>(<span>app)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.modules.base.Configuration" href="Configuration.html">src.modules.base.Configuration</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.modules.base.Instances" href="Instances.html">src.modules.base.Instances</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.modules.base.chevron_renderer" href="chevron_renderer.html">src.modules.base.chevron_renderer</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Initialize the chevron renderer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_renderer(app):
+    &#39;&#39;&#39;Initialize the chevron renderer&#39;&#39;&#39;
+
+    __logger = Logging()
+
+    def __get_string(key: str, scopes, warn: bool = False):
+
+        for scope in scopes:
+            #walk up the scopes, try to get the desired key and return if found
+            if hasattr(scope, &#34;get_variable_value&#34;):
+                value = scope.get_variable_value(key)
+                if value is not None:
+                    sub_scopes = CallStack().with_stack(scopes)
+                    sub_scopes.pop(0)
+                    return chevron.render(value, scopes=sub_scopes)
+
+        if key.startswith(&#34;id(&#34;):
+            #Special mode, e.g. id(**).field.subfield allows to access the instances directly.
+            #The concept is to find the id in the app and then follow the path (splitted by .) until the last element.
+            end = key.index(&#39;)&#39;)
+            id = key[3:end]
+            act = app.get_id(id)
+            rest = key[end+2:]
+            path = rest.split(&#39;.&#39;)
+            return_act = False
+            for path_element in path:
+                if act is None:
+                    return_act = False
+                    break
+                if hasattr(act, path_element):
+                    return_act = True
+                    act = getattr(act, path_element)
+                elif type(act) is dict and path_element in act:
+                    return_act = True
+                    act = act[path_element]
+                else:
+                    print((type(act).__name__))
+                    break
+            if return_act:
+                if type(act) is str:
+                    return scopes.get(act)
+                return act
+
+        #Fallback: return {{given key}} to indicate they key was not found to the user
+        result = &#34;{{&#34; + key + &#34;}}&#34;
+        __logger.log_warning(&#34;Can not render key &#39;&#34; + key + &#34;&#39;, returning {{&#34; + key + &#34;}}&#34; )
+        return result
+
+    chevron.renderer._get_key = __get_string</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -59,15 +162,12 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.modules" href="../index.html">src.modules</a></code></li>
+<li><code><a title="src.modules.base" href="index.html">src.modules.base</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="src.modules.base.CallStack" href="CallStack.html">src.modules.base.CallStack</a></code></li>
-<li><code><a title="src.modules.base.Configuration" href="Configuration.html">src.modules.base.Configuration</a></code></li>
-<li><code><a title="src.modules.base.Instances" href="Instances.html">src.modules.base.Instances</a></code></li>
-<li><code><a title="src.modules.base.chevron_renderer" href="chevron_renderer.html">src.modules.base.chevron_renderer</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="src.modules.base.chevron_renderer.init_renderer" href="#src.modules.base.chevron_renderer.init_renderer">init_renderer</a></code></li>
 </ul>
 </li>
 </ul>

@@ -38,13 +38,13 @@ class AppConfiguration(BaseModel):
     device: DeviceConfiguration
     &#34;&#34;&#34;Device configuration&#34;&#34;&#34;
 
-    platforms: Optional[list[WithPlugins(PlatformConfiguration)]]
+    platforms: Optional[list[WithPlugins(PlatformConfiguration)]] #type: ignore
     &#34;&#34;&#34;List of platforms&#34;&#34;&#34;
 
-    actions: Optional[list[WithPlugins(ActionConfiguration)]]
+    actions: Optional[list[WithPlugins(ActionConfiguration)]] #type: ignore
     &#34;&#34;&#34;List of actions (=outputs)&#34;&#34;&#34;
 
-    sensors: Optional[list[WithPlugins(SensorConfiguration)]]
+    sensors: Optional[list[WithPlugins(SensorConfiguration)]] #type: ignore
     &#34;&#34;&#34;List of sensors (=inputs)&#34;&#34;&#34;</code></pre>
 </details>
 </section>
@@ -76,13 +76,13 @@ class AppConfiguration(BaseModel):
     device: DeviceConfiguration
     &#34;&#34;&#34;Device configuration&#34;&#34;&#34;
 
-    platforms: Optional[list[WithPlugins(PlatformConfiguration)]]
+    platforms: Optional[list[WithPlugins(PlatformConfiguration)]] #type: ignore
     &#34;&#34;&#34;List of platforms&#34;&#34;&#34;
 
-    actions: Optional[list[WithPlugins(ActionConfiguration)]]
+    actions: Optional[list[WithPlugins(ActionConfiguration)]] #type: ignore
     &#34;&#34;&#34;List of actions (=outputs)&#34;&#34;&#34;
 
-    sensors: Optional[list[WithPlugins(SensorConfiguration)]]
+    sensors: Optional[list[WithPlugins(SensorConfiguration)]] #type: ignore
     &#34;&#34;&#34;List of sensors (=inputs)&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>

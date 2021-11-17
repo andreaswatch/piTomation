@@ -28,12 +28,16 @@ class ButtonSensorConfiguration(SensorConfiguration):
     '''If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.'''
 
     on_hold: list[AutomationConfiguration] = []
+    '''Automations to invoke when the button is held'''
     
     on_press: list[AutomationConfiguration] = []
+    '''Automations to invoke when the button is pressed'''
     
     on_release: list[AutomationConfiguration] = []
+    '''Automations to invoke when the button is released'''
 
     check_state_delay: Optional[float]
+    '''Only invoke '''
 
     @validator('platform')
     def check_platform_module(cls, v):
@@ -52,6 +56,7 @@ class ButtonSensorConfiguration(SensorConfiguration):
 
 class ButtonState(BaseState):
     is_pressed = False
+
 
 
 class ButtonSensor(BaseSensor, Debuggable):
@@ -82,12 +87,13 @@ class ButtonSensor(BaseSensor, Debuggable):
                 cls.is_pressed = is_pressed
 
             def invoke(cls): #type: ignore
-                self.state.is_pressed = cls.is_pressed
                 if self.check_state_delay is not None:
                     time.sleep(self.check_state_delay)
                     if self.__button.is_active is not cls.is_pressed:
                         self.log_debug("Not pressed anymore, cancelling ..")
                         return 
+
+                self.state.is_pressed = cls.is_pressed
 
                 call_stack = CallStack().with_keys({
                     "held_time": self.__button.held_time,

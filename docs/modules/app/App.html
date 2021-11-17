@@ -26,8 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from typing import Union
-import importlib
+<pre><code class="python">import importlib
 import os
 import sys
 from pydantic.error_wrappers import ValidationError
@@ -37,18 +36,15 @@ import socket
 from modules.base.CallStack import CallStack
 from modules.base.Configuration import *
 from modules.base.Instances import *
+from modules.base.chevron_renderer import *
 
-VERSION = &#34;2021.11.12&#34;
-CONF_YAML = &#34;yaml&#34;
-CONF_JSON = &#34;json&#34;
-CONF = CONF_YAML
-
+VERSION = &#34;2021.11.16&#34;
 
 class App(BaseApp, Logging, Debuggable):
     def __init__(self) -&gt; None:
         super().__init__()
 
-        init_renderer()
+        init_renderer(self)
 
         self.__read_configuration()
 
@@ -65,10 +61,10 @@ class App(BaseApp, Logging, Debuggable):
             platfrom.start(call_stack)
 
         for action in self.actions:
-            action.start(call_stack)        
+            action.start(call_stack)
 
         for sensor in self.sensors:
-            sensor.start(call_stack)                  
+            sensor.start(call_stack)
 
         self.log_debug(&#34;Platforms started&#34;)
 
@@ -93,29 +89,31 @@ class App(BaseApp, Logging, Debuggable):
         &#39;&#39;&#39;If the filename is not given in cli args, try to find the config file by the device&#39;s hostname.&#39;&#39;&#39;
 
         config_filename = &#34;&#34;
-        if len(sys.argv) == 1:
-            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
-            print(&#34;No configuration file given, use &#34; + config_filename)
+        if len(sys.argv) == 0:
+            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.yaml&#34;
+            self.log_info(&#34;No configuration file given, fallback to &#39;&#34; + config_filename + &#34;&#39;&#34;)
         else:
             config_filename = sys.argv[-1]
 
         try:
-            print(&#34;Loading &#34; + config_filename)
+            self.log_debug(&#34;Loading &#39;&#34; + config_filename + &#34;&#39;&#34;)
             with open(config_filename) as config_file:
-                if (CONF == CONF_JSON):
-                    raw = json.load(config_file)
-                elif (CONF == CONF_YAML):
+                if config_filename.upper().endswith(&#34;.YAML&#34;):
                     raw = yaml.safe_load(config_file)
+                elif config_filename.upper().endswith(&#34;.YAML&#34;):
+                    raw = json.load(config_file)
                 else:
-                    raise Exception(&#34;Unknown config type: &#34; + CONF)
+                    self.log_error(&#34;Unknown config type: &#34; + config_filename)
+                    exit()
 
             from modules.app.AppConfiguration import AppConfiguration
 
             try:
                 result = AppConfiguration.parse_obj(raw)
                 self.configuration = result
+
             except ValidationError as e:
-                print(e)
+                self.log_error(e)
                 exit()
 
         except IOError:
@@ -150,7 +148,7 @@ class App(BaseApp, Logging, Debuggable):
                 ctor = getattr(module, class_name)
                 platform = self.get_platform(action_conf.platform)
                 result.append(ctor(platform, action_conf))
-        return result        
+        return result
 
 
     def __init_sensors(self):
@@ -167,7 +165,7 @@ class App(BaseApp, Logging, Debuggable):
                 ctor = getattr(module, class_name)
                 platform = self.get_platform(sensor_conf.platform)
                 result.append(ctor(platform, sensor_conf))
-        return result             </code></pre>
+        return result</code></pre>
 </details>
 </section>
 <section>
@@ -192,7 +190,7 @@ class App(BaseApp, Logging, Debuggable):
     def __init__(self) -&gt; None:
         super().__init__()
 
-        init_renderer()
+        init_renderer(self)
 
         self.__read_configuration()
 
@@ -209,10 +207,10 @@ class App(BaseApp, Logging, Debuggable):
             platfrom.start(call_stack)
 
         for action in self.actions:
-            action.start(call_stack)        
+            action.start(call_stack)
 
         for sensor in self.sensors:
-            sensor.start(call_stack)                  
+            sensor.start(call_stack)
 
         self.log_debug(&#34;Platforms started&#34;)
 
@@ -237,29 +235,31 @@ class App(BaseApp, Logging, Debuggable):
         &#39;&#39;&#39;If the filename is not given in cli args, try to find the config file by the device&#39;s hostname.&#39;&#39;&#39;
 
         config_filename = &#34;&#34;
-        if len(sys.argv) == 1:
-            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.&#34; + CONF
-            print(&#34;No configuration file given, use &#34; + config_filename)
+        if len(sys.argv) == 0:
+            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.yaml&#34;
+            self.log_info(&#34;No configuration file given, fallback to &#39;&#34; + config_filename + &#34;&#39;&#34;)
         else:
             config_filename = sys.argv[-1]
 
         try:
-            print(&#34;Loading &#34; + config_filename)
+            self.log_debug(&#34;Loading &#39;&#34; + config_filename + &#34;&#39;&#34;)
             with open(config_filename) as config_file:
-                if (CONF == CONF_JSON):
-                    raw = json.load(config_file)
-                elif (CONF == CONF_YAML):
+                if config_filename.upper().endswith(&#34;.YAML&#34;):
                     raw = yaml.safe_load(config_file)
+                elif config_filename.upper().endswith(&#34;.YAML&#34;):
+                    raw = json.load(config_file)
                 else:
-                    raise Exception(&#34;Unknown config type: &#34; + CONF)
+                    self.log_error(&#34;Unknown config type: &#34; + config_filename)
+                    exit()
 
             from modules.app.AppConfiguration import AppConfiguration
 
             try:
                 result = AppConfiguration.parse_obj(raw)
                 self.configuration = result
+
             except ValidationError as e:
-                print(e)
+                self.log_error(e)
                 exit()
 
         except IOError:
@@ -294,7 +294,7 @@ class App(BaseApp, Logging, Debuggable):
                 ctor = getattr(module, class_name)
                 platform = self.get_platform(action_conf.platform)
                 result.append(ctor(platform, action_conf))
-        return result        
+        return result
 
 
     def __init_sensors(self):
@@ -311,7 +311,7 @@ class App(BaseApp, Logging, Debuggable):
                 ctor = getattr(module, class_name)
                 platform = self.get_platform(sensor_conf.platform)
                 result.append(ctor(platform, sensor_conf))
-        return result             </code></pre>
+        return result</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

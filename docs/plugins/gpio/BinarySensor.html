@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>src.plugins.gpio.ButtonSensor API documentation</title>
+<title>src.plugins.gpio.BinarySensor API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.plugins.gpio.ButtonSensor</code></h1>
+<h1 class="title">Module <code>src.plugins.gpio.BinarySensor</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -27,15 +27,16 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from os import execv
-from gpiozero.input_devices import Button
+from gpiozero.input_devices import DigitalInputDevice
 from modules.base.Configuration import *
 from modules.base.Instances import *
 from plugins.gpio.Platform import Platform
-import time
+from dataclasses import dataclass
+
 
 @configuration
-class ButtonSensorConfiguration(SensorConfiguration):
-    &#39;&#39;&#39;Sensor to read the GPIO state of a typical button.&#39;&#39;&#39;
+class BinarySensorConfiguration(SensorConfiguration):
+    &#39;&#39;&#39;Sensor to read the state of a GPIO pin.&#39;&#39;&#39;
 
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
@@ -49,23 +50,11 @@ class ButtonSensorConfiguration(SensorConfiguration):
     bounce_time: Optional[int] = None
     &#39;&#39;&#39;Length of time (in seconds) to ignore changes after initial change&#39;&#39;&#39;
 
-    hold_time: int = 1
-    &#39;&#39;&#39;Length of time (in seconds) to wait after the button is pushed, until executing the when_held handler&#39;&#39;&#39;
-
-    hold_repeat: Optional[bool] = False
-    &#39;&#39;&#39;If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.&#39;&#39;&#39;
-
-    on_hold: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is held&#39;&#39;&#39;
+    on_high: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;Automations to invoke when the GPIO is set to HIGH&#39;&#39;&#39;
     
-    on_press: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is pressed&#39;&#39;&#39;
-    
-    on_release: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is released&#39;&#39;&#39;
-
-    check_state_delay: Optional[float]
-    &#39;&#39;&#39;Only invoke &#39;&#39;&#39;
+    on_low: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;Automations to invoke when the GPIO is set to HIGH&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -76,38 +65,28 @@ class ButtonSensorConfiguration(SensorConfiguration):
 
     @validator(&#39;type&#39;)
     def check_type(cls, v):
-        type_name = &#34;ButtonSensor&#34;
+        type_name = &#34;BinarySensor&#34;
         if v != type_name:
             raise ValueError(&#34;wrong type: &#34; + type_name + &#34;, is: &#34; + v)
-        return v                 
+        return v          
 
+class BinaryState(BaseState):
+    is_high = False
 
-class ButtonState(BaseState):
-    is_pressed = False
-
-
-
-class ButtonSensor(BaseSensor, Debuggable):
+class BinarySensor(BaseSensor, Debuggable):
     &#39;&#39;&#39;Read the state of a GPIO pin&#39;&#39;&#39;
     
-    def __init__(self, parent: Platform, config: ButtonSensorConfiguration) -&gt; None:
+    def __init__(self, parent: Platform, config: BinarySensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
-        self.state = ButtonState()
+        self.state = BinaryState()
 
-        self.__button = Button(
+        self.__input_device = DigitalInputDevice(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
             bounce_time = self.configuration.bounce_time,
-            hold_time = self.configuration.hold_time,
-            hold_repeat = self.configuration.hold_repeat
         )
-
-        if self.configuration.check_state_delay:
-            self.check_state_delay = self.configuration.check_state_delay
-        else:
-            self.check_state_delay = 0
 
         class exec():
             def __init__(cls, automations: list[Automation], is_pressed) -&gt; None: #type: ignore
@@ -115,23 +94,12 @@ class ButtonSensor(BaseSensor, Debuggable):
                 cls.is_pressed = is_pressed
 
             def invoke(cls): #type: ignore
-                if self.check_state_delay is not None:
-                    time.sleep(self.check_state_delay)
-                    if self.__button.is_active is not cls.is_pressed:
-                        self.log_debug(&#34;Not pressed anymore, cancelling ..&#34;)
-                        return 
-
-                self.state.is_pressed = cls.is_pressed
-
+                self.state.is_high = cls.is_pressed
                 call_stack = CallStack().with_keys({
-                    &#34;held_time&#34;: self.__button.held_time,
-                    &#34;hold_repeat&#34;: self.__button.hold_repeat,
-                    &#34;hold_time&#34;: self.__button.hold_time,
-                    &#34;is_held&#34;: self.__button.is_held,
-                    &#34;is_active&#34;: self.__button.is_active,
-                    &#34;pin&#34;: self.__button.pin,
-                    &#34;pull_up&#34;: self.__button.pull_up,
-                    &#34;value&#34;: self.__button.value,
+                    &#34;is_active&#34;: self.__input_device.is_active,
+                    &#34;pin&#34;: self.__input_device.pin,
+                    &#34;pull_up&#34;: self.__input_device.pull_up,
+                    &#34;value&#34;: self.__input_device.value,
                 })
 
                 for automation in cls.automations:
@@ -140,13 +108,11 @@ class ButtonSensor(BaseSensor, Debuggable):
                 self.on_state_changed(call_stack)
 
 
-        self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
-        self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
-        self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
+        self.on_high_automations = Automation.create_automations(self, self.configuration.on_high)
+        self.on_low_automations = Automation.create_automations(self, self.configuration.on_low)
         
-        self.__button.when_activated = exec(self.on_press_automations, True).invoke
-        self.__button.when_held = exec(self.on_hold_automations, True).invoke
-        self.__button.when_deactivated = exec(self.on_release_automations, False).invoke</code></pre>
+        self.__input_device.when_activated = exec(self.on_high_automations, True).invoke
+        self.__input_device.when_deactivated = exec(self.on_low_automations, False).invoke</code></pre>
 </details>
 </section>
 <section>
@@ -158,9 +124,9 @@ class ButtonSensor(BaseSensor, Debuggable):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensor"><code class="flex name class">
-<span>class <span class="ident">ButtonSensor</span></span>
-<span>(</span><span>parent: plugins.gpio.Platform.Platform, config: <a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration">ButtonSensorConfiguration</a>)</span>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensor"><code class="flex name class">
+<span>class <span class="ident">BinarySensor</span></span>
+<span>(</span><span>parent: plugins.gpio.Platform.Platform, config: <a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration">BinarySensorConfiguration</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read the state of a GPIO pin</p></div>
@@ -168,27 +134,20 @@ class ButtonSensor(BaseSensor, Debuggable):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ButtonSensor(BaseSensor, Debuggable):
+<pre><code class="python">class BinarySensor(BaseSensor, Debuggable):
     &#39;&#39;&#39;Read the state of a GPIO pin&#39;&#39;&#39;
     
-    def __init__(self, parent: Platform, config: ButtonSensorConfiguration) -&gt; None:
+    def __init__(self, parent: Platform, config: BinarySensorConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
-        self.state = ButtonState()
+        self.state = BinaryState()
 
-        self.__button = Button(
+        self.__input_device = DigitalInputDevice(
             pin = self.configuration.pin,
             pull_up = self.configuration.pull_up,
             active_state = self.configuration.active_state,
             bounce_time = self.configuration.bounce_time,
-            hold_time = self.configuration.hold_time,
-            hold_repeat = self.configuration.hold_repeat
         )
-
-        if self.configuration.check_state_delay:
-            self.check_state_delay = self.configuration.check_state_delay
-        else:
-            self.check_state_delay = 0
 
         class exec():
             def __init__(cls, automations: list[Automation], is_pressed) -&gt; None: #type: ignore
@@ -196,23 +155,12 @@ class ButtonSensor(BaseSensor, Debuggable):
                 cls.is_pressed = is_pressed
 
             def invoke(cls): #type: ignore
-                if self.check_state_delay is not None:
-                    time.sleep(self.check_state_delay)
-                    if self.__button.is_active is not cls.is_pressed:
-                        self.log_debug(&#34;Not pressed anymore, cancelling ..&#34;)
-                        return 
-
-                self.state.is_pressed = cls.is_pressed
-
+                self.state.is_high = cls.is_pressed
                 call_stack = CallStack().with_keys({
-                    &#34;held_time&#34;: self.__button.held_time,
-                    &#34;hold_repeat&#34;: self.__button.hold_repeat,
-                    &#34;hold_time&#34;: self.__button.hold_time,
-                    &#34;is_held&#34;: self.__button.is_held,
-                    &#34;is_active&#34;: self.__button.is_active,
-                    &#34;pin&#34;: self.__button.pin,
-                    &#34;pull_up&#34;: self.__button.pull_up,
-                    &#34;value&#34;: self.__button.value,
+                    &#34;is_active&#34;: self.__input_device.is_active,
+                    &#34;pin&#34;: self.__input_device.pin,
+                    &#34;pull_up&#34;: self.__input_device.pull_up,
+                    &#34;value&#34;: self.__input_device.value,
                 })
 
                 for automation in cls.automations:
@@ -221,13 +169,11 @@ class ButtonSensor(BaseSensor, Debuggable):
                 self.on_state_changed(call_stack)
 
 
-        self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
-        self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
-        self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
+        self.on_high_automations = Automation.create_automations(self, self.configuration.on_high)
+        self.on_low_automations = Automation.create_automations(self, self.configuration.on_low)
         
-        self.__button.when_activated = exec(self.on_press_automations, True).invoke
-        self.__button.when_held = exec(self.on_hold_automations, True).invoke
-        self.__button.when_deactivated = exec(self.on_release_automations, False).invoke</code></pre>
+        self.__input_device.when_activated = exec(self.on_high_automations, True).invoke
+        self.__input_device.when_deactivated = exec(self.on_low_automations, False).invoke</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -240,12 +186,12 @@ class ButtonSensor(BaseSensor, Debuggable):
 <li>modules.base.Instances.Debuggable</li>
 </ul>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration"><code class="flex name class">
-<span>class <span class="ident">ButtonSensorConfiguration</span></span>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration"><code class="flex name class">
+<span>class <span class="ident">BinarySensorConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sensor to read the GPIO state of a typical button.</p>
+<div class="desc"><p>Sensor to read the state of a GPIO pin.</p>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
 <details class="source">
@@ -253,8 +199,8 @@ class ButtonSensor(BaseSensor, Debuggable):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@configuration
-class ButtonSensorConfiguration(SensorConfiguration):
-    &#39;&#39;&#39;Sensor to read the GPIO state of a typical button.&#39;&#39;&#39;
+class BinarySensorConfiguration(SensorConfiguration):
+    &#39;&#39;&#39;Sensor to read the state of a GPIO pin.&#39;&#39;&#39;
 
     pin: str
     &#39;&#39;&#39;GPIO PIN name. e.g. GPIO22&#39;&#39;&#39;
@@ -268,23 +214,11 @@ class ButtonSensorConfiguration(SensorConfiguration):
     bounce_time: Optional[int] = None
     &#39;&#39;&#39;Length of time (in seconds) to ignore changes after initial change&#39;&#39;&#39;
 
-    hold_time: int = 1
-    &#39;&#39;&#39;Length of time (in seconds) to wait after the button is pushed, until executing the when_held handler&#39;&#39;&#39;
-
-    hold_repeat: Optional[bool] = False
-    &#39;&#39;&#39;If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.&#39;&#39;&#39;
-
-    on_hold: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is held&#39;&#39;&#39;
+    on_high: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;Automations to invoke when the GPIO is set to HIGH&#39;&#39;&#39;
     
-    on_press: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is pressed&#39;&#39;&#39;
-    
-    on_release: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is released&#39;&#39;&#39;
-
-    check_state_delay: Optional[float]
-    &#39;&#39;&#39;Only invoke &#39;&#39;&#39;
+    on_low: list[AutomationConfiguration] = []
+    &#39;&#39;&#39;Automations to invoke when the GPIO is set to HIGH&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform_module(cls, v):
@@ -295,10 +229,10 @@ class ButtonSensorConfiguration(SensorConfiguration):
 
     @validator(&#39;type&#39;)
     def check_type(cls, v):
-        type_name = &#34;ButtonSensor&#34;
+        type_name = &#34;BinarySensor&#34;
         if v != type_name:
             raise ValueError(&#34;wrong type: &#34; + type_name + &#34;, is: &#34; + v)
-        return v                 </code></pre>
+        return v          </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -313,50 +247,34 @@ class ButtonSensorConfiguration(SensorConfiguration):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.active_state"><code class="name">var <span class="ident">active_state</span> : Optional[bool]</code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.active_state"><code class="name">var <span class="ident">active_state</span> : Optional[bool]</code></dt>
 <dd>
 <div class="desc"><p>True: Active=HIGH, False: Active=LOW, None=auto-select with pull_up not None</p></div>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.bounce_time"><code class="name">var <span class="ident">bounce_time</span> : Optional[int]</code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.bounce_time"><code class="name">var <span class="ident">bounce_time</span> : Optional[int]</code></dt>
 <dd>
 <div class="desc"><p>Length of time (in seconds) to ignore changes after initial change</p></div>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_state_delay"><code class="name">var <span class="ident">check_state_delay</span> : Optional[float]</code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_high"><code class="name">var <span class="ident">on_high</span> : list</code></dt>
 <dd>
-<div class="desc"><p>Only invoke</p></div>
+<div class="desc"><p>Automations to invoke when the GPIO is set to HIGH</p></div>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_repeat"><code class="name">var <span class="ident">hold_repeat</span> : Optional[bool]</code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_low"><code class="name">var <span class="ident">on_low</span> : list</code></dt>
 <dd>
-<div class="desc"><p>If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.</p></div>
+<div class="desc"><p>Automations to invoke when the GPIO is set to HIGH</p></div>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_time"><code class="name">var <span class="ident">hold_time</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Length of time (in seconds) to wait after the button is pushed, until executing the when_held handler</p></div>
-</dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_hold"><code class="name">var <span class="ident">on_hold</span> : list</code></dt>
-<dd>
-<div class="desc"><p>Automations to invoke when the button is held</p></div>
-</dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_press"><code class="name">var <span class="ident">on_press</span> : list</code></dt>
-<dd>
-<div class="desc"><p>Automations to invoke when the button is pressed</p></div>
-</dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_release"><code class="name">var <span class="ident">on_release</span> : list</code></dt>
-<dd>
-<div class="desc"><p>Automations to invoke when the button is released</p></div>
-</dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pin"><code class="name">var <span class="ident">pin</span> : str</code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pin"><code class="name">var <span class="ident">pin</span> : str</code></dt>
 <dd>
 <div class="desc"><p>GPIO PIN name. e.g. GPIO22</p></div>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pull_up"><code class="name">var <span class="ident">pull_up</span> : Optional[bool]</code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pull_up"><code class="name">var <span class="ident">pull_up</span> : Optional[bool]</code></dt>
 <dd>
 <div class="desc"><p>True=enable software pull up, False=enable software pulldown, None=disabled(floating)</p></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_platform_module"><code class="name flex">
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_platform_module"><code class="name flex">
 <span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
 </code></dt>
 <dd>
@@ -373,7 +291,7 @@ def check_platform_module(cls, v):
     return v    </code></pre>
 </details>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_type"><code class="name flex">
+<dt id="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_type"><code class="name flex">
 <span>def <span class="ident">check_type</span></span>(<span>v)</span>
 </code></dt>
 <dd>
@@ -384,16 +302,16 @@ def check_platform_module(cls, v):
 </summary>
 <pre><code class="python">@validator(&#39;type&#39;)
 def check_type(cls, v):
-    type_name = &#34;ButtonSensor&#34;
+    type_name = &#34;BinarySensor&#34;
     if v != type_name:
         raise ValueError(&#34;wrong type: &#34; + type_name + &#34;, is: &#34; + v)
-    return v                 </code></pre>
+    return v          </code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonState"><code class="flex name class">
-<span>class <span class="ident">ButtonState</span></span>
+<dt id="src.plugins.gpio.BinarySensor.BinaryState"><code class="flex name class">
+<span>class <span class="ident">BinaryState</span></span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -401,8 +319,8 @@ def check_type(cls, v):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ButtonState(BaseState):
-    is_pressed = False</code></pre>
+<pre><code class="python">class BinaryState(BaseState):
+    is_high = False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -410,7 +328,7 @@ def check_type(cls, v):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.gpio.ButtonSensor.ButtonState.is_pressed"><code class="name">var <span class="ident">is_pressed</span></code></dt>
+<dt id="src.plugins.gpio.BinarySensor.BinaryState.is_high"><code class="name">var <span class="ident">is_high</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -433,29 +351,25 @@ def check_type(cls, v):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensor" href="#src.plugins.gpio.ButtonSensor.ButtonSensor">ButtonSensor</a></code></h4>
+<h4><code><a title="src.plugins.gpio.BinarySensor.BinarySensor" href="#src.plugins.gpio.BinarySensor.BinarySensor">BinarySensor</a></code></h4>
 </li>
 <li>
-<h4><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration">ButtonSensorConfiguration</a></code></h4>
+<h4><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration">BinarySensorConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.active_state" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.active_state">active_state</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.bounce_time" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.bounce_time">bounce_time</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_platform_module" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_platform_module">check_platform_module</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_state_delay" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_state_delay">check_state_delay</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_type" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.check_type">check_type</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_repeat" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_repeat">hold_repeat</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_time" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.hold_time">hold_time</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_hold" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_hold">on_hold</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_press" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_press">on_press</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_release" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_release">on_release</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pin" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pin">pin</a></code></li>
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pull_up" href="#src.plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pull_up">pull_up</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.active_state" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.active_state">active_state</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.bounce_time" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.bounce_time">bounce_time</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_platform_module" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_platform_module">check_platform_module</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_type" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.check_type">check_type</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_high" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_high">on_high</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_low" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.on_low">on_low</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pin" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pin">pin</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pull_up" href="#src.plugins.gpio.BinarySensor.BinarySensorConfiguration.pull_up">pull_up</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.plugins.gpio.ButtonSensor.ButtonState" href="#src.plugins.gpio.ButtonSensor.ButtonState">ButtonState</a></code></h4>
+<h4><code><a title="src.plugins.gpio.BinarySensor.BinaryState" href="#src.plugins.gpio.BinarySensor.BinaryState">BinaryState</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.gpio.ButtonSensor.ButtonState.is_pressed" href="#src.plugins.gpio.ButtonSensor.ButtonState.is_pressed">is_pressed</a></code></li>
+<li><code><a title="src.plugins.gpio.BinarySensor.BinaryState.is_high" href="#src.plugins.gpio.BinarySensor.BinaryState.is_high">is_high</a></code></li>
 </ul>
 </li>
 </ul>

@@ -74,9 +74,9 @@ class Platform(BasePlatform, Logging):
             import pigpio        
             import time
             import os    
-            self.pi = pigpio.pi()
+            pi = pigpio.pi() #type: ignore
 
-            while not self.pi.connected:
+            while not pi.connected: #type: ignore
                 self.log_warning(&#34;make sure that pigpio is installed. &#39;sudo apt install pigpio&#39; &#34;)
                 self.log_info(&#34;trying to connect to pipgio..&#34;)
                 os.system(&#34;sudo pigpiod&#34;)
@@ -104,7 +104,7 @@ class Platform(BasePlatform, Logging):
         self.gpio = gpiozero
 
     def dispose(self):
-        self.gpio.Device.close()
+        self.gpio.Device.close() #type: ignore
         super().dispose()</code></pre>
 </details>
 </section>
@@ -218,9 +218,9 @@ def check_platform_module(cls, v):
             import pigpio        
             import time
             import os    
-            self.pi = pigpio.pi()
+            pi = pigpio.pi() #type: ignore
 
-            while not self.pi.connected:
+            while not pi.connected: #type: ignore
                 self.log_warning(&#34;make sure that pigpio is installed. &#39;sudo apt install pigpio&#39; &#34;)
                 self.log_info(&#34;trying to connect to pipgio..&#34;)
                 os.system(&#34;sudo pigpiod&#34;)
@@ -248,7 +248,7 @@ def check_platform_module(cls, v):
         self.gpio = gpiozero
 
     def dispose(self):
-        self.gpio.Device.close()
+        self.gpio.Device.close() #type: ignore
         super().dispose()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -271,7 +271,7 @@ def check_platform_module(cls, v):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dispose(self):
-    self.gpio.Device.close()
+    self.gpio.Device.close() #type: ignore
     super().dispose()</code></pre>
 </details>
 </dd>
