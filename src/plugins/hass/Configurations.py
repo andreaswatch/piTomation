@@ -29,7 +29,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
     '''Event to listen for the State'''
 
     @validator('type')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "trigger" not in v:
             raise ValueError("wrong type: trigger, is: " + v)
         return v      
@@ -46,7 +46,7 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     '''Where Homeassistant can get the state'''    
 
     @validator('type')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "sensor" not in v:
             raise ValueError("wrong type: sensor, is: " + v)
         return v          
@@ -66,7 +66,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     '''Where HomeAssistant can publish the state'''
 
     @validator('type')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "switch" not in v:
             raise ValueError("wrong type: switch, is: " + v)
         return v          
