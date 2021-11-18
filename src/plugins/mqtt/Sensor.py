@@ -17,7 +17,7 @@ class MqttSensorConfiguration(SensorConfiguration):
         return v   
 
     on_message: Optional[list[AutomationConfiguration]] = [] 
-    '''List of Automations to execute when a message is received, see `AutomationConfiguration`'''
+    '''List of Automations to execute when a message is received, see `modules.base.Configuration.AutomationConfiguration`'''
 
 
 class MqttSensorState(BaseState):

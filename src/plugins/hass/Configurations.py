@@ -57,10 +57,10 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     '''Exposes an action or sensor to HomeAssistant as an action entity.'''
 
     on_command: Optional[list[AutomationConfiguration]]
-    '''Automation to execute when HomeAssistant triggers ON, see `AutomationConfiguration`'''
+    '''Automation to execute when HomeAssistant triggers ON, see `modules.base.Configuration.AutomationConfiguration`'''
 
     off_command: Optional[list[AutomationConfiguration]]
-    '''Automation to execute when HomeAssistant triggers OFF, see `AutomationConfiguration`'''
+    '''Automation to execute when HomeAssistant triggers OFF, see `modules.base.Configuration.AutomationConfiguration`'''
 
     command_topic: Optional[str]
     '''Where HomeAssistant can publish the state'''

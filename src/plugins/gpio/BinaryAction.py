@@ -11,10 +11,10 @@ class BinaryActionConfiguration(ActionConfiguration):
     '''GPIO PIN name. e.g. GPIO22'''
 
     on_high: list[AutomationConfiguration] = []
-    '''List of Automations to execute when the GPIO is triggered to high, see `AutomationConfiguration`'''
+    '''List of Automations to execute when the GPIO is triggered to high, see `modules.base.Configuration.AutomationConfiguration`'''
 
     on_low: list[AutomationConfiguration] = []
-    '''List of Automations to execute when the GPIO is triggered to low, see `AutomationConfiguration`'''
+    '''List of Automations to execute when the GPIO is triggered to low, see `modules.base.Configuration.AutomationConfiguration`'''
 
     active_high: bool = True
     '''"True=normal, False=inverted'''

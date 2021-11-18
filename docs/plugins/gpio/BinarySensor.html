@@ -51,10 +51,10 @@ class BinarySensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;Length of time (in seconds) to ignore changes after initial change&#39;&#39;&#39;
 
     on_high: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to HIGH, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to HIGH, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
     
     on_low: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to LOW, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to LOW, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def __check_platform(cls, v):
@@ -207,10 +207,10 @@ class BinarySensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;Length of time (in seconds) to ignore changes after initial change&#39;&#39;&#39;
 
     on_high: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to HIGH, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to HIGH, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
     
     on_low: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to LOW, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute when the GPIO is set to LOW, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def __check_platform(cls, v):
@@ -249,11 +249,11 @@ class BinarySensorConfiguration(SensorConfiguration):
 </dd>
 <dt id="plugins.gpio.BinarySensor.BinarySensorConfiguration.on_high"><code class="name">var <span class="ident">on_high</span> : list</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute when the GPIO is set to HIGH, see <code>AutomationConfiguration</code></p></div>
+<div class="desc"><p>List of Automations to execute when the GPIO is set to HIGH, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="plugins.gpio.BinarySensor.BinarySensorConfiguration.on_low"><code class="name">var <span class="ident">on_low</span> : list</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute when the GPIO is set to LOW, see <code>AutomationConfiguration</code></p></div>
+<div class="desc"><p>List of Automations to execute when the GPIO is set to LOW, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="plugins.gpio.BinarySensor.BinarySensorConfiguration.pin"><code class="name">var <span class="ident">pin</span> : str</code></dt>
 <dd>

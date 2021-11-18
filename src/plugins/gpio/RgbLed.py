@@ -18,13 +18,13 @@ class RgbLedConfiguration(ActionConfiguration):
     '''GPIO PIN name for the blue led. e.g. GPIO22'''
 
     on_high: list[AutomationConfiguration] = []
-    '''List of Automations to execute when the LED is turned on, see `AutomationConfiguration`'''
+    '''List of Automations to execute when the LED is turned on, see `modules.base.Configuration.AutomationConfiguration`'''
 
     on_low: list[AutomationConfiguration] = []
-    '''List of Automations to execute when the LED is turned on, see `AutomationConfiguration`'''
+    '''List of Automations to execute when the LED is turned on, see `modules.base.Configuration.AutomationConfiguration`'''
 
     on_color_changed: list[AutomationConfiguration] = []
-    '''List of Automations to execute when the LED's color has changed, see `AutomationConfiguration`'''
+    '''List of Automations to execute when the LED's color has changed, see `modules.base.Configuration.AutomationConfiguration`'''
 
     active_high: bool = True
     '''True=normal, False=inverted'''

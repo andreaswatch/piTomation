@@ -72,13 +72,13 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
 
     on_connected: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute when the connection to the host is established, see `AutomationConfiguration`&#39;&#39;&#39; 
+    &#39;&#39;&#39;List of Automations to execute when the connection to the host is established, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
 
     on_disconnected: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute when the connection to the host is lost, see `AutomationConfiguration`&#39;&#39;&#39;    
+    &#39;&#39;&#39;List of Automations to execute when the connection to the host is lost, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;   
 
     on_message: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute when a MQTT message is received, see `AutomationConfiguration`&#39;&#39;&#39;    
+    &#39;&#39;&#39;List of Automations to execute when a MQTT message is received, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;  
 
 
 class Platform(BasePlatform):
@@ -301,13 +301,13 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;Availability topic and last will&#39;&#39;&#39;
 
     on_connected: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute when the connection to the host is established, see `AutomationConfiguration`&#39;&#39;&#39; 
+    &#39;&#39;&#39;List of Automations to execute when the connection to the host is established, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
 
     on_disconnected: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute when the connection to the host is lost, see `AutomationConfiguration`&#39;&#39;&#39;    
+    &#39;&#39;&#39;List of Automations to execute when the connection to the host is lost, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;   
 
     on_message: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute when a MQTT message is received, see `AutomationConfiguration`&#39;&#39;&#39;    </code></pre>
+    &#39;&#39;&#39;List of Automations to execute when a MQTT message is received, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;  </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -335,15 +335,15 @@ class MqttPlatformConfiguration(PlatformConfiguration):
 </dd>
 <dt id="plugins.mqtt.Platform.MqttPlatformConfiguration.on_connected"><code class="name">var <span class="ident">on_connected</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute when the connection to the host is established, see <code>AutomationConfiguration</code></p></div>
+<div class="desc"><p>List of Automations to execute when the connection to the host is established, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="plugins.mqtt.Platform.MqttPlatformConfiguration.on_disconnected"><code class="name">var <span class="ident">on_disconnected</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute when the connection to the host is lost, see <code>AutomationConfiguration</code></p></div>
+<div class="desc"><p>List of Automations to execute when the connection to the host is lost, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="plugins.mqtt.Platform.MqttPlatformConfiguration.on_message"><code class="name">var <span class="ident">on_message</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute when a MQTT message is received, see <code>AutomationConfiguration</code></p></div>
+<div class="desc"><p>List of Automations to execute when a MQTT message is received, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="plugins.mqtt.Platform.MqttPlatformConfiguration.port"><code class="name">var <span class="ident">port</span> : int</code></dt>
 <dd>

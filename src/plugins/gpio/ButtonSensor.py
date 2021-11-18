@@ -28,16 +28,16 @@ class ButtonSensorConfiguration(SensorConfiguration):
     '''If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.'''
 
     on_hold: list[AutomationConfiguration] = []
-    '''Automations to invoke when the button is held, see `AutomationConfiguration`'''
+    '''Automations to invoke when the button is held, see `modules.base.Configuration.AutomationConfiguration`'''
     
     on_press: list[AutomationConfiguration] = []
-    '''Automations to invoke when the button is pressed, see `AutomationConfiguration`'''
+    '''Automations to invoke when the button is pressed, see `modules.base.Configuration.AutomationConfiguration`'''
     
     on_release: list[AutomationConfiguration] = []
-    '''Automations to invoke when the button is released, see `AutomationConfiguration`'''
+    '''Automations to invoke when the button is released, see `modules.base.Configuration.AutomationConfiguration`'''
 
     check_state_delay: Optional[float]
-    '''Only invoke '''
+    '''experimental for debouncing, probably better to use on_hold with a hold_time instead of on_press'''
 
     @validator('platform')
     def __check_platform_module(cls, v):

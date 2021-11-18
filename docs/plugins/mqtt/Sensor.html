@@ -44,7 +44,7 @@ class MqttSensorConfiguration(SensorConfiguration):
         return v   
 
     on_message: Optional[list[AutomationConfiguration]] = [] 
-    &#39;&#39;&#39;List of Automations to execute when a message is received, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute when a message is received, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;
 
 
 class MqttSensorState(BaseState):
@@ -117,7 +117,7 @@ class MqttSensorConfiguration(SensorConfiguration):
         return v   
 
     on_message: Optional[list[AutomationConfiguration]] = [] 
-    &#39;&#39;&#39;List of Automations to execute when a message is received, see `AutomationConfiguration`&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;List of Automations to execute when a message is received, see `modules.base.Configuration.AutomationConfiguration`&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -134,7 +134,7 @@ class MqttSensorConfiguration(SensorConfiguration):
 <dl>
 <dt id="plugins.mqtt.Sensor.MqttSensorConfiguration.on_message"><code class="name">var <span class="ident">on_message</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute when a message is received, see <code>AutomationConfiguration</code></p></div>
+<div class="desc"><p>List of Automations to execute when a message is received, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="plugins.mqtt.Sensor.MqttSensorConfiguration.topic"><code class="name">var <span class="ident">topic</span> : str</code></dt>
 <dd>
