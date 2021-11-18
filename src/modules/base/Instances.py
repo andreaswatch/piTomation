@@ -270,7 +270,7 @@ class Automation(Stackable):
 
     @staticmethod
     def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
-        '''Creates automations for all given AutomationConfiguration's'''
+        '''Creates automations for all given AutomationConfiguration's, see `AutomationConfiguration`'''
 
         automations: list[Automation] = []
 

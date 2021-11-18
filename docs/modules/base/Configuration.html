@@ -32,7 +32,7 @@ from typing import Any, Optional, Union
 from pydantic.class_validators import validator
 
 __registry: dict[type, list[type]] = {}
-&#39;&#39;&#39;Contains all #@configuration class types, key is the base type&#39;&#39;&#39;
+&#39;&#39;&#39;Contains all @configuration class types, key is the base type&#39;&#39;&#39;
 
 
 def configuration(cls):
@@ -101,7 +101,7 @@ class ConditionConfiguration(Configuration):
     &#39;&#39;&#39;Adress of the actual value, e.g. &#34;payload&#34;&#39;&#39;&#39;
 
     comperator: str
-    &#39;&#39;&#39;Function name used to compare the values&#39;&#39;&#39;
+    &#39;&#39;&#39;Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]&#39;&#39;&#39;
 
     inverted: Optional[bool] = False
     &#39;&#39;&#39;Invert result&#39;&#39;&#39;
@@ -126,10 +126,10 @@ class AutomationConfiguration(Configuration):
     &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute&#39;&#39;&#39;
 
     conditions: Optional[list[ConditionConfiguration]] = []
-    &#39;&#39;&#39;list of conditions to prove before the actions get executed&#39;&#39;&#39;
+    &#39;&#39;&#39;list of conditions to prove before the actions get executed, see `ConditionConfiguration`&#39;&#39;&#39;
 
     actions: list[ActionTriggerConfiguration] = []
-    &#39;&#39;&#39;list of actions to execute&#39;&#39;&#39;
+    &#39;&#39;&#39;list of actions to execute, see `ActionTriggerConfiguration`&#39;&#39;&#39;
 
 
 #@configuration
@@ -137,10 +137,10 @@ class StackableConfiguration(IdConfiguration, VariablesConfiguration):
     &#39;&#39;&#39;Provides default automations that are executed by all Platforms, Actions and Sensors&#39;&#39;&#39;
 
     on_init: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute after init is done&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute after init is done, see `AutomationConfiguration`&#39;&#39;&#39;
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute before this platform is disposed&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute before this platform is disposed, see `AutomationConfiguration`&#39;&#39;&#39;
 
 
 #@configuration
@@ -167,7 +167,7 @@ class ScriptConfiguration(StackableConfiguration):
     &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
 
     on_state_changed: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed, see `AutomationConfiguration`&#39;&#39;&#39;
 
 
 #@configuration
@@ -185,11 +185,11 @@ class DeviceConfiguration(VariablesConfiguration):
     name: str
     &#39;&#39;&#39;Name of the device.&#39;&#39;&#39;
 
-    &#39;&#39;&#39;Version of the configuration&#39;&#39;&#39;
     version: str
+    &#39;&#39;&#39;Version of the configuration&#39;&#39;&#39;
 
     on_init: Optional[list[ActionTriggerConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute after init is done&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;Actions to execute after init is done, see `ActionTriggerConfiguration`&#39;&#39;&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -364,10 +364,10 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute&#39;&#39;&#39;
 
     conditions: Optional[list[ConditionConfiguration]] = []
-    &#39;&#39;&#39;list of conditions to prove before the actions get executed&#39;&#39;&#39;
+    &#39;&#39;&#39;list of conditions to prove before the actions get executed, see `ConditionConfiguration`&#39;&#39;&#39;
 
     actions: list[ActionTriggerConfiguration] = []
-    &#39;&#39;&#39;list of actions to execute&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;list of actions to execute, see `ActionTriggerConfiguration`&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -379,11 +379,11 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.AutomationConfiguration.actions"><code class="name">var <span class="ident">actions</span> : list</code></dt>
 <dd>
-<div class="desc"><p>list of actions to execute</p></div>
+<div class="desc"><p>list of actions to execute, see <code><a title="modules.base.Configuration.ActionTriggerConfiguration" href="#modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></p></div>
 </dd>
 <dt id="modules.base.Configuration.AutomationConfiguration.conditions"><code class="name">var <span class="ident">conditions</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>list of conditions to prove before the actions get executed</p></div>
+<div class="desc"><p>list of conditions to prove before the actions get executed, see <code><a title="modules.base.Configuration.ConditionConfiguration" href="#modules.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></code></p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -413,7 +413,7 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;Adress of the actual value, e.g. &#34;payload&#34;&#39;&#39;&#39;
 
     comperator: str
-    &#39;&#39;&#39;Function name used to compare the values&#39;&#39;&#39;
+    &#39;&#39;&#39;Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]&#39;&#39;&#39;
 
     inverted: Optional[bool] = False
     &#39;&#39;&#39;Invert result&#39;&#39;&#39;
@@ -435,7 +435,7 @@ class DeviceConfiguration(VariablesConfiguration):
 </dd>
 <dt id="modules.base.Configuration.ConditionConfiguration.comperator"><code class="name">var <span class="ident">comperator</span> : str</code></dt>
 <dd>
-<div class="desc"><p>Function name used to compare the values</p></div>
+<div class="desc"><p>Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]</p></div>
 </dd>
 <dt id="modules.base.Configuration.ConditionConfiguration.expected"><code class="name">var <span class="ident">expected</span> : str</code></dt>
 <dd>
@@ -515,11 +515,11 @@ class DeviceConfiguration(VariablesConfiguration):
     name: str
     &#39;&#39;&#39;Name of the device.&#39;&#39;&#39;
 
-    &#39;&#39;&#39;Version of the configuration&#39;&#39;&#39;
     version: str
+    &#39;&#39;&#39;Version of the configuration&#39;&#39;&#39;
 
     on_init: Optional[list[ActionTriggerConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute after init is done&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;Actions to execute after init is done, see `ActionTriggerConfiguration`&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -536,11 +536,11 @@ class DeviceConfiguration(VariablesConfiguration):
 </dd>
 <dt id="modules.base.Configuration.DeviceConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>Actions to execute after init is done</p></div>
+<div class="desc"><p>Actions to execute after init is done, see <code><a title="modules.base.Configuration.ActionTriggerConfiguration" href="#modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></p></div>
 </dd>
 <dt id="modules.base.Configuration.DeviceConfiguration.version"><code class="name">var <span class="ident">version</span> : str</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Version of the configuration</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -678,7 +678,7 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
 
     on_state_changed: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed, see `AutomationConfiguration`&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -698,7 +698,7 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.ScriptConfiguration.on_state_changed"><code class="name">var <span class="ident">on_state_changed</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute after the sensor's state has changed</p></div>
+<div class="desc"><p>List of Automations to execute after the sensor's state has changed, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="modules.base.Configuration.ScriptConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
@@ -783,10 +783,10 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;Provides default automations that are executed by all Platforms, Actions and Sensors&#39;&#39;&#39;
 
     on_init: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute after init is done&#39;&#39;&#39;
+    &#39;&#39;&#39;List of Automations to execute after init is done, see `AutomationConfiguration`&#39;&#39;&#39;
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute before this platform is disposed&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;List of Automations to execute before this platform is disposed, see `AutomationConfiguration`&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -805,11 +805,11 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.StackableConfiguration.on_dispose"><code class="name">var <span class="ident">on_dispose</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>Actions to execute before this platform is disposed</p></div>
+<div class="desc"><p>List of Automations to execute before this platform is disposed, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 <dt id="modules.base.Configuration.StackableConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>Actions to execute after init is done</p></div>
+<div class="desc"><p>List of Automations to execute after init is done, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>

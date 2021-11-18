@@ -23,10 +23,10 @@ class BinarySensorConfiguration(SensorConfiguration):
     '''Length of time (in seconds) to ignore changes after initial change'''
 
     on_high: list[AutomationConfiguration] = []
-    '''Automations to invoke when the GPIO is set to HIGH'''
+    '''List of Automations to execute when the GPIO is set to HIGH, see `AutomationConfiguration`'''
     
     on_low: list[AutomationConfiguration] = []
-    '''Automations to invoke when the GPIO is set to HIGH'''
+    '''List of Automations to execute when the GPIO is set to LOW, see `AutomationConfiguration`'''
 
     @validator('platform')
     def __check_platform(cls, v):

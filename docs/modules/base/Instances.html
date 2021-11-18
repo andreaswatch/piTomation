@@ -298,7 +298,7 @@ class Automation(Stackable):
 
     @staticmethod
     def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
-        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
+        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s, see `AutomationConfiguration`&#39;&#39;&#39;
 
         automations: list[Automation] = []
 
@@ -490,7 +490,7 @@ class ActionTrigger(Stackable, Logging):
 
     @staticmethod
     def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
-        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
+        &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s, see `AutomationConfiguration`&#39;&#39;&#39;
 
         automations: list[Automation] = []
 
@@ -510,14 +510,14 @@ class ActionTrigger(Stackable, Logging):
 <span>def <span class="ident">create_automations</span></span>(<span>parent: <a title="modules.base.Instances.Stackable" href="#modules.base.Instances.Stackable">Stackable</a>, conf: Optional[list])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Creates automations for all given AutomationConfiguration's</p></div>
+<div class="desc"><p>Creates automations for all given AutomationConfiguration's, see <code>AutomationConfiguration</code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
 def create_automations(parent: Stackable, conf: Optional[list[AutomationConfiguration]]):
-    &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s&#39;&#39;&#39;
+    &#39;&#39;&#39;Creates automations for all given AutomationConfiguration&#39;s, see `AutomationConfiguration`&#39;&#39;&#39;
 
     automations: list[Automation] = []
 

@@ -56,13 +56,13 @@ class ButtonSensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.&#39;&#39;&#39;
 
     on_hold: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is held&#39;&#39;&#39;
+    &#39;&#39;&#39;Automations to invoke when the button is held, see `AutomationConfiguration`&#39;&#39;&#39;
     
     on_press: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is pressed&#39;&#39;&#39;
+    &#39;&#39;&#39;Automations to invoke when the button is pressed, see `AutomationConfiguration`&#39;&#39;&#39;
     
     on_release: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is released&#39;&#39;&#39;
+    &#39;&#39;&#39;Automations to invoke when the button is released, see `AutomationConfiguration`&#39;&#39;&#39;
 
     check_state_delay: Optional[float]
     &#39;&#39;&#39;Only invoke &#39;&#39;&#39;
@@ -269,13 +269,13 @@ class ButtonSensorConfiguration(SensorConfiguration):
     &#39;&#39;&#39;If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.&#39;&#39;&#39;
 
     on_hold: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is held&#39;&#39;&#39;
+    &#39;&#39;&#39;Automations to invoke when the button is held, see `AutomationConfiguration`&#39;&#39;&#39;
     
     on_press: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is pressed&#39;&#39;&#39;
+    &#39;&#39;&#39;Automations to invoke when the button is pressed, see `AutomationConfiguration`&#39;&#39;&#39;
     
     on_release: list[AutomationConfiguration] = []
-    &#39;&#39;&#39;Automations to invoke when the button is released&#39;&#39;&#39;
+    &#39;&#39;&#39;Automations to invoke when the button is released, see `AutomationConfiguration`&#39;&#39;&#39;
 
     check_state_delay: Optional[float]
     &#39;&#39;&#39;Only invoke &#39;&#39;&#39;
@@ -329,15 +329,15 @@ class ButtonSensorConfiguration(SensorConfiguration):
 </dd>
 <dt id="plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_hold"><code class="name">var <span class="ident">on_hold</span> : list</code></dt>
 <dd>
-<div class="desc"><p>Automations to invoke when the button is held</p></div>
+<div class="desc"><p>Automations to invoke when the button is held, see <code>AutomationConfiguration</code></p></div>
 </dd>
 <dt id="plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_press"><code class="name">var <span class="ident">on_press</span> : list</code></dt>
 <dd>
-<div class="desc"><p>Automations to invoke when the button is pressed</p></div>
+<div class="desc"><p>Automations to invoke when the button is pressed, see <code>AutomationConfiguration</code></p></div>
 </dd>
 <dt id="plugins.gpio.ButtonSensor.ButtonSensorConfiguration.on_release"><code class="name">var <span class="ident">on_release</span> : list</code></dt>
 <dd>
-<div class="desc"><p>Automations to invoke when the button is released</p></div>
+<div class="desc"><p>Automations to invoke when the button is released, see <code>AutomationConfiguration</code></p></div>
 </dd>
 <dt id="plugins.gpio.ButtonSensor.ButtonSensorConfiguration.pin"><code class="name">var <span class="ident">pin</span> : str</code></dt>
 <dd>

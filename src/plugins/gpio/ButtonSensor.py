@@ -28,13 +28,13 @@ class ButtonSensorConfiguration(SensorConfiguration):
     '''If True, the when_held handler will be repeatedly executed as long as the device remains active, every hold_time seconds. If False (the default) the when_held handler will be only be executed once per hold.'''
 
     on_hold: list[AutomationConfiguration] = []
-    '''Automations to invoke when the button is held'''
+    '''Automations to invoke when the button is held, see `AutomationConfiguration`'''
     
     on_press: list[AutomationConfiguration] = []
-    '''Automations to invoke when the button is pressed'''
+    '''Automations to invoke when the button is pressed, see `AutomationConfiguration`'''
     
     on_release: list[AutomationConfiguration] = []
-    '''Automations to invoke when the button is released'''
+    '''Automations to invoke when the button is released, see `AutomationConfiguration`'''
 
     check_state_delay: Optional[float]
     '''Only invoke '''

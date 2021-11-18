@@ -4,7 +4,7 @@ from typing import Any, Optional, Union
 from pydantic.class_validators import validator
 
 __registry: dict[type, list[type]] = {}
-'''Contains all #@configuration class types, key is the base type'''
+'''Contains all @configuration class types, key is the base type'''
 
 
 def configuration(cls):
@@ -73,7 +73,7 @@ class ConditionConfiguration(Configuration):
     '''Adress of the actual value, e.g. "payload"'''
 
     comperator: str
-    '''Function name used to compare the values'''
+    '''Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]'''
 
     inverted: Optional[bool] = False
     '''Invert result'''
@@ -98,10 +98,10 @@ class AutomationConfiguration(Configuration):
     '''An Automation consists of optional conditions and a list of actions to execute'''
 
     conditions: Optional[list[ConditionConfiguration]] = []
-    '''list of conditions to prove before the actions get executed'''
+    '''list of conditions to prove before the actions get executed, see `ConditionConfiguration`'''
 
     actions: list[ActionTriggerConfiguration] = []
-    '''list of actions to execute'''
+    '''list of actions to execute, see `ActionTriggerConfiguration`'''
 
 
 #@configuration
@@ -109,10 +109,10 @@ class StackableConfiguration(IdConfiguration, VariablesConfiguration):
     '''Provides default automations that are executed by all Platforms, Actions and Sensors'''
 
     on_init: Optional[list[AutomationConfiguration]] = []
-    '''Actions to execute after init is done'''
+    '''List of Automations to execute after init is done, see `AutomationConfiguration`'''
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
-    '''Actions to execute before this platform is disposed'''
+    '''List of Automations to execute before this platform is disposed, see `AutomationConfiguration`'''
 
 
 #@configuration
@@ -139,7 +139,7 @@ class ScriptConfiguration(StackableConfiguration):
     '''The class type of this script'''
 
     on_state_changed: Optional[list[AutomationConfiguration]] = []
-    '''List of Automations to execute after the sensor's state has changed'''
+    '''List of Automations to execute after the sensor's state has changed, see `AutomationConfiguration`'''
 
 
 #@configuration
@@ -157,8 +157,8 @@ class DeviceConfiguration(VariablesConfiguration):
     name: str
     '''Name of the device.'''
 
-    '''Version of the configuration'''
     version: str
+    '''Version of the configuration'''
 
     on_init: Optional[list[ActionTriggerConfiguration]] = []
-    '''Actions to execute after init is done'''
+    '''Actions to execute after init is done, see `ActionTriggerConfiguration`'''

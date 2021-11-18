@@ -44,13 +44,13 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     '''Availability topic and last will'''
 
     on_connected: Optional[list[AutomationConfiguration]] = []
-    '''Actions to execute when the connection to the host is established''' 
+    '''List of Automations to execute when the connection to the host is established, see `AutomationConfiguration`''' 
 
     on_disconnected: Optional[list[AutomationConfiguration]] = []
-    '''Actions to execute when the connection to the host is lost'''    
+    '''List of Automations to execute when the connection to the host is lost, see `AutomationConfiguration`'''    
 
     on_message: Optional[list[AutomationConfiguration]] = []
-    '''Actions to execute when a MQTT message is received'''    
+    '''List of Automations to execute when a MQTT message is received, see `AutomationConfiguration`'''    
 
 
 class Platform(BasePlatform):
