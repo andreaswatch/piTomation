@@ -40,14 +40,14 @@ class ButtonSensorConfiguration(SensorConfiguration):
     '''Only invoke '''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform_module(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
     @validator('type')
-    def check_type(cls, v):
+    def __check_type(cls, v):
         type_name = "ButtonSensor"
         if v != type_name:
             raise ValueError("wrong type: " + type_name + ", is: " + v)

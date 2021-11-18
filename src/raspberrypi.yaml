@@ -65,8 +65,8 @@ platforms:
         off_event: on_release
         expose_state: state.is_pressed
 
-  - platform: plugins.web
-    id: web
+#  - platform: plugins.web
+#    id: web
 
 actions:
   - id: print

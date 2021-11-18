@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>plugins.gpio.Platform API documentation</title>
+<title>plugins.dfplayer.Platform API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,93 +19,66 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>plugins.gpio.Platform</code></h1>
+<h1 class="title">Module <code>plugins.dfplayer.Platform</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import gpiozero as gpiozero
-from pydantic.class_validators import validator
-
-from modules.base.Configuration import *
+<pre><code class="python">from modules.base.Configuration import *
 from modules.base.Instances import *
 
 @configuration
-class GpioPlatform(PlatformConfiguration):
-    &#39;&#39;&#39;The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
-    Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.&#39;&#39;&#39;
-
-    factory: str = &#34;pigpio&#34;
-    &#39;&#39;&#39;gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html&#39;&#39;&#39;
+class DFPlayerPlatformConfiguration(PlatformConfiguration):
+    &#39;&#39;&#39;Configuration settings for the DFPlayer&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def __check_platform(cls, v):
-        if &#34;plugins.gpio&#34; not in v:
-            raise ValueError(&#34;wrong platform: plugins.gpio, is: &#34; + v)
+        if &#34;plugins.dfplayer&#34; not in v:
+            raise ValueError(&#34;wrong platform: plugins.dfplayer, is: &#34; + v)
         return v
+
+    tx_pin: str = &#34;GPIO5&#34;
+    &#39;&#39;&#39;GPIO pin for TX communication to the DFPlayer Mini&#39;&#39;&#39;
+
+    baud_rate: Optional[int] = 9600
+    &#39;&#39;&#39;Baudrate for the serial interface, 9600 by default&#39;&#39;&#39;
 
 
 class Platform(BasePlatform, Logging):
-    &#39;&#39;&#39;GPIO platform&#39;&#39;&#39;
-    
-    def __init__(self, parent: Stackable, config: GpioPlatform) -&gt; None:
+    &#39;&#39;&#39;This platform opens a serial console through the tx_pin to the DFPlayer.
+    Use the Action to invoke commands like &#39;play&#39;. 
+    &#39;&#39;&#39;
+
+    def __init__(self, parent: Stackable, config: DFPlayerPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
 
-        def mockFactory():
-            from gpiozero.pins.mock import MockFactory
-            return MockFactory()
+        tx_pin = int(str(self.configuration.tx_pin).replace(&#34;GPIO&#34;, &#34;&#34;))
+        
+        try:
+            import pigpio
+        except Exception as e:
+            self.log_error(&#34;pigpio library not installed, DFPlayer Mini not initialized&#34;)
 
-        def rpigpioFactory():
-            from gpiozero.pins.rpigpio import RPiGPIOFactory
-            return RPiGPIOFactory()
+        try:
+            import sys, os
 
-        def lgpioFactory():
-            from gpiozero.pins.lgpio import LGPIOFactory
-            return LGPIOFactory()
+            #find actual path
+            realpath = os.path.realpath(__file__)
+            dirname = os.path.dirname(realpath)
 
-        def rpioFactory():
-            from gpiozero.pins.rpio import RPIOFactory
-            return RPIOFactory()
+            #add modules &amp; plugins
+            app_path = os.path.join(dirname, &#34;SimpleDFPlayerMini_for_RaspberryPi&#34;)
+            sys.path.append(app_path)
 
-        def pigpioFactory():
-            import pigpio        
-            import time
-            import os    
-            pi = pigpio.pi() #type: ignore
-
-            while not pi.connected: #type: ignore
-                self.log_warning(&#34;make sure that pigpio is installed. &#39;sudo apt install pigpio&#39; &#34;)
-                self.log_info(&#34;trying to connect to pipgio..&#34;)
-                os.system(&#34;sudo pigpiod&#34;)
-                time.sleep(1)
-
-            from gpiozero.pins.pigpio import PiGPIOFactory
-            return PiGPIOFactory()
-
-        def nativeFactory():
-            from gpiozero.pins.native import NativeFactory
-            return NativeFactory()
-
-
-        factories = {
-            &#34;mock&#34;: mockFactory,
-            &#34;rpigpio&#34;: rpigpioFactory,
-            &#34;lgpio&#34;: lgpioFactory,
-            &#34;rpio&#34;: rpioFactory,
-            &#34;pigpio&#34;: pigpioFactory,
-            &#34;native&#34;:   nativeFactory
-        }
-
-        gpiozero.Device.pin_factory = factories[self.configuration.factory]()
-
-        self.gpio = gpiozero
-
-    def dispose(self):
-        self.gpio.Device.close() #type: ignore
-        super().dispose()</code></pre>
+            from dfplayer import SimpleDFPlayerMini #type: ignore
+            self.player = SimpleDFPlayerMini(tx_pin, self.configuration.baud_rate)
+            
+        except Exception as e:
+            self.log_error(e)
+            self.player = None</code></pre>
 </details>
 </section>
 <section>
@@ -117,31 +90,32 @@ class Platform(BasePlatform, Logging):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="plugins.gpio.Platform.GpioPlatform"><code class="flex name class">
-<span>class <span class="ident">GpioPlatform</span></span>
+<dt id="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration"><code class="flex name class">
+<span>class <span class="ident">DFPlayerPlatformConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
-Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.</p>
+<div class="desc"><p>Configuration settings for the DFPlayer</p>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@configuration
-class GpioPlatform(PlatformConfiguration):
-    &#39;&#39;&#39;The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
-    Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.&#39;&#39;&#39;
-
-    factory: str = &#34;pigpio&#34;
-    &#39;&#39;&#39;gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html&#39;&#39;&#39;
+class DFPlayerPlatformConfiguration(PlatformConfiguration):
+    &#39;&#39;&#39;Configuration settings for the DFPlayer&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def __check_platform(cls, v):
-        if &#34;plugins.gpio&#34; not in v:
-            raise ValueError(&#34;wrong platform: plugins.gpio, is: &#34; + v)
-        return v</code></pre>
+        if &#34;plugins.dfplayer&#34; not in v:
+            raise ValueError(&#34;wrong platform: plugins.dfplayer, is: &#34; + v)
+        return v
+
+    tx_pin: str = &#34;GPIO5&#34;
+    &#39;&#39;&#39;GPIO pin for TX communication to the DFPlayer Mini&#39;&#39;&#39;
+
+    baud_rate: Optional[int] = 9600
+    &#39;&#39;&#39;Baudrate for the serial interface, 9600 by default&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -155,9 +129,13 @@ class GpioPlatform(PlatformConfiguration):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="plugins.gpio.Platform.GpioPlatform.factory"><code class="name">var <span class="ident">factory</span> : str</code></dt>
+<dt id="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration.baud_rate"><code class="name">var <span class="ident">baud_rate</span> : Optional[int]</code></dt>
 <dd>
-<div class="desc"><p>gpio zero factory name, please see <a href="https://gpiozero.readthedocs.io/en/stable/api_pins.html">https://gpiozero.readthedocs.io/en/stable/api_pins.html</a></p></div>
+<div class="desc"><p>Baudrate for the serial interface, 9600 by default</p></div>
+</dd>
+<dt id="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration.tx_pin"><code class="name">var <span class="ident">tx_pin</span> : str</code></dt>
+<dd>
+<div class="desc"><p>GPIO pin for TX communication to the DFPlayer Mini</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -174,75 +152,50 @@ class GpioPlatform(PlatformConfiguration):
 </li>
 </ul>
 </dd>
-<dt id="plugins.gpio.Platform.Platform"><code class="flex name class">
+<dt id="plugins.dfplayer.Platform.Platform"><code class="flex name class">
 <span>class <span class="ident">Platform</span></span>
-<span>(</span><span>parent: <a title="modules.base.Instances.Stackable" href="../../modules/base/Instances.html#modules.base.Instances.Stackable">Stackable</a>, config: <a title="plugins.gpio.Platform.GpioPlatform" href="#plugins.gpio.Platform.GpioPlatform">GpioPlatform</a>)</span>
+<span>(</span><span>parent: <a title="modules.base.Instances.Stackable" href="../../modules/base/Instances.html#modules.base.Instances.Stackable">Stackable</a>, config: <a title="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration" href="#plugins.dfplayer.Platform.DFPlayerPlatformConfiguration">DFPlayerPlatformConfiguration</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>GPIO platform</p></div>
+<div class="desc"><p>This platform opens a serial console through the tx_pin to the DFPlayer.
+Use the Action to invoke commands like 'play'.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Platform(BasePlatform, Logging):
-    &#39;&#39;&#39;GPIO platform&#39;&#39;&#39;
-    
-    def __init__(self, parent: Stackable, config: GpioPlatform) -&gt; None:
+    &#39;&#39;&#39;This platform opens a serial console through the tx_pin to the DFPlayer.
+    Use the Action to invoke commands like &#39;play&#39;. 
+    &#39;&#39;&#39;
+
+    def __init__(self, parent: Stackable, config: DFPlayerPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         self.configuration = config
 
-        def mockFactory():
-            from gpiozero.pins.mock import MockFactory
-            return MockFactory()
+        tx_pin = int(str(self.configuration.tx_pin).replace(&#34;GPIO&#34;, &#34;&#34;))
+        
+        try:
+            import pigpio
+        except Exception as e:
+            self.log_error(&#34;pigpio library not installed, DFPlayer Mini not initialized&#34;)
 
-        def rpigpioFactory():
-            from gpiozero.pins.rpigpio import RPiGPIOFactory
-            return RPiGPIOFactory()
+        try:
+            import sys, os
 
-        def lgpioFactory():
-            from gpiozero.pins.lgpio import LGPIOFactory
-            return LGPIOFactory()
+            #find actual path
+            realpath = os.path.realpath(__file__)
+            dirname = os.path.dirname(realpath)
 
-        def rpioFactory():
-            from gpiozero.pins.rpio import RPIOFactory
-            return RPIOFactory()
+            #add modules &amp; plugins
+            app_path = os.path.join(dirname, &#34;SimpleDFPlayerMini_for_RaspberryPi&#34;)
+            sys.path.append(app_path)
 
-        def pigpioFactory():
-            import pigpio        
-            import time
-            import os    
-            pi = pigpio.pi() #type: ignore
-
-            while not pi.connected: #type: ignore
-                self.log_warning(&#34;make sure that pigpio is installed. &#39;sudo apt install pigpio&#39; &#34;)
-                self.log_info(&#34;trying to connect to pipgio..&#34;)
-                os.system(&#34;sudo pigpiod&#34;)
-                time.sleep(1)
-
-            from gpiozero.pins.pigpio import PiGPIOFactory
-            return PiGPIOFactory()
-
-        def nativeFactory():
-            from gpiozero.pins.native import NativeFactory
-            return NativeFactory()
-
-
-        factories = {
-            &#34;mock&#34;: mockFactory,
-            &#34;rpigpio&#34;: rpigpioFactory,
-            &#34;lgpio&#34;: lgpioFactory,
-            &#34;rpio&#34;: rpioFactory,
-            &#34;pigpio&#34;: pigpioFactory,
-            &#34;native&#34;:   nativeFactory
-        }
-
-        gpiozero.Device.pin_factory = factories[self.configuration.factory]()
-
-        self.gpio = gpiozero
-
-    def dispose(self):
-        self.gpio.Device.close() #type: ignore
-        super().dispose()</code></pre>
+            from dfplayer import SimpleDFPlayerMini #type: ignore
+            self.player = SimpleDFPlayerMini(tx_pin, self.configuration.baud_rate)
+            
+        except Exception as e:
+            self.log_error(e)
+            self.player = None</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -252,23 +205,6 @@ class GpioPlatform(PlatformConfiguration):
 <li><a title="modules.base.Instances.Disposeable" href="../../modules/base/Instances.html#modules.base.Instances.Disposeable">Disposeable</a></li>
 <li><a title="modules.base.Instances.Logging" href="../../modules/base/Instances.html#modules.base.Instances.Logging">Logging</a></li>
 </ul>
-<h3>Methods</h3>
-<dl>
-<dt id="plugins.gpio.Platform.Platform.dispose"><code class="name flex">
-<span>def <span class="ident">dispose</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def dispose(self):
-    self.gpio.Device.close() #type: ignore
-    super().dispose()</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Instances.BasePlatform" href="../../modules/base/Instances.html#modules.base.Instances.BasePlatform">BasePlatform</a></b></code>:
@@ -296,22 +232,20 @@ class GpioPlatform(PlatformConfiguration):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="plugins.gpio" href="index.html">plugins.gpio</a></code></li>
+<li><code><a title="plugins.dfplayer" href="index.html">plugins.dfplayer</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="plugins.gpio.Platform.GpioPlatform" href="#plugins.gpio.Platform.GpioPlatform">GpioPlatform</a></code></h4>
+<h4><code><a title="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration" href="#plugins.dfplayer.Platform.DFPlayerPlatformConfiguration">DFPlayerPlatformConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="plugins.gpio.Platform.GpioPlatform.factory" href="#plugins.gpio.Platform.GpioPlatform.factory">factory</a></code></li>
+<li><code><a title="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration.baud_rate" href="#plugins.dfplayer.Platform.DFPlayerPlatformConfiguration.baud_rate">baud_rate</a></code></li>
+<li><code><a title="plugins.dfplayer.Platform.DFPlayerPlatformConfiguration.tx_pin" href="#plugins.dfplayer.Platform.DFPlayerPlatformConfiguration.tx_pin">tx_pin</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="plugins.gpio.Platform.Platform" href="#plugins.gpio.Platform.Platform">Platform</a></code></h4>
-<ul class="">
-<li><code><a title="plugins.gpio.Platform.Platform.dispose" href="#plugins.gpio.Platform.Platform.dispose">dispose</a></code></li>
-</ul>
+<h4><code><a title="plugins.dfplayer.Platform.Platform" href="#plugins.dfplayer.Platform.Platform">Platform</a></code></h4>
 </li>
 </ul>
 </li>

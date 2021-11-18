@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>src.plugins.hass.Configurations API documentation</title>
+<title>plugins.hass.Configurations API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.plugins.hass.Configurations</code></h1>
+<h1 class="title">Module <code>plugins.hass.Configurations</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -33,7 +33,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 #@configuration
-class HassEntityConfiguration(BaseModel):
+class HassEntityConfiguration(Configuration):
     &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant.&#39;&#39;&#39;
 
     id: str
@@ -57,7 +57,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;Event to listen for the State&#39;&#39;&#39;
 
     @validator(&#39;type&#39;)
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if &#34;trigger&#34; not in v:
             raise ValueError(&#34;wrong type: trigger, is: &#34; + v)
         return v      
@@ -74,7 +74,7 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;Where Homeassistant can get the state&#39;&#39;&#39;    
 
     @validator(&#39;type&#39;)
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if &#34;sensor&#34; not in v:
             raise ValueError(&#34;wrong type: sensor, is: &#34; + v)
         return v          
@@ -94,7 +94,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     &#39;&#39;&#39;Where HomeAssistant can publish the state&#39;&#39;&#39;
 
     @validator(&#39;type&#39;)
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if &#34;switch&#34; not in v:
             raise ValueError(&#34;wrong type: switch, is: &#34; + v)
         return v          
@@ -105,7 +105,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;Allows to export actions and sensors to HomeAssistant entities.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if &#34;plugins.hass&#34; not in v:
             raise ValueError(&#34;wrong platform: plugins.hass, is: &#34; + v)
         return v
@@ -132,14 +132,13 @@ class HassPlatformConfiguration(PlatformConfiguration):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration"><code class="flex name class">
+<dt id="plugins.hass.Configurations.HassActionEntityConfiguration"><code class="flex name class">
 <span>class <span class="ident">HassActionEntityConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exposes an action or sensor to HomeAssistant as an action entity.</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
+<p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -158,55 +157,75 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     &#39;&#39;&#39;Where HomeAssistant can publish the state&#39;&#39;&#39;
 
     @validator(&#39;type&#39;)
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if &#34;switch&#34; not in v:
             raise ValueError(&#34;wrong type: switch, is: &#34; + v)
         return v          </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></li>
-<li><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassEntityConfiguration" href="#plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></li>
+<li><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.command_topic"><code class="name">var <span class="ident">command_topic</span> : Optional[str]</code></dt>
+<dt id="plugins.hass.Configurations.HassActionEntityConfiguration.command_topic"><code class="name">var <span class="ident">command_topic</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>Where HomeAssistant can publish the state</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command"><code class="name">var <span class="ident">off_command</span> : Optional[list]</code></dt>
+<dt id="plugins.hass.Configurations.HassActionEntityConfiguration.off_command"><code class="name">var <span class="ident">off_command</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>Automation to execute when HomeAssistant triggers OFF</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command"><code class="name">var <span class="ident">on_command</span> : Optional[list]</code></dt>
+<dt id="plugins.hass.Configurations.HassActionEntityConfiguration.on_command"><code class="name">var <span class="ident">on_command</span> : Optional[list]</code></dt>
 <dd>
 <div class="desc"><p>Automation to execute when HomeAssistant triggers ON</p></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="plugins.hass.Configurations.HassActionEntityConfiguration.check_type"><code class="name flex">
+<span>def <span class="ident">check_type</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;type&#39;)
+def check_type(cls, v):
+    if &#34;switch&#34; not in v:
+        raise ValueError(&#34;wrong type: switch, is: &#34; + v)
+    return v          </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></b></code>:
+<li><code><b><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state">expose_state</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.icon" href="#src.plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.debug" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state">expose_state</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.icon" href="#plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.id" href="#plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.name" href="#plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.type" href="#plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration"><code class="flex name class">
+<dt id="plugins.hass.Configurations.HassBinarySensorEntityConfiguration"><code class="flex name class">
 <span>class <span class="ident">HassBinarySensorEntityConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exposes an action or sensor to HomeAssistant as a binary sensor entity.</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
+<p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -222,57 +241,77 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;Where Homeassistant can get the state&#39;&#39;&#39;    
 
     @validator(&#39;type&#39;)
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if &#34;sensor&#34; not in v:
             raise ValueError(&#34;wrong type: sensor, is: &#34; + v)
         return v          </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassEntityConfiguration" href="#plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></li>
+<li><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration">HassActionEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassActionEntityConfiguration" href="#plugins.hass.Configurations.HassActionEntityConfiguration">HassActionEntityConfiguration</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state"><code class="name">var <span class="ident">expose_state</span> : str</code></dt>
+<dt id="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state"><code class="name">var <span class="ident">expose_state</span> : str</code></dt>
 <dd>
 <div class="desc"><p>State to listen for ON/OFF</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic"><code class="name">var <span class="ident">state_topic</span> : Optional[str]</code></dt>
+<dt id="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic"><code class="name">var <span class="ident">state_topic</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>Where Homeassistant can get the state</p></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_type"><code class="name flex">
+<span>def <span class="ident">check_type</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;type&#39;)
+def check_type(cls, v):
+    if &#34;sensor&#34; not in v:
+        raise ValueError(&#34;wrong type: sensor, is: &#34; + v)
+    return v          </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></b></code>:
+<li><code><b><a title="plugins.hass.Configurations.HassEntityConfiguration" href="#plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.icon" href="#src.plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.debug" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.icon" href="#plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.id" href="#plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.name" href="#plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.type" href="#plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassEntityConfiguration"><code class="flex name class">
+<dt id="plugins.hass.Configurations.HassEntityConfiguration"><code class="flex name class">
 <span>class <span class="ident">HassEntityConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exposes an action or sensor to HomeAssistant.</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
+<p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HassEntityConfiguration(BaseModel):
+<pre><code class="python">class HassEntityConfiguration(Configuration):
     &#39;&#39;&#39;Exposes an action or sensor to HomeAssistant.&#39;&#39;&#39;
 
     id: str
@@ -289,42 +328,50 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></li>
-<li><a title="src.plugins.hass.Configurations.HassTriggerEntityConfiguration" href="#src.plugins.hass.Configurations.HassTriggerEntityConfiguration">HassTriggerEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassTriggerEntityConfiguration" href="#plugins.hass.Configurations.HassTriggerEntityConfiguration">HassTriggerEntityConfiguration</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassEntityConfiguration.icon"><code class="name">var <span class="ident">icon</span> : Optional[str]</code></dt>
+<dt id="plugins.hass.Configurations.HassEntityConfiguration.icon"><code class="name">var <span class="ident">icon</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>Icon to show in HomeAssistant</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassEntityConfiguration.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dt id="plugins.hass.Configurations.HassEntityConfiguration.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Script id to export</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassEntityConfiguration.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
+<dt id="plugins.hass.Configurations.HassEntityConfiguration.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>friendly name in HomeAssistant</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassEntityConfiguration.type"><code class="name">var <span class="ident">type</span> : str</code></dt>
+<dt id="plugins.hass.Configurations.HassEntityConfiguration.type"><code class="name">var <span class="ident">type</span> : str</code></dt>
 <dd>
 <div class="desc"><p>HomeAssistant type</p></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></b></code>:
+<ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.debug" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration"><code class="flex name class">
+<dt id="plugins.hass.Configurations.HassPlatformConfiguration"><code class="flex name class">
 <span>class <span class="ident">HassPlatformConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Allows to export actions and sensors to HomeAssistant entities.</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
+<p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -334,7 +381,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;Allows to export actions and sensors to HomeAssistant entities.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if &#34;plugins.hass&#34; not in v:
             raise ValueError(&#34;wrong platform: plugins.hass, is: &#34; + v)
         return v
@@ -353,61 +400,54 @@ class HassPlatformConfiguration(PlatformConfiguration):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>modules.base.Configuration.PlatformConfiguration</li>
-<li>modules.base.Configuration.StackableConfiguration</li>
-<li>modules.base.Configuration.IdConfiguration</li>
-<li>modules.base.Configuration.VariablesConfiguration</li>
-<li>modules.base.Configuration.Configuration</li>
+<li><a title="modules.base.Configuration.PlatformConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></li>
+<li><a title="modules.base.Configuration.StackableConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></li>
+<li><a title="modules.base.Configuration.IdConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.IdConfiguration">IdConfiguration</a></li>
+<li><a title="modules.base.Configuration.VariablesConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></li>
+<li><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.auto_discovery_topic"><code class="name">var <span class="ident">auto_discovery_topic</span> : str</code></dt>
+<dt id="plugins.hass.Configurations.HassPlatformConfiguration.auto_discovery_topic"><code class="name">var <span class="ident">auto_discovery_topic</span> : str</code></dt>
 <dd>
 <div class="desc"><p>HomeAssistant Autodiscovery topic "homeassistant" by default</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.base_topic"><code class="name">var <span class="ident">base_topic</span> : Optional[str]</code></dt>
+<dt id="plugins.hass.Configurations.HassPlatformConfiguration.base_topic"><code class="name">var <span class="ident">base_topic</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"><p>Base topic for entity values "home/piTomation" by default</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.connection"><code class="name">var <span class="ident">connection</span> : str</code></dt>
+<dt id="plugins.hass.Configurations.HassPlatformConfiguration.connection"><code class="name">var <span class="ident">connection</span> : str</code></dt>
 <dd>
 <div class="desc"><p>(MQTT) Platform used for connection to HomeAssistant</p></div>
 </dd>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.exports"><code class="name">var <span class="ident">exports</span> : list</code></dt>
+<dt id="plugins.hass.Configurations.HassPlatformConfiguration.exports"><code class="name">var <span class="ident">exports</span> : list</code></dt>
 <dd>
 <div class="desc"><p>Scripts to export to HomeAssistant</p></div>
 </dd>
 </dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="src.plugins.hass.Configurations.HassPlatformConfiguration.check_platform_module"><code class="name flex">
-<span>def <span class="ident">check_platform_module</span></span>(<span>v)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@validator(&#39;platform&#39;)
-def check_platform_module(cls, v):
-    if &#34;plugins.hass&#34; not in v:
-        raise ValueError(&#34;wrong platform: plugins.hass, is: &#34; + v)
-    return v</code></pre>
-</details>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="modules.base.Configuration.PlatformConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.PlatformConfiguration">PlatformConfiguration</a></b></code>:
+<ul class="hlist">
+<li><code><a title="modules.base.Configuration.PlatformConfiguration.debug" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="modules.base.Configuration.PlatformConfiguration.id" href="../../modules/base/Configuration.html#modules.base.Configuration.IdConfiguration.id">id</a></code></li>
+<li><code><a title="modules.base.Configuration.PlatformConfiguration.on_dispose" href="../../modules/base/Configuration.html#modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
+<li><code><a title="modules.base.Configuration.PlatformConfiguration.on_init" href="../../modules/base/Configuration.html#modules.base.Configuration.StackableConfiguration.on_init">on_init</a></code></li>
+<li><code><a title="modules.base.Configuration.PlatformConfiguration.platform" href="../../modules/base/Configuration.html#modules.base.Configuration.PlatformConfiguration.platform">platform</a></code></li>
+<li><code><a title="modules.base.Configuration.PlatformConfiguration.variables" href="../../modules/base/Configuration.html#modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
-</dl>
-</dd>
-<dt id="src.plugins.hass.Configurations.HassTriggerEntityConfiguration"><code class="flex name class">
+<dt id="plugins.hass.Configurations.HassTriggerEntityConfiguration"><code class="flex name class">
 <span>class <span class="ident">HassTriggerEntityConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exposes an Action or Sensor to HomeAssistant as a trigger entity.</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
+<p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -420,32 +460,53 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
     &#39;&#39;&#39;Event to listen for the State&#39;&#39;&#39;
 
     @validator(&#39;type&#39;)
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if &#34;trigger&#34; not in v:
             raise ValueError(&#34;wrong type: trigger, is: &#34; + v)
         return v      </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></li>
+<li><a title="plugins.hass.Configurations.HassEntityConfiguration" href="#plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></li>
+<li><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></li>
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="src.plugins.hass.Configurations.HassTriggerEntityConfiguration.event"><code class="name">var <span class="ident">event</span> : str</code></dt>
+<dt id="plugins.hass.Configurations.HassTriggerEntityConfiguration.event"><code class="name">var <span class="ident">event</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Event to listen for the State</p></div>
 </dd>
 </dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="plugins.hass.Configurations.HassTriggerEntityConfiguration.check_type"><code class="name flex">
+<span>def <span class="ident">check_type</span></span>(<span>v)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@validator(&#39;type&#39;)
+def check_type(cls, v):
+    if &#34;trigger&#34; not in v:
+        raise ValueError(&#34;wrong type: trigger, is: &#34; + v)
+    return v      </code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></b></code>:
+<li><code><b><a title="plugins.hass.Configurations.HassEntityConfiguration" href="#plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></b></code>:
 <ul class="hlist">
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.icon" href="#src.plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.debug" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.debug">debug</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.icon" href="#plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.id" href="#plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.name" href="#plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.type" href="#plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 </ul>
@@ -461,49 +522,51 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src.plugins.hass" href="index.html">src.plugins.hass</a></code></li>
+<li><code><a title="plugins.hass" href="index.html">plugins.hass</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration">HassActionEntityConfiguration</a></code></h4>
+<h4><code><a title="plugins.hass.Configurations.HassActionEntityConfiguration" href="#plugins.hass.Configurations.HassActionEntityConfiguration">HassActionEntityConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.command_topic" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.command_topic">command_topic</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.off_command">off_command</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command" href="#src.plugins.hass.Configurations.HassActionEntityConfiguration.on_command">on_command</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassActionEntityConfiguration.check_type" href="#plugins.hass.Configurations.HassActionEntityConfiguration.check_type">check_type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassActionEntityConfiguration.command_topic" href="#plugins.hass.Configurations.HassActionEntityConfiguration.command_topic">command_topic</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassActionEntityConfiguration.off_command" href="#plugins.hass.Configurations.HassActionEntityConfiguration.off_command">off_command</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassActionEntityConfiguration.on_command" href="#plugins.hass.Configurations.HassActionEntityConfiguration.on_command">on_command</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></code></h4>
+<h4><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration">HassBinarySensorEntityConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state">expose_state</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#src.plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_type" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration.check_type">check_type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration.expose_state">expose_state</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic" href="#plugins.hass.Configurations.HassBinarySensorEntityConfiguration.state_topic">state_topic</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration" href="#src.plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></code></h4>
+<h4><code><a title="plugins.hass.Configurations.HassEntityConfiguration" href="#plugins.hass.Configurations.HassEntityConfiguration">HassEntityConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.icon" href="#src.plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.id" href="#src.plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.name" href="#src.plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassEntityConfiguration.type" href="#src.plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.icon" href="#plugins.hass.Configurations.HassEntityConfiguration.icon">icon</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.id" href="#plugins.hass.Configurations.HassEntityConfiguration.id">id</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.name" href="#plugins.hass.Configurations.HassEntityConfiguration.name">name</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassEntityConfiguration.type" href="#plugins.hass.Configurations.HassEntityConfiguration.type">type</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration" href="#src.plugins.hass.Configurations.HassPlatformConfiguration">HassPlatformConfiguration</a></code></h4>
+<h4><code><a title="plugins.hass.Configurations.HassPlatformConfiguration" href="#plugins.hass.Configurations.HassPlatformConfiguration">HassPlatformConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.auto_discovery_topic" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.auto_discovery_topic">auto_discovery_topic</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.base_topic" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.base_topic">base_topic</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.check_platform_module" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.check_platform_module">check_platform_module</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.connection" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.connection">connection</a></code></li>
-<li><code><a title="src.plugins.hass.Configurations.HassPlatformConfiguration.exports" href="#src.plugins.hass.Configurations.HassPlatformConfiguration.exports">exports</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassPlatformConfiguration.auto_discovery_topic" href="#plugins.hass.Configurations.HassPlatformConfiguration.auto_discovery_topic">auto_discovery_topic</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassPlatformConfiguration.base_topic" href="#plugins.hass.Configurations.HassPlatformConfiguration.base_topic">base_topic</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassPlatformConfiguration.connection" href="#plugins.hass.Configurations.HassPlatformConfiguration.connection">connection</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassPlatformConfiguration.exports" href="#plugins.hass.Configurations.HassPlatformConfiguration.exports">exports</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="src.plugins.hass.Configurations.HassTriggerEntityConfiguration" href="#src.plugins.hass.Configurations.HassTriggerEntityConfiguration">HassTriggerEntityConfiguration</a></code></h4>
+<h4><code><a title="plugins.hass.Configurations.HassTriggerEntityConfiguration" href="#plugins.hass.Configurations.HassTriggerEntityConfiguration">HassTriggerEntityConfiguration</a></code></h4>
 <ul class="">
-<li><code><a title="src.plugins.hass.Configurations.HassTriggerEntityConfiguration.event" href="#src.plugins.hass.Configurations.HassTriggerEntityConfiguration.event">event</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassTriggerEntityConfiguration.check_type" href="#plugins.hass.Configurations.HassTriggerEntityConfiguration.check_type">check_type</a></code></li>
+<li><code><a title="plugins.hass.Configurations.HassTriggerEntityConfiguration.event" href="#plugins.hass.Configurations.HassTriggerEntityConfiguration.event">event</a></code></li>
 </ul>
 </li>
 </ul>

@@ -5,7 +5,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 #@configuration
-class HassEntityConfiguration(BaseModel):
+class HassEntityConfiguration(Configuration):
     '''Exposes an action or sensor to HomeAssistant.'''
 
     id: str
@@ -29,7 +29,7 @@ class HassTriggerEntityConfiguration(HassEntityConfiguration):
     '''Event to listen for the State'''
 
     @validator('type')
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if "trigger" not in v:
             raise ValueError("wrong type: trigger, is: " + v)
         return v      
@@ -46,7 +46,7 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     '''Where Homeassistant can get the state'''    
 
     @validator('type')
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if "sensor" not in v:
             raise ValueError("wrong type: sensor, is: " + v)
         return v          
@@ -66,7 +66,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     '''Where HomeAssistant can publish the state'''
 
     @validator('type')
-    def __check_platform(cls, v):
+    def check_type(cls, v):
         if "switch" not in v:
             raise ValueError("wrong type: switch, is: " + v)
         return v          
@@ -77,7 +77,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
     '''Allows to export actions and sensors to HomeAssistant entities.'''
 
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform(cls, v):
         if "plugins.hass" not in v:
             raise ValueError("wrong platform: plugins.hass, is: " + v)
         return v

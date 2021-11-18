@@ -4,12 +4,11 @@ import threading
 from typing import Any, Optional
 import paho.mqtt.client as mqtt
 from pydantic.class_validators import validator
-from pydantic.main import BaseModel
 
 from modules.base.Configuration import *
 from modules.base.Instances import *
 
-class Availability(BaseModel):
+class MqttAvailabilityConfiguration(Configuration):
     '''Availability topic and last will.'''
 
     topic: str
@@ -41,7 +40,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     keep_alive: Optional[int] = 60
     '''seconds to keep the server connection'''
 
-    availability: Optional[Availability]
+    availability: Optional[MqttAvailabilityConfiguration]
     '''Availability topic and last will'''
 
     on_connected: Optional[list[AutomationConfiguration]] = []

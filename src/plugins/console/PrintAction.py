@@ -6,7 +6,7 @@ class PrintActionConfiguration(ActionConfiguration):
     '''Configuration settings for a GPIO output'''
     
     @validator('platform')
-    def check_platform_module(cls, v):
+    def __check_platform_module(cls, v):
         platform_name = "console"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)

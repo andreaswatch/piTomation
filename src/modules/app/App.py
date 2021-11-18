@@ -10,10 +10,13 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 from modules.base.chevron_renderer import *
 
-VERSION = "2021.11.16"
+VERSION = "2021.11.18"
 
 class App(BaseApp, Logging, Debuggable):
     def __init__(self) -> None:
+        '''
+        Based on: `src.modules.base.Instances.BaseApp`
+        '''
         super().__init__()
 
         init_renderer(self)
@@ -85,7 +88,7 @@ class App(BaseApp, Logging, Debuggable):
                 self.configuration = result
 
             except ValidationError as e:
-                self.log_error(e)
+                print(e)
                 exit()
 
         except IOError:
