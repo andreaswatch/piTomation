@@ -94,6 +94,22 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity["topic"] = self.configuration.command_topic #type: ignore
             entity["type"] = "button_short_press"
             entity["subtype"] = self.configuration.id
+            entity["command_topic"] = self.configuration.command_topic            
+            
+            def OnCommand(call_stack: CallStack):
+                payload = call_stack.get("{{payload}}")
+                if payload == entity["payload_on"]:
+                    if self.on_command_automations:
+                        for automation in self.on_command_automations:
+                            automation.invoke(call_stack)
+
+                if payload == entity["payload_off"]:
+                    if self.off_command_automations:
+                        for automation in self.off_command_automations:
+                            automation.invoke(call_stack)                            
+
+            self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
+        
 
         elif self.hass_type == HassType.ACTION and type(self.configuration) is HassActionEntityConfiguration:
             entity["unique_id"] = get_unique_id()

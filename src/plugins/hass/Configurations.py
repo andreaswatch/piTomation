@@ -22,20 +22,6 @@ class HassEntityConfiguration(Configuration):
 
 
 @configuration
-class HassTriggerEntityConfiguration(HassEntityConfiguration):
-    '''Exposes an Action or Sensor to HomeAssistant as a trigger entity.'''
-
-    event: str
-    '''Event to listen for the State'''
-
-    @validator('type')
-    def check_type(cls, v):
-        if "trigger" not in v:
-            raise ValueError("wrong type: trigger, is: " + v)
-        return v      
-
-
-@configuration
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     '''Exposes an action or sensor to HomeAssistant as a binary sensor entity.'''
 
@@ -50,6 +36,23 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
         if "sensor" not in v:
             raise ValueError("wrong type: sensor, is: " + v)
         return v          
+
+
+@configuration
+class HassTriggerEntityConfiguration(HassEntityConfiguration):
+    '''Exposes an Action or Sensor to HomeAssistant as a trigger entity.'''
+
+    on_command: Optional[list[AutomationConfiguration]]
+    '''Automation to execute when HomeAssistant triggers ON, see `modules.base.Configuration.AutomationConfiguration`'''
+
+    command_topic: Optional[str]
+    '''Where HomeAssistant can publish the state'''
+
+    @validator('type')
+    def check_type(cls, v):
+        if "trigger" not in v:
+            raise ValueError("wrong type: trigger, is: " + v)
+        return v      
 
 
 @configuration

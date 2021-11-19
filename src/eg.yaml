@@ -1,5 +1,5 @@
 device:
-  name: RaspberryPi
+  name: eg
   version: 1.0
 
 platforms:
@@ -64,14 +64,6 @@ platforms:
         on_event: on_press
         off_event: on_release
         expose_state: state.is_pressed
-      - id: dingdongeg
-        type: trigger
-        on_command:
-          - actions:
-            - action: player
-              values:
-                command: next_track
-
 
 #  - platform: plugins.web
 #    id: web
