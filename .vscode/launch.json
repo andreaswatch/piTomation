@@ -8,9 +8,9 @@
             "name": "Python: piTomation",
             "type": "python",
             "request": "launch",
-            "program": "src/__main__.py",
+            "program": "__main__.py",
             "args": [ "src/raspberrypi.yaml" ],
             "console": "integratedTerminal"
         }     
     ]
-}
+} 
