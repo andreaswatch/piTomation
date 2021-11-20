@@ -10,7 +10,7 @@
                 "cwd": "src"
             },
             "dependsOn":["rmdocs"],
-            "command": "pdoc --html index.py modules plugins --force --output-dir ../docs",
+            "command": "pdoc --html index.py plugins modules --force --output-dir ../docs",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
