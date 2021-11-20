@@ -67,7 +67,7 @@ class App(BaseApp, Logging, Debuggable):
         '''If the filename is not given in cli args, try to find the config file by the device's hostname.'''
 
         config_filename = ""
-        if len(sys.argv) == 0:
+        if len(sys.argv) == 1:
             config_filename = os.getcwd() + "/" + socket.gethostname() + ".yaml"
             self.log_info("No configuration file given, fallback to '" + config_filename + "'")
         else:

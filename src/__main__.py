@@ -18,7 +18,8 @@ def import_plugins():
             continue
 
         if len(path.split('.')) < 4:
-            '''only import the top level plugin directory'''
+            '''only import the top level plugin directory, so that potential submodules are 
+            only imported if they are imported by the plugins.'''
             importlib.import_module(path)
 
 import_plugins()
