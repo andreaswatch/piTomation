@@ -5,10 +5,10 @@ from modules.base.Instances import *
 
 @configuration
 class LogActionConfiguration(ActionConfiguration):
-    '''Log a message to the web app. Pass the text in {{payload}}.'''
+    '''Log a message to the web app. Pass the text in {{{payload}}}.'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "web"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -23,7 +23,7 @@ class LogActionState(BaseState):
 
 
 class LogAction(BaseAction):
-    '''Add a message from {{payload}} to the dashboard'''
+    '''Add a message from {{{payload}}} to the dashboard'''
 
     from plugins.web.Platform import Platform
 
@@ -37,7 +37,7 @@ class LogAction(BaseAction):
         if self.configuration.variables is not None:
             call_stack.with_keys(self.configuration.variables)       
 
-        message = call_stack.get("{{payload}}")
+        message = call_stack.get("{{{payload}}}")
         self.state.message = str(message)
         
         self.platform.add_log(message)

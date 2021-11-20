@@ -36,7 +36,7 @@ class RgbLedConfiguration(ActionConfiguration):
     '''enable PWM for the led'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -69,7 +69,7 @@ class RgbLedCommands(Enum):
     '''Change the color of the led, use payload needs to contain a color (red/green/yellow/..)'''
 
 
-class RgbLed(BaseAction, Debuggable, Logging):
+class RgbLedAction(BaseAction, Debuggable, Logging):
     '''Control the state of a RGB led'''
 
     def __init__(self, platform: Platform, config: RgbLedConfiguration) -> None:
@@ -132,7 +132,7 @@ class RgbLed(BaseAction, Debuggable, Logging):
                 automation.invoke(call_stack)
 
         elif RgbLedCommands.set_color.name == topic:
-            payload = call_stack.get("{{payload}}")
+            payload = call_stack.get("{{{payload}}}")
             self.led.color = Color(payload)
             self.state.color = self.led.color.html
             self.state.is_active = self.led.is_active            

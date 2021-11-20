@@ -3,10 +3,10 @@ from modules.base.Instances import *
 
 @configuration
 class PrintActionConfiguration(ActionConfiguration):
-    '''Configuration settings for a GPIO output'''
+    '''Configuration settings for the Print Action'''
     
     @validator('platform')
-    def __check_platform_module(cls, v):
+    def check_platform_module(cls, v):
         platform_name = "console"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -21,7 +21,7 @@ class PrintActionState(BaseState):
 
 
 class PrintAction(BaseAction):
-    '''Prints the given {{payload}} to the System Console.'''
+    '''Prints the given {{{payload}}} to the System Console.'''
     
     def __init__(self, parent: Stackable, config: PrintActionConfiguration) -> None:
         super().__init__(parent, config)
@@ -32,7 +32,7 @@ class PrintAction(BaseAction):
         if self.configuration.variables is not None:
             call_stack.with_keys(self.configuration.variables)        
 
-        message = call_stack.get("{{payload}}")
+        message = call_stack.get("{{{payload}}}")
 
         print("PRINT: " + str(message))
         self.state = message

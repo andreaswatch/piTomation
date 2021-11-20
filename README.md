@@ -1,4 +1,4 @@
-## Caution: Early Alpha Version
+Please note that this is an early Alpha Version with daily breaking changes.
 
 # piTomation
 

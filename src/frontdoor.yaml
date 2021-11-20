@@ -1,5 +1,5 @@
 device:
-  name: RaspberryPi
+  name: Frontdoor
   version: 1.0
   on_init:
    - action: led
@@ -8,7 +8,7 @@ device:
        payload: blue
 
 variables:
-  name: raspberrypi
+  name: frontdoor
   baresip_base: "/home/interkom/{{id(app).variables.name}}/baresip"
 
 platforms:

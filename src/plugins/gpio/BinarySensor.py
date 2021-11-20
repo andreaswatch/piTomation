@@ -29,14 +29,14 @@ class BinarySensorConfiguration(SensorConfiguration):
     '''List of Automations to execute when the GPIO is set to LOW, see `modules.base.Configuration.AutomationConfiguration`'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
     @validator('type')
-    def __check_type(cls, v):
+    def check_type(cls, v):
         type_name = "BinarySensor"
         if v != type_name:
             raise ValueError("wrong type: " + type_name + ", is: " + v)
@@ -77,6 +77,8 @@ class Handler():
         self.binary_sensor = binary_sensor
 
     def invoke(self):
+        self.binary_sensor.log_debug(str(self.is_pressed))
+
         self.binary_sensor.state.is_high = self.is_pressed
         call_stack = CallStack().with_element(self)
 

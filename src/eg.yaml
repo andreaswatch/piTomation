@@ -2,152 +2,212 @@ device:
   name: eg
   version: 1.0
 
+variables:
+  name: eg
+  baresip_base: "/home/interkom/{{id(app).variables.name}}/baresip"
+
 platforms:
-  - platform: plugins.mqtt
-    id: mqtt
-    variables:
-      base_topic: "home/{{id(device).configuration.name}}"
-    host: home
-    port: 1883
-    availability:
-      topic: "{{id(mqtt).variables.base_topic}}/connected"
-      payload_on: "yes"
-      payload_off: "no"
-    on_connected:
-      - actions:
-        - action: print
-          values:
-            payload: "on_connected: {{id(mqtt).variables.base_topic}}"
-    on_disconnected:
-      - actions:
-        - action: print
-          values:
-            payload: bye    
-    on_message:
-      - actions:
-        - action: print #display all messages in the dashboard
-          values:
-            payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
-        - action: webTable
+- platform: plugins.mqtt
+  id: mqtt
+  variables:
+    base_topic: "home/{{id(app).variables.name}}"
+  host: home
+  port: 1883
+  availability:
+    topic: "{{id(mqtt).variables.base_topic}}/connected"
+    payload_on: "yes"
+    payload_off: "no"
+  on_connected:
+  - actions:
+    - action: print
+      values:
+        payload: "on_connected: {{id(mqtt).variables.base_topic}}"
+  on_disconnected:
+  - actions:
+    - action: print
+      values:
+        payload: bye    
+#  on_message:
+#  - actions:
+#    - action: print #display all messages in the dashboard
+#      values:
+#        payload: "I got a message on topic '{{topic}}' with payload: {{{payload}}}"  
 
-  - platform: plugins.gpio
-    id: gpio
-    factory: rpigpio
+- platform: plugins.gpio
+  id: gpio
+  factory: rpigpio
 
-  - platform: plugins.console
-    id: console
+- platform: plugins.console
+  id: console
 
-  - platform: plugins.dfplayer
-    id: dfplayer
-    tx_pin: GPIO5
+- platform: plugins.dfplayer
+  id: dfplayer
+  tx_pin: GPIO5
 
-  - platform: plugins.hass
-    id: hass
-    connection: mqtt
-    exports:
-      - id: player
-        type: switch
-        icon: mdi:home
-        on_command: 
-          - actions:
-            - action: player
-              values:
-                command: next_track
-        off_command: 
-          - actions:
-            - action: player
-              values:
-                topic: pause
-        expose_state: state.is_playing
-      - id: button1
-        type: sensor
-        on_event: on_press
-        off_event: on_release
-        expose_state: state.is_pressed
+- platform: plugins.hass
+  id: hass
+  connection: mqtt
+  exports:
+  - id: player
+    type: switch
+    icon: mdi:home
+    on_command: 
+    - actions:
+      - action: player
+        values:
+          command: next_track
+    off_command: 
+    - actions:
+      - action: player
+        values:
+          topic: pause
+    expose_state: state.is_playing
 
-#  - platform: plugins.web
-#    id: web
+  - id: btn_ring_og
+    type: sensor
+    on_event: on_press
+    off_event: on_release
+    expose_state: state.is_pressed
+
+  - id: btn_open_door
+    type: sensor
+    on_event: on_press
+    off_event: on_release
+    expose_state: state.is_pressed        
 
 actions:
-  - id: print
-    platform: console
-    type: PrintAction
+- id: print
+  platform: console
+  type: PrintAction
 
-  - id: player
-    platform: dfplayer
+- id: player
+  platform: dfplayer
 
-  - id: led
-    platform: gpio
-    pin: GPIO13
-    type: BinaryAction
+- id: setVariable
+  platform: system
+  type: SetVariableAction
+  debug: true
 
-  - id: webTable
-    platform: web
-    type: UpdateAction
+- id: baresip_dial_og
+  platform: mqtt
+  debug: true
+  topic: "/home/interkom/{{id(app).variables.name}}/baresip/command/dial"
+  payload:
+    command: dial
+    token: og
+    params: sip:og
+
+- id: baresip_dial_frontdoor
+  platform: mqtt
+  debug: true
+  topic: "/home/interkom/{{id(app).variables.name}}/baresip/command/dial"
+  payload:
+    command: dial
+    token: frontdoor
+    params: sip:frontdoor    
+
+- id: baresip_hangup
+  platform: mqtt
+  debug: true
+  topic: "/home/interkom/{{id(app).variables.name}}/baresip/command/hangup"
+  payload:
+    command: hangup
+    token: hangup
+    params: hangup
 
 sensors:
-  - id: button1
-    platform: gpio
-    pin: GPIO6
-    type: ButtonSensor
-    debug: True
-    check_state_delay: 0.03
-    on_press:
-      - actions:
-        - action: print
-          values: 
-            payload: button high
-        - action: led
-          values:
-            topic: toggle
-    on_release:
-      - actions:
-        - action: print
-          values: 
-            payload: button low
-        #- action: led
-        #  values:
-        #    topic: turn_off            
-    on_hold:
-      - actions:
-        - action: print
-          values: 
-            payload: GPIO6 hold
-        - action: player
-          values:
-            command: next_track        
+- id: btn_ring_og
+  platform: gpio
+  debug: true
+  #pin33
+  pin: GPIO13 
+  type: ButtonSensor
+  check_state_delay: 0.03
+  hold_time: 0.2
 
+- id: btn_open_door
+  platform: gpio
+  debug: true
+  #pin35
+  pin: GPIO19
+  type: ButtonSensor
+  check_state_delay: 0.03
 
-  - id: play
-    platform: mqtt
-    topic: "{{id(mqtt).variables.base_topic}}/play"
-    on_message:
-      - actions:
-        - action: print
-          values:
-            payload: "I got a message on topic '{{topic}}' with payload: {{payload}}"  
-        - action: player
-          values:
-            command: next_track 
-
-
-  - id: something
-    platform: mqtt
-    topic: "{{id(mqtt).variables.base_topic}}/x"
-    on_message:
-      - conditions:
-          - actual: "{{id(mqtt).is_connected}}"
-            comperator: equals
-            expected: True
-        actions:
-        - action: print
-          values:
-            payload: "I got a message and {{id(mqtt).is_connected}} == true"      
-
-      - actions:
-        - action: print
-          values:
-            payload: "Got message on topic '{{topic}}', with payload '{{payload}}'"
-
-
+#- id: btn_hangup_or_dial
+#  platform: gpio
+#  debug: true
+#  #pin37
+#  pin: GPIO26
+#  type: ButtonSensor
+#  inverted: true
+#  on_release:
+#  - actions: 
+#    - action: print
+#      values: 
+#        payload: on_release
+#  - conditions:
+#    - actual: "{{id(is_ringing).state.payload}}"
+#      comperator: equals
+#      expected: "incoming call"
+#    actions:
+#    - action: print
+#      values:
+#        payload: dial frontdoor
+#    - action: baresip_dial_frontdoor
+#  on_press:
+#  - actions:
+#      - action: print
+#        values:
+#          payload: on_press
+#      - action: baresip_hangup
         
+- id: play
+  #Run dfplayer.next_track()
+  platform: mqtt
+  topic: "{{id(mqtt).variables.base_topic}}/play"
+  on_message:
+  - actions:
+    - action: player
+      values:
+        command: next_track 
+
+      
+#- id: is_ringing
+#  platform: mqtt
+#  topic: "{{id(app).variables.baresip_base}}/event/#"
+#  on_message:
+#  - actions:
+#    - action: print
+#      values:
+#        payload: is ringing...
+
+- id: baresip_state
+  #Save baresip state into variable 'connected'
+  platform: mqtt
+  topic: "{{id(app).variables.baresip_base}}/event"
+  on_message:
+  - conditions:
+    - actual: "{{#payload}}{{type}}{{/payload}}"
+      comperator: contains
+      expected: REGISTER_OK
+    actions:
+    - action: print
+      values:
+        payload: hello baresip
+    - action: setVariable
+      values:
+        topic: connected
+        payload: true        
+  - conditions:
+    - actual: "{{#payload}}{{type}}{{/payload}}"
+      comperator: equals
+      expected: EXIT
+    actions:
+    - action: print
+      values:
+        payload: bye baresip    
+    - action: setVariable
+      values:
+        topic: connected
+        payload: false
+

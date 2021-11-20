@@ -6,7 +6,7 @@ class UpdateActionConfiguration(ActionConfiguration):
     '''Configuration settings for the Update Action'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "web"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -24,7 +24,7 @@ class UpdateActionState(BaseState):
 
 
 class UpdateAction(BaseAction):
-    '''Write a given {{payload}} into the table row {{topic}}.'''
+    '''Write a given {{{payload}}} into the table row {{topic}}.'''
 
     from plugins.web.Platform import Platform
 
@@ -35,7 +35,7 @@ class UpdateAction(BaseAction):
 
     def invoke(self, call_stack: CallStack):
         self.state.topic = str(call_stack.get("{{topic}}"))
-        self.state.payload = str(call_stack.get("{{payload}}"))
+        self.state.payload = str(call_stack.get("{{{payload}}}"))
         
         self.platform.update(self.state.topic, self.state.payload)
 

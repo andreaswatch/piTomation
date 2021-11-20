@@ -13,7 +13,7 @@ class WebPlatformConfiguration(PlatformConfiguration):
     '''Configuration setting for the pywebio Dashboard'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         if "plugins.web" not in v:
             raise ValueError("wrong platform: plugins.web, is: " + v)
         return v

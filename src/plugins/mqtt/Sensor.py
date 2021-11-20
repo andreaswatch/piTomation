@@ -10,7 +10,7 @@ class MqttSensorConfiguration(SensorConfiguration):
     topic: str
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "mqtt"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -26,11 +26,11 @@ class MqttSensorState(BaseState):
     topic: str
     '''Last received topic'''
 
-    payload: str
+    payload: Union[str, dict]
     '''Last received payload'''
 
 
-class Sensor(BaseSensor):
+class Sensor(BaseSensor, Debuggable):
     '''Allows to listen to a given MQTT topic.'''
     from plugins.mqtt.Platform import Platform
 
@@ -49,7 +49,8 @@ class Sensor(BaseSensor):
 
     def on_message(self, call_stack: CallStack):
         self.state.topic = str(call_stack.get("{{topic}}"))
-        self.state.payload = str(call_stack.get("{{payload}}"))
+        self.state.payload = call_stack.get("{{{payload}}}")
+        self.log_debug("Got message from " + self.state.topic + ", with payload: "+ str(self.state.payload))
 
         for automation in self.on_message_automations:
             automation.invoke(call_stack)

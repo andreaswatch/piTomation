@@ -34,7 +34,7 @@ def WithPlugins(t: type):
     if t in __registry.keys():
         classes = list(__registry[t])
         return Union[tuple(classes)]  # type: ignore
-    return t
+    raise Exception("AppConfiguration must get imported after all plugins")
 
 
 #@configuration
@@ -69,7 +69,7 @@ class VariablesConfiguration(Configuration):
 class ConditionConfiguration(Configuration):
     '''Configuration settings for a Condition.'''
 
-    actual: str
+    actual: Union[str, dict]
     '''Adress of the actual value, e.g. "payload"'''
 
     comperator: str
@@ -78,7 +78,7 @@ class ConditionConfiguration(Configuration):
     inverted: Optional[bool] = False
     '''Invert result'''
 
-    expected: str
+    expected: Union[str, dict]
     '''Expected value'''
 
 
@@ -123,7 +123,7 @@ class PlatformConfiguration(StackableConfiguration):
     '''plugin name of the platform'''
 
     #@validator('platform', always=False, allow_reuse=False)
-    #def __check_platform(cls, v):
+    #def check_platform(cls, v):
     #    raise ValueError(
     #        "Generic PlatformConfiguration not supported for: " + v)
 

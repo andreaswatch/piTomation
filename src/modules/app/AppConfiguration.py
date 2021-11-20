@@ -1,10 +1,9 @@
-import pydantic
 from modules.base.Configuration import *
 from modules.base.Instances import *
 
 
 @configuration
-class AppConfiguration(Configuration):
+class AppConfiguration(VariablesConfiguration):
     """AppConfiguration"""
 
     device: DeviceConfiguration

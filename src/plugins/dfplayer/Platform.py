@@ -6,7 +6,7 @@ class DFPlayerPlatformConfiguration(PlatformConfiguration):
     '''Configuration settings for the DFPlayer'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         if "plugins.dfplayer" not in v:
             raise ValueError("wrong platform: plugins.dfplayer, is: " + v)
         return v

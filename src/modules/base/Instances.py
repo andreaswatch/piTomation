@@ -20,7 +20,10 @@ class Base:
 
 class VariableProvider:
     def __init__(self, config: VariablesConfiguration) -> None:
-        self.variables = config.variables
+        if config.variables:
+            self.variables = config.variables
+        else:
+            self.variables = {}
 
     def get_variable_value(self, variable_id):
         if self.variables is not None:
@@ -56,7 +59,19 @@ class Debuggable():
         if hasattr(self, "configuration"):
             if hasattr(self.configuration, "debug"):
                 if self.configuration.debug:
-                    print("[DEBUG] " + message)
+                    prefix = ""
+                    parent = self
+                    while parent is not None:
+                        if hasattr(parent, "configuration"):
+                            id = getattr(parent.configuration, "id", None) 
+                            if id is None:
+                                id = type(parent).__name__
+                            prefix = id + ">" + prefix
+                            parent = getattr(parent, "parent", None)
+                        else:
+                            break
+
+                    print("[DEBUG] " + prefix + ": " + message)
 
 
 class Identifyable():
@@ -128,11 +143,6 @@ class BaseApp(Stackable, Disposeable, VariableProvider):
     def __init__(self) -> None:
         Stackable.__init__(self, None)
         Disposeable.__init__(self)
-        VariableProvider.__init__(self, VariablesConfiguration())
-
-        self.variables = {
-            "id": "piTomation"
-        }
 
         self.device: Device
         self.platforms: list[BasePlatform]
@@ -281,7 +291,7 @@ class Automation(Stackable):
         return automations            
 
 
-class Condition(Stackable):
+class Condition(Stackable, Logging):
     def __init__(self, parent: Stackable, config: ConditionConfiguration) -> None:
         super().__init__(parent)
         self.configuration = config
@@ -292,21 +302,26 @@ class Condition(Stackable):
         expected_value = call_stack.get(self.configuration.expected)
         invert_result = not call_stack.get(self.configuration.inverted)
 
-        if "contains" == functionName:
-            result = (expected_value in actual_value) == invert_result #type: ignore
-            return result
+        try:
+            if "contains" == functionName:
+                result = (expected_value in actual_value) == invert_result #type: ignore
+                return result
 
-        if "equals" == functionName:
-            result = (expected_value == actual_value) == invert_result
-            return result
+            if "equals" == functionName:
+                result = (expected_value == actual_value) == invert_result
+                return result
 
-        if "startsWith" == functionName:
-            result = (actual_value.startswith(expected_value)) == invert_result #type: ignore
-            return result
+            if "startsWith" == functionName:
+                result = (actual_value.startswith(expected_value)) == invert_result #type: ignore
+                return result
 
-        if "endsWith" == functionName:
-            result = (actual_value.endswith(expected_value)) == invert_result #type: ignore
-            return result
+            if "endsWith" == functionName:
+                result = (actual_value.endswith(expected_value)) == invert_result #type: ignore
+                return result
+
+        except Exception as e:
+            print(e)
+            self.log_warning("Unable to compare values")
 
         return False
 

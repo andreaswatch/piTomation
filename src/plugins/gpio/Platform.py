@@ -5,7 +5,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 @configuration
-class GpioPlatform(PlatformConfiguration):
+class GpioPlatformConfiguration(PlatformConfiguration):
     '''The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
     Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.'''
 
@@ -13,7 +13,7 @@ class GpioPlatform(PlatformConfiguration):
     '''gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         if "plugins.gpio" not in v:
             raise ValueError("wrong platform: plugins.gpio, is: " + v)
         return v
@@ -22,7 +22,7 @@ class GpioPlatform(PlatformConfiguration):
 class Platform(BasePlatform, Logging):
     '''GPIO platform'''
     
-    def __init__(self, parent: Stackable, config: GpioPlatform) -> None:
+    def __init__(self, parent: Stackable, config: GpioPlatformConfiguration) -> None:
         super().__init__(parent, config)
         self.configuration = config
 

@@ -6,10 +6,10 @@ from plugins.system.Platform import *
 
 @configuration
 class DelayActionConfiguration(ActionConfiguration):
-    '''Allows to sleep for a given duration. Pass the amount of seconds in {{payload}}.'''
+    '''Allows to sleep for a given duration. Pass the amount of seconds in {{{payload}}}.'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "system"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
@@ -27,7 +27,7 @@ class DelayActionState(BaseState):
 
 
 class DelayAction(BaseAction):
-    '''Executees python's time.sleep({{payload}})'''
+    '''Executees python's time.sleep({{{payload}}})'''
 
     def __init__(self, parent: Platform, config: DelayActionConfiguration) -> None:
         super().__init__(parent, config)
@@ -35,7 +35,7 @@ class DelayAction(BaseAction):
 
     def invoke(self, call_stack: CallStack):
 
-        seconds = float(call_stack.get("{{payload}}"))
+        seconds = float(call_stack.get("{{{payload}}}"))
         
         self.state.delay_seconds = seconds
         self.state.is_active = True

@@ -10,7 +10,7 @@ class DFPlayerActionConfiguration(ActionConfiguration):
     '''Configuration settings for the DFPlayer'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "dfplayer"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)

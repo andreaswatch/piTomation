@@ -23,7 +23,7 @@ class BinaryActionConfiguration(ActionConfiguration):
     '''expected initial value'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)

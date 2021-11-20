@@ -10,18 +10,21 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 from modules.base.chevron_renderer import *
 
-VERSION = "2021.11.18"
+VERSION = "2021.11.19"
 
 class App(BaseApp, Logging, Debuggable):
+
     def __init__(self) -> None:
-        '''
-        Based on: `src.modules.base.Instances.BaseApp`
-        '''
-        super().__init__()
+        BaseApp.__init__(self)
+        Logging.__init__(self)
 
         init_renderer(self)
 
-        self.__read_configuration()
+        self.configuration = self.__read_configuration()
+
+        Debuggable.__init__(self, self.configuration)
+        VariableProvider.__init__(self, self.configuration)
+        self.variables["id"] = "piTomation"
 
         self.device = Device(self, self.configuration.device)
         self.platforms = self.__init_platforms()
@@ -81,11 +84,11 @@ class App(BaseApp, Logging, Debuggable):
                     self.log_error("Unknown config type: " + config_filename)
                     exit()
 
-            from modules.app.AppConfiguration import AppConfiguration
 
             try:
+                from modules.app.AppConfiguration import AppConfiguration
                 result = AppConfiguration.parse_obj(raw)
-                self.configuration = result
+                return result
 
             except ValidationError as e:
                 print(e)

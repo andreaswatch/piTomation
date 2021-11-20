@@ -26,7 +26,7 @@ class MqttPlatformConfiguration(PlatformConfiguration):
     '''Configuration settings for the MQTT platform.'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         if "plugins.mqtt" not in v:
             raise ValueError("wrong platform: plugins.mqtt, is: " + v)
         return v
@@ -113,6 +113,10 @@ class Platform(BasePlatform):
 
         def method(client, userdata, msg):
             payload = msg.payload.decode("utf-8")
+            try:
+                payload = json.loads(payload)
+            except:
+                pass
 
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack()) \
@@ -124,6 +128,9 @@ class Platform(BasePlatform):
             for callback in self.callbacks:
                 if callback["topic"] == msg.topic:
                     callback["callback"](call_stack)
+                elif str(callback["topic"]).endswith("+") or str(callback["topic"]).endswith("#"):
+                    if str(msg.topic).startswith(str(callback["topic"])[0:-2]):
+                        callback["callback"](call_stack)
 
             for automation in self.on_message_automations:
                 automation.invoke(call_stack)
@@ -156,6 +163,9 @@ class Platform(BasePlatform):
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack()) \
                 .with_key("return_code", rc)
+
+            for callback in self.callbacks:
+                self.client.subscribe(callback["topic"])
 
             for automation in self.on_connected_actions:
                 automation.invoke(call_stack)

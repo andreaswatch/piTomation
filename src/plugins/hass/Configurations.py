@@ -80,7 +80,7 @@ class HassPlatformConfiguration(PlatformConfiguration):
     '''Allows to export actions and sensors to HomeAssistant entities.'''
 
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         if "plugins.hass" not in v:
             raise ValueError("wrong platform: plugins.hass, is: " + v)
         return v

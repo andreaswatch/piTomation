@@ -17,7 +17,24 @@ def init_renderer(app):
                 if value is not None:
                     sub_scopes = CallStack().with_stack(scopes)
                     sub_scopes.pop(0)
+                    if type(value) is str:
+                        return chevron.render(value, scopes=sub_scopes)
+                    return value
+            if type(scope) is dict:
+                value = scope[key]
+                if type(value) is str:
+                    sub_scopes = CallStack().with_stack(scopes)
+                    sub_scopes.pop(0)                    
                     return chevron.render(value, scopes=sub_scopes)
+                return value                    
+            if hasattr(scope, key):
+                value = getattr(scope, key)
+                if type(value) is str:
+                    sub_scopes = CallStack().with_stack(scopes)
+                    sub_scopes.pop(0)                    
+                    return chevron.render(value, scopes=sub_scopes)
+                return value
+
 
         if key.startswith("id("):
             #Special mode, e.g. id(**).field.subfield allows to access the instances directly.
@@ -46,9 +63,7 @@ def init_renderer(app):
                     return scopes.get(act)
                 return act
 
-        #Fallback: return {{given key}} to indicate they key was not found to the user
-        result = "{{" + key + "}}"
-        __logger.log_warning("Can not render key '" + key + "', returning {{" + key + "}}" )
+        result = None
         return result
 
     chevron.renderer._get_key = __get_string

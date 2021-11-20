@@ -40,14 +40,14 @@ class ButtonSensorConfiguration(SensorConfiguration):
     '''experimental for debouncing, probably better to use on_hold with a hold_time instead of on_press'''
 
     @validator('platform')
-    def __check_platform_module(cls, v):
+    def check_platform_module(cls, v):
         platform_name = "gpio"
         if v != platform_name:
             raise ValueError("wrong script platform: " + platform_name + ", is: " + v)
         return v    
 
     @validator('type')
-    def __check_type(cls, v):
+    def check_type(cls, v):
         type_name = "ButtonSensor"
         if v != type_name:
             raise ValueError("wrong type: " + type_name + ", is: " + v)
@@ -86,11 +86,10 @@ class ButtonSensor(BaseSensor, Debuggable):
         self.on_press_automations = Automation.create_automations(self, self.configuration.on_press)
         self.on_hold_automations = Automation.create_automations(self, self.configuration.on_hold)
         self.on_release_automations = Automation.create_automations(self, self.configuration.on_release)
-        
 
-        self.button.when_activated = Handler(self, self.on_press_automations, True).__invoke
-        self.button.when_held = Handler(self, self.on_hold_automations, True).__invoke
-        self.button.when_deactivated = Handler(self, self.on_release_automations, False).__invoke
+        self.button.when_activated = Handler(self, self.on_press_automations, True).press
+        self.button.when_held = Handler(self, self.on_hold_automations, True).hold
+        self.button.when_deactivated = Handler(self, self.on_release_automations, False).release
 
 
 
@@ -101,22 +100,28 @@ class Handler():
         self.button_sensor = button_sensor
 
     def press(self):
+        self.button_sensor.log_debug("pressed")
+
         if self.button_sensor.check_state_delay is not None:
             time.sleep(self.button_sensor.check_state_delay)
             if self.button_sensor.button.is_active is not self.expected_state:
                 self.press_canceled = True
                 self.button_sensor.log_debug("Not pressed anymore, cancelling ..")
                 return 
-        self.press_canceled = False
+        self.button_sensor.press_canceled = False
         self.__invoke()
 
     def hold(self):
-        if self.press_canceled:
+        self.button_sensor.log_debug("hold")
+
+        if self.button_sensor.press_canceled:
             return
         self.__invoke()
 
     def release(self):
-        if self.press_canceled:
+        self.button_sensor.log_debug("released")
+
+        if self.button_sensor.press_canceled:
             return
         self.__invoke()
 

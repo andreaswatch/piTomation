@@ -10,7 +10,7 @@ class SystemPlatformConfiguration(PlatformConfiguration):
     '''Configuration settings for the System platform.'''
     
     @validator('platform')
-    def __check_platform(cls, v):
+    def check_platform(cls, v):
         if "plugins.system" not in v:
             raise ValueError("wrong platform: plugins.system, is: " + v)
         return v

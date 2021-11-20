@@ -1,5 +1,6 @@
 from typing import List
 import chevron
+import json
 
 class VariableProvider():
     def __init__(self) -> None:
@@ -13,9 +14,8 @@ class VariableProvider():
     def __repr__(self):
         return self.variables
 
-
 class CallStack(List):
-    def __init__(self) -> None:
+    def __init__(self) -> None:       
         pass
 
 
@@ -72,12 +72,29 @@ class CallStack(List):
         return c
                 
 
-    def get(self, getKey):
-        def _render(input: str):
-            if not type(input) is str:
-                return input
+    def get(self, getKey, optional=False):
+        def ret(key, result):
+            if optional and result is None:
+                #Fallback: return {{given key}} to indicate they key was not found to the user
+                result = "{{" + key + "}}"
+                from modules.base.Instances import Logging
+                Logging.log_warning(Logging(), "Can not render key '" + key + "', returning {{" + key + "}}" )
+                return key
 
-            result = chevron.render(input, scopes=self)
+            #try:
+            #    _json = json.loads(result)
+            #    return _json
+            #except Exception as ex:
+            #    print(ex)
+            #    pass
+
             return result
 
-        return _render(getKey)
+        def _render(input: str):
+            if not type(input) is str:
+                return ret(input, input)
+
+            result = chevron.render(input, scopes=self)
+            return ret(input, result)
+
+        return ret(input, _render(getKey))
