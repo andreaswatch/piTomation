@@ -16,7 +16,7 @@ def import_plugins():
         dp = str(dir_path)
         if dp.lower().endswith("__init__.py"):
             continue
-        path = dp[len(dirname)+1:-3].replace("/",".")
+        path = dp[len(dirname)+1:-3].replace(os.sep,".")
 
         if len(path.split('.')) < 4:
             '''only import the top level plugin directory, so that potential submodules are 

@@ -44,7 +44,11 @@ platforms:
     type: sensor
     on_event: on_hold
     off_event: on_release
-    expose_state: state.is_pressed        
+    expose_state: state.is_pressed     
+    
+- platform: plugins.camera
+  id: camera
+  port: 8091
 
 
 actions:

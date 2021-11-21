@@ -9,3 +9,4 @@ pywebio
 chevron
 paho-mqtt
 pigpio
+pillow
