@@ -45,6 +45,10 @@ cd ~
 git clone --recurse-submodules http://github.com/andreasWatch/piTomation
 pip3.9 install -r piTomation/src/requirements.txt
 ```
+To use GPIO with the pigpio factory (and DFPlayer), it is also required to install:
+```
+sudo apt install pigpio
+```
 
 ## Run
 piTomation needs to have a valid yaml config file. As an example, raspberrypi.yaml can be used.

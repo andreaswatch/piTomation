@@ -2,6 +2,7 @@ from typing import List
 import chevron
 import json
 
+
 class VariableProvider():
     def __init__(self) -> None:
         self.variables = {}

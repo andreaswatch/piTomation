@@ -1,9 +1,6 @@
-import plugins
-import modules
-
 '''
-Entrypoint for Configuration: `modules.app.AppConfiguration`
-Plugins: `plugins`
-
-Application: `modules`
+# piTomation Documentation:
++ `modules.app.AppConfiguration`: Top Level YAML configuration
++ `plugins`: All available plugins
++ `modules.base.Configuration.AutomationConfiguration`: Automation configuration
 '''

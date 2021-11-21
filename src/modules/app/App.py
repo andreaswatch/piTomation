@@ -1,3 +1,5 @@
+'''The piTomation Application class. For YAML configuration, please see `modules.app.AppConfiguration`.'''
+
 import importlib
 import os
 import sys
@@ -10,10 +12,10 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 from modules.base.chevron_renderer import *
 
-VERSION = "2021.11.19"
+VERSION = "2021.11.21"
 
 class App(BaseApp, Logging, Debuggable):
-
+    ''' '''
     def __init__(self) -> None:
         BaseApp.__init__(self)
         Logging.__init__(self)
@@ -51,7 +53,7 @@ class App(BaseApp, Logging, Debuggable):
 
 
     def get_id(self, id: str):
-        '''get a configured component(action/sensor/script +app&device) by id'''
+        '''Get a configured component(action/sensor/script +app&device) by the id. This method can get used from YAML by: {{id(my_id)}}'''
 
         if id == "device":
             return self.device

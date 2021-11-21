@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>modules.base.Configuration API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Basic piTomation configuration options." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,14 +22,24 @@
 <h1 class="title">Module <code>modules.base.Configuration</code></h1>
 </header>
 <section id="section-intro">
+<p>Basic piTomation configuration options.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from pydantic import BaseModel
+<pre><code class="python">&#39;&#39;&#39;
+Basic piTomation configuration options.
+&#39;&#39;&#39;
+
+from pydantic import BaseModel
 from typing import Any, Optional, Union
 
 from pydantic.class_validators import validator
+
+__pdoc__ = {
+    &#34;WithPlugins&#34;: None,
+    &#34;configuration&#34;: None
+}
 
 __registry: dict[type, list[type]] = {}
 &#39;&#39;&#39;Contains all @configuration class types, key is the base type&#39;&#39;&#39;
@@ -74,7 +84,10 @@ class Configuration(BaseModel):
         super().__init__(**data)
 
     debug: Optional[bool] = False
-    &#39;&#39;&#39;Enable additional debugging output for this instance&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, bool): Enable additional debugging output for this instance&#39;&#39;&#39;
+
+    comment: Optional[str]
+    &#39;&#39;&#39;(Optional, string): Additional text information about this node. Not used anywhere.&#39;&#39;&#39;
 
 
 #@configuration
@@ -82,15 +95,25 @@ class IdConfiguration(Configuration):
     &#39;&#39;&#39;Base class for all configuration classes that provide an Id&#39;&#39;&#39;
 
     id: str
-    &#39;&#39;&#39;Own reference&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): This is the name of the node. It should always be unique in your piTomation network.&#39;&#39;&#39;
 
 
 #@configuration
 class VariablesConfiguration(Configuration):
-    &#39;&#39;&#39;Adds variables to an id, access: id(myId).variables.myVariable&#39;&#39;&#39;
+    &#39;&#39;&#39;Adds variables to an id, access: id(myId).variables.myVariable
+&lt;details&gt;
+Example:
+```
+platform: mqtt
+variables:
+ - myVariableA: &#34;ValueA&#34;
+ - myVariableB: &#34;On&#34;
+```
+&lt;/details&gt;    
+&#39;&#39;&#39;
 
     variables: Optional[dict]
-    &#39;&#39;&#39;Variables, exposed as id(xy).variables.name&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, dictionary of variables): Variables, exposed as id(xy).variables.name&#39;&#39;&#39;
 
 
 #@configuration
@@ -98,98 +121,137 @@ class ConditionConfiguration(Configuration):
     &#39;&#39;&#39;Configuration settings for a Condition.&#39;&#39;&#39;
 
     actual: Union[str, dict]
-    &#39;&#39;&#39;Adress of the actual value, e.g. &#34;payload&#34;&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string or dictionary): The actual value to compare, e.g. &#34;{{payload}}&#34;.
+    The value can contain either a simple string or a dictionary of values (e.g. a json payload from a mqtt message).
+    &#39;&#39;&#39;
 
     comperator: str
-    &#39;&#39;&#39;Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Function name used to compare the values, currently available: [contains, equals, startWith, endsWith].&#39;&#39;&#39;
 
     inverted: Optional[bool] = False
-    &#39;&#39;&#39;Invert result&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, bool): Invert result.&#39;&#39;&#39;
 
     expected: Union[str, dict]
-    &#39;&#39;&#39;Expected value&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, stirng or dictionary): Expected value.&#39;&#39;&#39;
 
 
 #@configuration
 class ActionTriggerConfiguration(Configuration):
-    &#39;&#39;&#39;Configuration settings for an ActionTrigger&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for an ActionTrigger.
+&lt;details&gt;
+# Example 1:    
+Print the last received payload to the console:
+```
+actions:
+- action: print
+  values:
+    payload: &#34;{{payload}}&#34;
+```
+# Example 2:    
+Print the last received topic and payload to the console:
+```
+actions:
+- action: print
+  values:
+    payload: &#34;Got a message on topic &#39;{{topic}}&#39; with payload: {{payload}}&#34;
+&lt;/details&gt;
+```
+    &#39;&#39;&#39;
 
     action: str
-    &#39;&#39;&#39;id of the action to execute&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Id of the Node/Action to execute.&#39;&#39;&#39;
 
     values: Optional[dict] = {}
-    &#39;&#39;&#39;optional list of values to pass&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, dictionary): Values to pass to the action.&#39;&#39;&#39;
 
 
-#@configuration
 class AutomationConfiguration(Configuration):
-    &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute&#39;&#39;&#39;
+    &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute.
+&lt;details&gt;
+# Example:
+If you get a payload like this:
+```
+{&#34;something&#34;: &#34;value&#34;, &#34;type&#34;: &#34;REGISTER_OK&#34;}
+```
+and want to check if the type == &#34;REGISTER_OK&#34;, the configuration could look like this:
+```
+on_...:
+- conditions:
+  - actual: &#34;{{#payload}}{{type}}{{/payload}}&#34;
+    comperator: equals
+    expected: REGISTER_OK
+  actions:
+  - action: print
+    values:
+      payload: Register is OK
+```
+If you also want to check for other values, you could add this configuration below the upper one:
+```
+- conditions:
+  - actual: &#34;{{#payload}}{{type}}{{/payload}}&#34;
+    comperator: equals
+    expected: REGISTER_FAIL
+  actions:
+  - action: print
+    values:
+      payload: Register is FAIL
+```
+&lt;/details&gt;
+    &#39;&#39;&#39;
 
     conditions: Optional[list[ConditionConfiguration]] = []
-    &#39;&#39;&#39;list of conditions to prove before the actions get executed, see `ConditionConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, list of conditions): piTomation evaluates these conditions before actions get executed, see `ConditionConfiguration`.&#39;&#39;&#39;
 
     actions: list[ActionTriggerConfiguration] = []
-    &#39;&#39;&#39;list of actions to execute, see `ActionTriggerConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, list of actions): Actions to execute, see `ActionTriggerConfiguration`.&#39;&#39;&#39;
 
 
-#@configuration
 class StackableConfiguration(IdConfiguration, VariablesConfiguration):
-    &#39;&#39;&#39;Provides default automations that are executed by all Platforms, Actions and Sensors&#39;&#39;&#39;
+    &#39;&#39;&#39;Provides default Automations that are executed by all Platforms, Actions and Sensors&#39;&#39;&#39;
 
     on_init: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after init is done, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, List of Automations): Automations to execute after init is done, see `AutomationConfiguration`.&#39;&#39;&#39;
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute before this platform is disposed, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, List of Automations): Automations to execute before this platform is disposed, see `AutomationConfiguration`.&#39;&#39;&#39;
 
 
-#@configuration
 class PlatformConfiguration(StackableConfiguration):
     &#39;&#39;&#39;Base class for all platform configuration classes&#39;&#39;&#39;
 
     platform: str
-    &#39;&#39;&#39;plugin name of the platform&#39;&#39;&#39;
-
-    #@validator(&#39;platform&#39;, always=False, allow_reuse=False)
-    #def check_platform(cls, v):
-    #    raise ValueError(
-    #        &#34;Generic PlatformConfiguration not supported for: &#34; + v)
+    &#39;&#39;&#39;(Required, string): Plugin name of the platform.&#39;&#39;&#39;
 
 
-#@configuration
 class ScriptConfiguration(StackableConfiguration):
-    &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;
+    &#39;&#39;&#39;Base clss for all script configuration classes.&#39;&#39;&#39;
 
     platform: str
-    &#39;&#39;&#39;The platform of this script&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): The platform of this script.&#39;&#39;&#39;
 
     type: Optional[str]
-    &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, string): The class type of this script.&#39;&#39;&#39;
 
     on_state_changed: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, List of Automations): Automations to execute after the Sensor&#39;s state has changed, see `AutomationConfiguration`.&#39;&#39;&#39;
 
 
-#@configuration
 class ActionConfiguration(ScriptConfiguration):
-    &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;
+    &#39;&#39;&#39;Base class for all script configuration classes.&#39;&#39;&#39;
 
 
-#@configuration
 class SensorConfiguration(ScriptConfiguration):
     &#39;&#39;&#39;Base clas for all sensor configuration classes&#39;&#39;&#39;
 
-
-#@configuration
 class DeviceConfiguration(VariablesConfiguration):
     name: str
-    &#39;&#39;&#39;Name of the device.&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Name of the device.&#39;&#39;&#39;
 
     version: str
-    &#39;&#39;&#39;Version of the configuration&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Version of the configuration.&#39;&#39;&#39;
 
     on_init: Optional[list[ActionTriggerConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute after init is done, see `ActionTriggerConfiguration`&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, List of Actions): Actions to execute after init is done, see `ActionTriggerConfiguration`.&#39;&#39;&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -197,57 +259,6 @@ class DeviceConfiguration(VariablesConfiguration):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="modules.base.Configuration.WithPlugins"><code class="name flex">
-<span>def <span class="ident">WithPlugins</span></span>(<span>t: type)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Used internally to add all derivered types to a list</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def WithPlugins(t: type):
-    &#39;&#39;&#39;Used internally to add all derivered types to a list&#39;&#39;&#39;
-    if t in __registry.keys():
-        classes = list(__registry[t])
-        return Union[tuple(classes)]  # type: ignore
-    raise Exception(&#34;AppConfiguration must get imported after all plugins&#34;)</code></pre>
-</details>
-</dd>
-<dt id="modules.base.Configuration.configuration"><code class="name flex">
-<span>def <span class="ident">configuration</span></span>(<span>cls)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>All configurations in the configuration file must be tagged with #@configuration, so that the __registry is aware about the classes.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def configuration(cls):
-    &#39;&#39;&#39;All configurations in the configuration file must be tagged with #@configuration, so that the __registry is aware about the classes.&#39;&#39;&#39;
-    def __register(self):
-        hasBase = False
-        base = None
-
-        for base in self.__bases__:
-            hasBase = True
-            if not base in __registry.keys():
-                __registry[base] = []
-            __registry[base].append(self)
-
-        if not hasBase:
-            if base is not None:
-                if not base in __registry.keys():
-                    __registry[self.Type] = []
-
-    __register(cls)
-
-    return cls</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -257,14 +268,14 @@ class DeviceConfiguration(VariablesConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Base class for all script configuration classes.</p>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ActionConfiguration(ScriptConfiguration):
-    &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;Base class for all script configuration classes.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -292,6 +303,7 @@ class DeviceConfiguration(VariablesConfiguration):
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.ScriptConfiguration" href="#modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.ScriptConfiguration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.ScriptConfiguration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 <li><code><a title="modules.base.Configuration.ScriptConfiguration.id" href="#modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 <li><code><a title="modules.base.Configuration.ScriptConfiguration.on_dispose" href="#modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
@@ -309,20 +321,55 @@ class DeviceConfiguration(VariablesConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configuration settings for an ActionTrigger</p>
-<p>YAML configuration</p></div>
+<div class="desc"><p>Configuration settings for an ActionTrigger.</p>
+<details>
+# Example 1:
+Print the last received payload to the console:
+<pre><code>actions:
+- action: print
+  values:
+    payload: &quot;{{payload}}&quot;
+</code></pre>
+# Example 2:
+Print the last received topic and payload to the console:
+<pre><code>actions:
+- action: print
+  values:
+    payload: &quot;Got a message on topic '{{topic}}' with payload: {{payload}}&quot;
+&lt;/details&gt;
+</code></pre>
+YAML configuration</div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ActionTriggerConfiguration(Configuration):
-    &#39;&#39;&#39;Configuration settings for an ActionTrigger&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration settings for an ActionTrigger.
+&lt;details&gt;
+# Example 1:    
+Print the last received payload to the console:
+```
+actions:
+- action: print
+  values:
+    payload: &#34;{{payload}}&#34;
+```
+# Example 2:    
+Print the last received topic and payload to the console:
+```
+actions:
+- action: print
+  values:
+    payload: &#34;Got a message on topic &#39;{{topic}}&#39; with payload: {{payload}}&#34;
+&lt;/details&gt;
+```
+    &#39;&#39;&#39;
 
     action: str
-    &#39;&#39;&#39;id of the action to execute&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Id of the Node/Action to execute.&#39;&#39;&#39;
 
     values: Optional[dict] = {}
-    &#39;&#39;&#39;optional list of values to pass&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, dictionary): Values to pass to the action.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -334,17 +381,18 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.ActionTriggerConfiguration.action"><code class="name">var <span class="ident">action</span> : str</code></dt>
 <dd>
-<div class="desc"><p>id of the action to execute</p></div>
+<div class="desc"><p>(Required, string): Id of the Node/Action to execute.</p></div>
 </dd>
 <dt id="modules.base.Configuration.ActionTriggerConfiguration.values"><code class="name">var <span class="ident">values</span> : Optional[dict]</code></dt>
 <dd>
-<div class="desc"><p>optional list of values to pass</p></div>
+<div class="desc"><p>(Optional, dictionary): Values to pass to the action.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.Configuration" href="#modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.Configuration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
@@ -355,20 +403,78 @@ class DeviceConfiguration(VariablesConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An Automation consists of optional conditions and a list of actions to execute</p>
+<div class="desc"><p>An Automation consists of optional conditions and a list of actions to execute.</p>
+<details>
+# Example:
+If you get a payload like this:
+<pre><code>{&quot;something&quot;: &quot;value&quot;, &quot;type&quot;: &quot;REGISTER_OK&quot;}
+</code></pre>
+and want to check if the type == "REGISTER_OK", the configuration could look like this:
+<pre><code>on_...:
+- conditions:
+  - actual: &quot;{{#payload}}{{type}}{{/payload}}&quot;
+    comperator: equals
+    expected: REGISTER_OK
+  actions:
+  - action: print
+    values:
+      payload: Register is OK
+</code></pre>
+If you also want to check for other values, you could add this configuration below the upper one:
+<pre><code>- conditions:
+  - actual: &quot;{{#payload}}{{type}}{{/payload}}&quot;
+    comperator: equals
+    expected: REGISTER_FAIL
+  actions:
+  - action: print
+    values:
+      payload: Register is FAIL
+</code></pre>
+</details>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AutomationConfiguration(Configuration):
-    &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute&#39;&#39;&#39;
+    &#39;&#39;&#39;An Automation consists of optional conditions and a list of actions to execute.
+&lt;details&gt;
+# Example:
+If you get a payload like this:
+```
+{&#34;something&#34;: &#34;value&#34;, &#34;type&#34;: &#34;REGISTER_OK&#34;}
+```
+and want to check if the type == &#34;REGISTER_OK&#34;, the configuration could look like this:
+```
+on_...:
+- conditions:
+  - actual: &#34;{{#payload}}{{type}}{{/payload}}&#34;
+    comperator: equals
+    expected: REGISTER_OK
+  actions:
+  - action: print
+    values:
+      payload: Register is OK
+```
+If you also want to check for other values, you could add this configuration below the upper one:
+```
+- conditions:
+  - actual: &#34;{{#payload}}{{type}}{{/payload}}&#34;
+    comperator: equals
+    expected: REGISTER_FAIL
+  actions:
+  - action: print
+    values:
+      payload: Register is FAIL
+```
+&lt;/details&gt;
+    &#39;&#39;&#39;
 
     conditions: Optional[list[ConditionConfiguration]] = []
-    &#39;&#39;&#39;list of conditions to prove before the actions get executed, see `ConditionConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, list of conditions): piTomation evaluates these conditions before actions get executed, see `ConditionConfiguration`.&#39;&#39;&#39;
 
     actions: list[ActionTriggerConfiguration] = []
-    &#39;&#39;&#39;list of actions to execute, see `ActionTriggerConfiguration`&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Required, list of actions): Actions to execute, see `ActionTriggerConfiguration`.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -380,17 +486,18 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.AutomationConfiguration.actions"><code class="name">var <span class="ident">actions</span> : list</code></dt>
 <dd>
-<div class="desc"><p>list of actions to execute, see <code><a title="modules.base.Configuration.ActionTriggerConfiguration" href="#modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></p></div>
+<div class="desc"><p>(Required, list of actions): Actions to execute, see <code><a title="modules.base.Configuration.ActionTriggerConfiguration" href="#modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code>.</p></div>
 </dd>
 <dt id="modules.base.Configuration.AutomationConfiguration.conditions"><code class="name">var <span class="ident">conditions</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>list of conditions to prove before the actions get executed, see <code><a title="modules.base.Configuration.ConditionConfiguration" href="#modules.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></code></p></div>
+<div class="desc"><p>(Optional, list of conditions): piTomation evaluates these conditions before actions get executed, see <code><a title="modules.base.Configuration.ConditionConfiguration" href="#modules.base.Configuration.ConditionConfiguration">ConditionConfiguration</a></code>.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.Configuration" href="#modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.Configuration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
@@ -411,16 +518,18 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;Configuration settings for a Condition.&#39;&#39;&#39;
 
     actual: Union[str, dict]
-    &#39;&#39;&#39;Adress of the actual value, e.g. &#34;payload&#34;&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string or dictionary): The actual value to compare, e.g. &#34;{{payload}}&#34;.
+    The value can contain either a simple string or a dictionary of values (e.g. a json payload from a mqtt message).
+    &#39;&#39;&#39;
 
     comperator: str
-    &#39;&#39;&#39;Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Function name used to compare the values, currently available: [contains, equals, startWith, endsWith].&#39;&#39;&#39;
 
     inverted: Optional[bool] = False
-    &#39;&#39;&#39;Invert result&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, bool): Invert result.&#39;&#39;&#39;
 
     expected: Union[str, dict]
-    &#39;&#39;&#39;Expected value&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Required, stirng or dictionary): Expected value.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -432,25 +541,27 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.ConditionConfiguration.actual"><code class="name">var <span class="ident">actual</span> : Union[str, dict]</code></dt>
 <dd>
-<div class="desc"><p>Adress of the actual value, e.g. "payload"</p></div>
+<div class="desc"><p>(Required, string or dictionary): The actual value to compare, e.g. "{{payload}}".
+The value can contain either a simple string or a dictionary of values (e.g. a json payload from a mqtt message).</p></div>
 </dd>
 <dt id="modules.base.Configuration.ConditionConfiguration.comperator"><code class="name">var <span class="ident">comperator</span> : str</code></dt>
 <dd>
-<div class="desc"><p>Function name used to compare the values, currently available: [contains, equals, startWith, endsWith]</p></div>
+<div class="desc"><p>(Required, string): Function name used to compare the values, currently available: [contains, equals, startWith, endsWith].</p></div>
 </dd>
 <dt id="modules.base.Configuration.ConditionConfiguration.expected"><code class="name">var <span class="ident">expected</span> : Union[str, dict]</code></dt>
 <dd>
-<div class="desc"><p>Expected value</p></div>
+<div class="desc"><p>(Required, stirng or dictionary): Expected value.</p></div>
 </dd>
 <dt id="modules.base.Configuration.ConditionConfiguration.inverted"><code class="name">var <span class="ident">inverted</span> : Optional[bool]</code></dt>
 <dd>
-<div class="desc"><p>Invert result</p></div>
+<div class="desc"><p>(Optional, bool): Invert result.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.Configuration" href="#modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.Configuration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
@@ -475,7 +586,10 @@ class DeviceConfiguration(VariablesConfiguration):
         super().__init__(**data)
 
     debug: Optional[bool] = False
-    &#39;&#39;&#39;Enable additional debugging output for this instance&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, bool): Enable additional debugging output for this instance&#39;&#39;&#39;
+
+    comment: Optional[str]
+    &#39;&#39;&#39;(Optional, string): Additional text information about this node. Not used anywhere.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -494,9 +608,13 @@ class DeviceConfiguration(VariablesConfiguration):
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="modules.base.Configuration.Configuration.comment"><code class="name">var <span class="ident">comment</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"><p>(Optional, string): Additional text information about this node. Not used anywhere.</p></div>
+</dd>
 <dt id="modules.base.Configuration.Configuration.debug"><code class="name">var <span class="ident">debug</span> : Optional[bool]</code></dt>
 <dd>
-<div class="desc"><p>Enable additional debugging output for this instance</p></div>
+<div class="desc"><p>(Optional, bool): Enable additional debugging output for this instance</p></div>
 </dd>
 </dl>
 </dd>
@@ -506,6 +624,16 @@ class DeviceConfiguration(VariablesConfiguration):
 </code></dt>
 <dd>
 <div class="desc"><p>Adds variables to an id, access: id(myId).variables.myVariable</p>
+<details>
+Example:
+<pre><code>platform: mqtt
+variables:
+ - myVariableA: &quot;ValueA&quot;
+ - myVariableB: &quot;On&quot;
+</code></pre>
+</details>
+<pre><code>
+</code></pre>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
@@ -513,13 +641,13 @@ class DeviceConfiguration(VariablesConfiguration):
 </summary>
 <pre><code class="python">class DeviceConfiguration(VariablesConfiguration):
     name: str
-    &#39;&#39;&#39;Name of the device.&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Name of the device.&#39;&#39;&#39;
 
     version: str
-    &#39;&#39;&#39;Version of the configuration&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): Version of the configuration.&#39;&#39;&#39;
 
     on_init: Optional[list[ActionTriggerConfiguration]] = []
-    &#39;&#39;&#39;Actions to execute after init is done, see `ActionTriggerConfiguration`&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, List of Actions): Actions to execute after init is done, see `ActionTriggerConfiguration`.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -532,21 +660,22 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.DeviceConfiguration.name"><code class="name">var <span class="ident">name</span> : str</code></dt>
 <dd>
-<div class="desc"><p>Name of the device.</p></div>
+<div class="desc"><p>(Required, string): Name of the device.</p></div>
 </dd>
 <dt id="modules.base.Configuration.DeviceConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>Actions to execute after init is done, see <code><a title="modules.base.Configuration.ActionTriggerConfiguration" href="#modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code></p></div>
+<div class="desc"><p>(Optional, List of Actions): Actions to execute after init is done, see <code><a title="modules.base.Configuration.ActionTriggerConfiguration" href="#modules.base.Configuration.ActionTriggerConfiguration">ActionTriggerConfiguration</a></code>.</p></div>
 </dd>
 <dt id="modules.base.Configuration.DeviceConfiguration.version"><code class="name">var <span class="ident">version</span> : str</code></dt>
 <dd>
-<div class="desc"><p>Version of the configuration</p></div>
+<div class="desc"><p>(Required, string): Version of the configuration.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.VariablesConfiguration" href="#modules.base.Configuration.VariablesConfiguration">VariablesConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.VariablesConfiguration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.VariablesConfiguration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 <li><code><a title="modules.base.Configuration.VariablesConfiguration.variables" href="#modules.base.Configuration.VariablesConfiguration.variables">variables</a></code></li>
 </ul>
@@ -568,7 +697,7 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;Base class for all configuration classes that provide an Id&#39;&#39;&#39;
 
     id: str
-    &#39;&#39;&#39;Own reference&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Required, string): This is the name of the node. It should always be unique in your piTomation network.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -584,13 +713,14 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.IdConfiguration.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
 <dd>
-<div class="desc"><p>Own reference</p></div>
+<div class="desc"><p>(Required, string): This is the name of the node. It should always be unique in your piTomation network.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.Configuration" href="#modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.Configuration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
@@ -611,12 +741,7 @@ class DeviceConfiguration(VariablesConfiguration):
     &#39;&#39;&#39;Base class for all platform configuration classes&#39;&#39;&#39;
 
     platform: str
-    &#39;&#39;&#39;plugin name of the platform&#39;&#39;&#39;
-
-    #@validator(&#39;platform&#39;, always=False, allow_reuse=False)
-    #def check_platform(cls, v):
-    #    raise ValueError(
-    #        &#34;Generic PlatformConfiguration not supported for: &#34; + v)</code></pre>
+    &#39;&#39;&#39;(Required, string): Plugin name of the platform.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -641,13 +766,14 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.PlatformConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
-<div class="desc"><p>plugin name of the platform</p></div>
+<div class="desc"><p>(Required, string): Plugin name of the platform.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.StackableConfiguration" href="#modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.StackableConfiguration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.StackableConfiguration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 <li><code><a title="modules.base.Configuration.StackableConfiguration.id" href="#modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 <li><code><a title="modules.base.Configuration.StackableConfiguration.on_dispose" href="#modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
@@ -662,23 +788,23 @@ class DeviceConfiguration(VariablesConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base clss for all script configuration classes</p>
+<div class="desc"><p>Base clss for all script configuration classes.</p>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ScriptConfiguration(StackableConfiguration):
-    &#39;&#39;&#39;Base clss for all script configuration classes&#39;&#39;&#39;
+    &#39;&#39;&#39;Base clss for all script configuration classes.&#39;&#39;&#39;
 
     platform: str
-    &#39;&#39;&#39;The platform of this script&#39;&#39;&#39;
+    &#39;&#39;&#39;(Required, string): The platform of this script.&#39;&#39;&#39;
 
     type: Optional[str]
-    &#39;&#39;&#39;The class type of this script&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, string): The class type of this script.&#39;&#39;&#39;
 
     on_state_changed: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after the sensor&#39;s state has changed, see `AutomationConfiguration`&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, List of Automations): Automations to execute after the Sensor&#39;s state has changed, see `AutomationConfiguration`.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -698,21 +824,22 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.ScriptConfiguration.on_state_changed"><code class="name">var <span class="ident">on_state_changed</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute after the sensor's state has changed, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
+<div class="desc"><p>(Optional, List of Automations): Automations to execute after the Sensor's state has changed, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code>.</p></div>
 </dd>
 <dt id="modules.base.Configuration.ScriptConfiguration.platform"><code class="name">var <span class="ident">platform</span> : str</code></dt>
 <dd>
-<div class="desc"><p>The platform of this script</p></div>
+<div class="desc"><p>(Required, string): The platform of this script.</p></div>
 </dd>
 <dt id="modules.base.Configuration.ScriptConfiguration.type"><code class="name">var <span class="ident">type</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>The class type of this script</p></div>
+<div class="desc"><p>(Optional, string): The class type of this script.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.StackableConfiguration" href="#modules.base.Configuration.StackableConfiguration">StackableConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.StackableConfiguration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.StackableConfiguration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 <li><code><a title="modules.base.Configuration.StackableConfiguration.id" href="#modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 <li><code><a title="modules.base.Configuration.StackableConfiguration.on_dispose" href="#modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
@@ -756,6 +883,7 @@ class DeviceConfiguration(VariablesConfiguration):
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.ScriptConfiguration" href="#modules.base.Configuration.ScriptConfiguration">ScriptConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.ScriptConfiguration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.ScriptConfiguration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 <li><code><a title="modules.base.Configuration.ScriptConfiguration.id" href="#modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 <li><code><a title="modules.base.Configuration.ScriptConfiguration.on_dispose" href="#modules.base.Configuration.StackableConfiguration.on_dispose">on_dispose</a></code></li>
@@ -773,20 +901,20 @@ class DeviceConfiguration(VariablesConfiguration):
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Provides default automations that are executed by all Platforms, Actions and Sensors</p>
+<div class="desc"><p>Provides default Automations that are executed by all Platforms, Actions and Sensors</p>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class StackableConfiguration(IdConfiguration, VariablesConfiguration):
-    &#39;&#39;&#39;Provides default automations that are executed by all Platforms, Actions and Sensors&#39;&#39;&#39;
+    &#39;&#39;&#39;Provides default Automations that are executed by all Platforms, Actions and Sensors&#39;&#39;&#39;
 
     on_init: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute after init is done, see `AutomationConfiguration`&#39;&#39;&#39;
+    &#39;&#39;&#39;(Optional, List of Automations): Automations to execute after init is done, see `AutomationConfiguration`.&#39;&#39;&#39;
 
     on_dispose: Optional[list[AutomationConfiguration]] = []
-    &#39;&#39;&#39;List of Automations to execute before this platform is disposed, see `AutomationConfiguration`&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, List of Automations): Automations to execute before this platform is disposed, see `AutomationConfiguration`.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -805,17 +933,18 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.StackableConfiguration.on_dispose"><code class="name">var <span class="ident">on_dispose</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute before this platform is disposed, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
+<div class="desc"><p>(Optional, List of Automations): Automations to execute before this platform is disposed, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code>.</p></div>
 </dd>
 <dt id="modules.base.Configuration.StackableConfiguration.on_init"><code class="name">var <span class="ident">on_init</span> : Optional[list]</code></dt>
 <dd>
-<div class="desc"><p>List of Automations to execute after init is done, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code></p></div>
+<div class="desc"><p>(Optional, List of Automations): Automations to execute after init is done, see <code><a title="modules.base.Configuration.AutomationConfiguration" href="#modules.base.Configuration.AutomationConfiguration">AutomationConfiguration</a></code>.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.IdConfiguration" href="#modules.base.Configuration.IdConfiguration">IdConfiguration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.IdConfiguration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.IdConfiguration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 <li><code><a title="modules.base.Configuration.IdConfiguration.id" href="#modules.base.Configuration.IdConfiguration.id">id</a></code></li>
 </ul>
@@ -833,16 +962,36 @@ class DeviceConfiguration(VariablesConfiguration):
 </code></dt>
 <dd>
 <div class="desc"><p>Adds variables to an id, access: id(myId).variables.myVariable</p>
+<details>
+Example:
+<pre><code>platform: mqtt
+variables:
+ - myVariableA: &quot;ValueA&quot;
+ - myVariableB: &quot;On&quot;
+</code></pre>
+</details>
+<pre><code>
+</code></pre>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class VariablesConfiguration(Configuration):
-    &#39;&#39;&#39;Adds variables to an id, access: id(myId).variables.myVariable&#39;&#39;&#39;
+    &#39;&#39;&#39;Adds variables to an id, access: id(myId).variables.myVariable
+&lt;details&gt;
+Example:
+```
+platform: mqtt
+variables:
+ - myVariableA: &#34;ValueA&#34;
+ - myVariableB: &#34;On&#34;
+```
+&lt;/details&gt;    
+&#39;&#39;&#39;
 
     variables: Optional[dict]
-    &#39;&#39;&#39;Variables, exposed as id(xy).variables.name&#39;&#39;&#39;</code></pre>
+    &#39;&#39;&#39;(Optional, dictionary of variables): Variables, exposed as id(xy).variables.name&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -860,13 +1009,14 @@ class DeviceConfiguration(VariablesConfiguration):
 <dl>
 <dt id="modules.base.Configuration.VariablesConfiguration.variables"><code class="name">var <span class="ident">variables</span> : Optional[dict]</code></dt>
 <dd>
-<div class="desc"><p>Variables, exposed as id(xy).variables.name</p></div>
+<div class="desc"><p>(Optional, dictionary of variables): Variables, exposed as id(xy).variables.name</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="modules.base.Configuration.Configuration" href="#modules.base.Configuration.Configuration">Configuration</a></b></code>:
 <ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.Configuration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
@@ -884,12 +1034,6 @@ class DeviceConfiguration(VariablesConfiguration):
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="modules.base" href="index.html">modules.base</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="modules.base.Configuration.WithPlugins" href="#modules.base.Configuration.WithPlugins">WithPlugins</a></code></li>
-<li><code><a title="modules.base.Configuration.configuration" href="#modules.base.Configuration.configuration">configuration</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -923,6 +1067,7 @@ class DeviceConfiguration(VariablesConfiguration):
 <li>
 <h4><code><a title="modules.base.Configuration.Configuration" href="#modules.base.Configuration.Configuration">Configuration</a></code></h4>
 <ul class="">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="#modules.base.Configuration.Configuration.comment">comment</a></code></li>
 <li><code><a title="modules.base.Configuration.Configuration.debug" href="#modules.base.Configuration.Configuration.debug">debug</a></code></li>
 </ul>
 </li>
