@@ -1,29 +1,37 @@
 import importlib
 import time
-import modules.app.App as piTomation
 from pathlib import Path
-
-app: piTomation.App
+import os
+import sys
 
 def import_plugins():
-    plugin_path = "./src/plugins/"
+    #find actual path
+    realpath = os.path.realpath(__file__)
+    dirname = os.path.dirname(realpath)
 
-    for path in Path(plugin_path).rglob('*.py'):
-        plugin = ""
-        for l in path.parts[1:-1]:
-            plugin += "." + l
-        path = str.join(".", path.parts[1:-1]) + "." + path.parts[-1].replace(".py","")
+    #add modules & plugins
+    plugin_path = os.path.join(dirname, "plugins")
 
-        if path.endswith("__init__"):
+    for dir_path in Path(plugin_path).rglob('*.py'):
+        dp = str(dir_path)
+        if dp.lower().endswith("__init__.py"):
             continue
+        path = dp[len(dirname)+1:-3].replace("/",".")
 
         if len(path.split('.')) < 4:
             '''only import the top level plugin directory, so that potential submodules are 
             only imported if they are imported by the plugins.'''
+            print(" > " + path)
             importlib.import_module(path)
 
+print("Import plugins ..")
 import_plugins()
 
+print("Import app ..")
+import modules.app.App as piTomation
+app: piTomation.App 
+
+print("Start app ..")
 app = piTomation.App()
 
 #try:
