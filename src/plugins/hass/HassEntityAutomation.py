@@ -155,11 +155,15 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
 
         def get_state():
-            path = str(self.configuration.expose_state).split('.') #type: ignore
-            act = wrapped_id
-            for path_element in path:
-                act = getattr(act, path_element)
-            return act
+            exp_state = str(self.configuration.expose_state) #type: ignore
+            if exp_state == "OFF":
+                return False
+            else:
+                path = exp_state.split('.') #type: ignore
+                act = wrapped_id
+                for path_element in path:
+                    act = getattr(act, path_element)
+                return act
 
         if self.hass_type == HassType.SENSOR or self.hass_type == HassType.ACTION:
             class UpdateHassState(Automation):
