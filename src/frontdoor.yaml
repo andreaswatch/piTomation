@@ -45,13 +45,61 @@ platforms:
     on_event: on_hold
     off_event: on_release
     expose_state: state.is_pressed     
+
+  - id: playBeep
+    type: switch
+    payload_on: "ON"
+    payload_off: "OFF"    
+    on_command: 
+    - actions:
+       - action: playBeep
+         values:
+           command: "aplay"
+           topic: "aplay"
+           payload: "/home/pi/audio/dtmf/cell-phone-1-nr3.wav"
+        - action: led
+          values: 
+            topic: set_color
+            payload: green
+        - action: delay
+          values:
+            payload: 2
+        - action: led
+          values: 
+            topic: set_color
+            payload: blue            
+
+    off_command:
+       - action: playBeep
+         values:
+           command: "aplay"
+           topic: "aplay"
+           payload: "/home/pi/audio/dtmf/cell-phone-1-nr3.wav"
+        - action: led
+          values: 
+            topic: set_color
+            payload: green
+        - action: delay
+          values:
+            payload: 2
+        - action: led
+          values: 
+            topic: set_color
+            payload: blue              
+    expose_state: "OFF"
+    debug: true
     
-- platform: plugins.camera
-  id: camera
-  port: 8091
+    
+#- platform: plugins.camera
+#  id: camera
+#  port: 8091
 
 
 actions:
+- id: delay
+  platform: system
+  type: DelayAction
+
 - id: print
   platform: console
   type: PrintAction
@@ -71,6 +119,11 @@ actions:
   #pin 15
   pin_blue: GPIO22
   initial_color: yellow
+
+- id: playBeep
+  platform: system
+  type: ShellCommandAction
+  debug: true
 
 sensors:
 - id: btn_ring_eg
