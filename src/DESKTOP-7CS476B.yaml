@@ -1,69 +1,235 @@
-device:
+device: 
   name: desktop
-  version: "1.1"
+  version: 1.0
+  on_init:
+   - action: led
+     values:
+       topic: set_color
+       payload: blue
+
+variables:
+  name: desktop
+  baresip_base: "/home/interkom/{{id(app).variables.name}}/baresip"
 
 platforms:
-  - platform: plugins.mqtt
-    id: mqtt
-    host: home
-    port: 1883
+- platform: plugins.mqtt
+  id: mqtt
+  variables:
+    base_topic: "home/{{id(app).variables.name}}"
+  host: home
+  port: 1883
+  availability:
+    topic: "{{id(mqtt).variables.base_topic}}/connected"
+    payload_on: "yes"
+    payload_off: "no"
 
-  - platform: plugins.console
-    id: console
+- platform: plugins.gpio
+  id: gpio
+  factory: mock
 
-  - platform: plugins.web
-    id: web
-    port: 8888
-    exports:
-      - id: fakeGpio
-        expose_state: state.is_high
+- platform: plugins.console
+  id: console
 
-  - platform: plugins.hass
-    id: hass
-    connection: mqtt
-    exports:
-      - id: fakeGpio
-        type: switch
-        expose_state: state.is_high
+- platform: plugins.hass
+  id: hass
+  connection: mqtt
+  exports:
+  - id: btn_ring_og
+    type: sensor
+    on_event: on_hold
+    off_event: on_release
+    expose_state: state.is_pressed
 
-  - platform: plugins.gpio
-    id: gpio
-    type: mock
+  - id: btn_ring_eg
+    type: sensor
+    on_event: on_hold
+    off_event: on_release
+    expose_state: state.is_pressed     
+
+  - id: ir_cut
+    type: switch
+    expose_state: state.is_high
+    
+  - id: ir_led
+    type: switch
+    expose_state: state.is_high
+    
+  - id: baresip_dial_og
+    type: switch
+    expose_state: "OFF"    
+    
+  - id: baresip_dial_eg
+    type: switch
+    expose_state: "OFF"    
+    
+  - id: baresip_dial_iphone
+    type: switch
+    expose_state: "OFF"    
+
+  - id: baresip_state
+    type: sensor
+    expose_state: state.payload
+
+  - id: shellCommand
+    type: switch
+    payload_on: "ON"
+    payload_off: "OFF"   
+    expose_state: "OFF"
+    debug: true
+         
+    on_command: 
+    - actions:
+      - action: shellCommand
+        values:       
+          topic: "aplay"
+          payload: "/app/assets/audio/cell-phone-1-nr3.wav"
+      - action: led
+        values: 
+          topic: set_color
+          payload: "#00ff00"
+      - action: delay
+        values:
+          payload: 2
+      - action: led
+        values: 
+          topic: set_color
+          payload: "#0000ff"          
+
+    off_command:
+    - actions:
+      - action: shellCommand
+        values:
+          command: "aplay"
+          topic: "aplay"
+          payload: "/app/assets/audio/cell-phone-1-nr3.wav"
+      - action: led
+        values: 
+          topic: set_color
+          payload: green
+      - action: delay
+        values:
+          payload: 2
+      - action: led
+        values: 
+          topic: set_color
+          payload: blue              
+
+    
+    
+#- platform: plugins.camera
+#  id: camera
+#  port: 8091
 
 
 actions:
-  - id: log
-    platform: web
-    type: UpdateAction
+- id: delay
+  platform: system
+  type: DelayAction
 
-  - id: print
-    platform: console
-    type: PrintAction
+- id: print
+  platform: console
+  type: PrintAction
 
-  - id: fakeGpio
-    platform: gpio
-    type: BinaryAction
-    pin: 0
-    debug: true
+- id: setVariable
+  platform: system
+  type: SetVariableAction
+  debug: true
+
+- id: led
+  platform: gpio
+  type: RgbLedAction
+  pin_red: GPIO17
+  pin_green: GPIO27
+  pin_blue: GPIO22
+  initial_color: "#ff0000"
+  debug: true
+
+- id: shellCommand
+  platform: system
+  type: ShellCommandAction
+  debug: true
+
+- id: ir_led
+  platform: gpio
+  pin: GPIO12
+  type: BinaryAction
+  debug: true
+
+- id: ir_cut
+  platform: gpio
+  pin: GPIO16
+  type: BinaryAction    
+  debug: true
+
+- id: baresip_dial_eg
+  platform: mqtt
+  debug: true
+  topic: "/home/interkom/{{id(app).variables.name}}/baresip/command/dial"
+  payload:
+    command: dial
+    token: eg
+    params: sip:eg
+
+- id: baresip_dial_og
+  platform: mqtt
+  debug: true
+  topic: "/home/interkom/{{id(app).variables.name}}/baresip/command/dial"
+  payload:
+    command: dial
+    token: og
+    params: sip:og    
+
+- id: baresip_dial_iphone
+  platform: mqtt
+  debug: true
+  topic: "/home/interkom/{{id(app).variables.name}}/baresip/command/dial"
+  payload:
+    command: dial
+    token: iphone
+    params: sip:iphone        
 
 sensors:
-  - id: availability
-    platform: mqtt
-    topic: oo
-    on_message:
-      - conditions:
-          - actual: "{{id(mqtt).is_connected}}"
-            comperator: equals
-            expected: True
-        actions:
-        - action: print
-          values:
-            payload: "I got a message and {{id(mqtt).is_connected}} == true"      
+- id: btn_ring_eg
+  platform: gpio
+  debug: true
+  pin: GPIO24
+  type: ButtonSensor
+  hold_time: 0.2
 
-      - actions:
-        - action: print
-          values:
-            payload: "Got message on topic '{{topic}}', with payload '{{payload}}'"
+- id: btn_ring_og
+  platform: gpio
+  debug: true
+  pin: GPIO23
+  type: ButtonSensor
+  hold_time: 0.2
 
+- id: baresip_state
+  #Save baresip state into variable 'connected'
+  platform: mqtt
+  topic: "{{id(app).variables.baresip_base}}/event"
+  on_message:
+  - conditions:
+    - actual: "{{#payload}}{{type}}{{/payload}}"
+      comperator: contains
+      expected: REGISTER_OK
+    actions:
+    - action: print
+      values:
+        payload: hello baresip
+    - action: setVariable
+      values:
+        topic: connected
+        payload: true        
+  - conditions:
+    - actual: "{{#payload}}{{type}}{{/payload}}"
+      comperator: equals
+      expected: EXIT
+    actions:
+    - action: print
+      values:
+        payload: bye baresip    
+    - action: setVariable
+      values:
+        topic: connected
+        payload: false
 
-        

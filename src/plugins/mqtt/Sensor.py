@@ -23,10 +23,10 @@ class MqttSensorConfiguration(SensorConfiguration):
 class MqttSensorState(BaseState):
     '''Represents the state of the GPIO pin'''
 
-    topic: str
+    topic: str = ""
     '''Last received topic'''
 
-    payload: Union[str, dict]
+    payload: Union[str, dict] = ""
     '''Last received payload'''
 
 

@@ -291,7 +291,8 @@ class Automation(Stackable):
             for action_conf in conf:
                 automations.append(Automation(parent, action_conf))
 
-        return automations            
+        return automations       
+ 
 
 
 class Condition(Stackable, Logging):
@@ -350,3 +351,7 @@ class ActionTrigger(Stackable, Logging):
             call_stack = call_stack.with_keys(self.configuration.values)
 
         id.invoke(call_stack)
+
+
+    def __repr__(self) -> str:
+        return "ActionTrigger: " + self.configuration.action

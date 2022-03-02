@@ -30,7 +30,7 @@ class ShellCommandAction(BaseAction, Debuggable):
     def invoke(self, call_stack: CallStack):
         command = str(call_stack.get("{{{topic}}}"))
         args = str(call_stack.get("{{{payload}}}"))
-        cmdline = command + " " + args;
+        cmdline = command + " " + args
 
         self.log_debug("Execute shell command: " + cmdline)
 
