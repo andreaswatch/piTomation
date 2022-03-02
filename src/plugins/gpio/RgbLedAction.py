@@ -133,6 +133,8 @@ class RgbLedAction(BaseAction, Debuggable, Logging):
 
         elif RgbLedCommands.set_color.name == topic:
             payload = call_stack.get("{{{payload}}}")
+            self.log_debug(str(payload))
+            self.log_debug(str(Color(payload)))
             self.led.color = Color(payload)
             self.state.color = self.led.color.html
             self.state.is_active = self.led.is_active            
