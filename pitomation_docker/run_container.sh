@@ -10,6 +10,7 @@
 docker run -it \
   --mount type=bind,source=/home/pi/piTomation,target=/app \
   --mount type=bind,source=/home/pi/frontdoor.yaml,target=/config.yaml \
+  --device /dev/snd:/dev/snd \
   --privileged \
-  awatch/pitomation:1.0.2 python \
+  awatch/pitomation:1.0.3 python \
   /app/__main__.py /config.yaml

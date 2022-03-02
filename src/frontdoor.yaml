@@ -1,4 +1,4 @@
-device:
+device: 
   name: Frontdoor
   version: 1.0
   on_init:
@@ -56,7 +56,7 @@ platforms:
          values:
            command: "aplay"
            topic: "aplay"
-           payload: "/home/pi/audio/dtmf/cell-phone-1-nr3.wav"
+           payload: "/app/assets/audio/dtmf/cell-phone-1-nr3.wav"
         - action: led
           values: 
             topic: set_color
@@ -74,7 +74,7 @@ platforms:
          values:
            command: "aplay"
            topic: "aplay"
-           payload: "/home/pi/audio/dtmf/cell-phone-1-nr3.wav"
+           payload: "/app/assets/audio/dtmf/cell-phone-1-nr3.wav"
         - action: led
           values: 
             topic: set_color

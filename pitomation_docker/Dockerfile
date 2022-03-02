@@ -5,6 +5,9 @@ RUN apt-get update && apt-get -y install \
     libjpeg62 \
     pigpio-tools \
     build-essential \
-    python3-pillow
-#pigpio -y
+    python3-pillow 
+#pigpio
 RUN pip install colorzero gpiozero pigpio RPi.GPIO pydantic PyYAML pywebio chevron paho-mqtt pillow
+#alsa:
+RUN apt-get -y install alsa-utils
+

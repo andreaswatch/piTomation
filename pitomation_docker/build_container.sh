@@ -1,1 +1,1 @@
-docker build -t awatch/pitomation:1.0.2 .
+docker build -t awatch/pitomation:1.0.3 .
