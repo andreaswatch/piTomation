@@ -231,6 +231,9 @@ class BaseAction(BaseScript):
         '''must get called whenever the action has been invoked'''
         self.on_state_changed(call_stack) 
 
+    def toggle(self, call_stack: CallStack):
+        self.on_state_changed(call_stack) 
+
 
 class BasePlatform(Stackable, Identifyable, Disposeable):
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -> None:

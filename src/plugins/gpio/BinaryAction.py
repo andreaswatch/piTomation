@@ -68,26 +68,33 @@ class BinaryAction(BaseAction, Debuggable, Logging):
         self.on_high = Automation.create_automations(self, config.on_high)
         self.on_low = Automation.create_automations(self, config.on_low)
 
+    def toggle(self):
+        call_stack = CallStack().with_key("topic", BinaryActionCommands.toggle)
+        self.invoke(call_stack)
 
     def invoke(self, call_stack: CallStack):
         topic = str(call_stack.get("{{topic}}"))
-        self.log_debug("Command: " + topic)
+        payload = str(call_stack.get("{{payload}}"))
+        payload_lower = payload.lower()
 
         call_stack = call_stack.with_element(self)
 
         if BinaryActionCommands.on.name == topic:
+            self.log_debug("Command: " + topic)
             self.output_pin.on()
             self.state.is_high = True
             for on_high in self.on_high:
                 on_high.invoke(call_stack)
 
         elif BinaryActionCommands.off.name == topic:
+            self.log_debug("Command: " + topic)
             self.output_pin.off()
             self.state.is_high = False
             for on_low in self.on_low:
                 on_low.invoke(call_stack)
 
         elif BinaryActionCommands.toggle.name == topic:
+            self.log_debug("Command: " + topic)
             self.output_pin.toggle()
             if self.output_pin.is_active:
                 self.state.is_high = True
@@ -97,6 +104,18 @@ class BinaryAction(BaseAction, Debuggable, Logging):
                 self.state.is_high = False
                 for on_low in self.on_low:
                     on_low.invoke(call_stack)
+
+        elif payload_lower == 'true' or payload_lower == 'on':
+            self.log_debug("Payload: " + payload)
+            self.state.is_high = True
+            for on_high in self.on_high:
+                on_high.invoke(call_stack)
+
+        elif payload_lower == 'false' or payload_lower == 'off':
+            self.log_debug("Payload: " + payload)
+            self.state.is_high = False
+            for on_low in self.on_low:
+                on_low.invoke(call_stack)
 
         else:
             self.log_error("Unknown command: {{" + topic + "}}")

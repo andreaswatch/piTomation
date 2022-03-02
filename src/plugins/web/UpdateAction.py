@@ -16,10 +16,10 @@ class UpdateActionConfiguration(ActionConfiguration):
 class UpdateActionState(BaseState):
     '''Represents the state of the Update Action'''
 
-    topic: str
+    topic: str = ""
     '''Last updated topic'''
 
-    payload: str
+    payload: str = ""
     '''Last payload'''
 
 

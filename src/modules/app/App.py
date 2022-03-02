@@ -70,7 +70,7 @@ class App(BaseApp, Logging, Debuggable):
 
         config_filename = ""
         if len(sys.argv) == 1:
-            config_filename = os.getcwd() + "/" + socket.gethostname() + ".yaml"
+            config_filename = os.getcwd() + os.sep + "src" + os.sep + socket.gethostname() + ".yaml"
             self.log_info("No configuration file given, fallback to '" + config_filename + "'")
         else:
             config_filename = sys.argv[-1]

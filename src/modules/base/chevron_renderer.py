@@ -18,6 +18,8 @@ def init_renderer(app):
                     sub_scopes = CallStack().with_stack(scopes)
                     sub_scopes.pop(0)
                     if type(value) is str:
+                        if (len(sub_scopes) == 0):
+                            return value
                         return chevron.render(value, scopes=sub_scopes)
                     return value
             if type(scope) is dict:
