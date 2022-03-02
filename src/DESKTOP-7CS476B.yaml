@@ -1,5 +1,5 @@
 device:
-  name: frontdoor
+  name: desktop
   version: "1.1"
 
 platforms:
@@ -7,35 +7,44 @@ platforms:
     id: mqtt
     host: home
     port: 1883
-    availability:
-      topic: oo
-      payload_on: on
-      payload_off: off
-    on_connected:
-      - actions:
-        - action: print
-          values:
-            payload: hello
-    on_disconnected:
-      - actions:
-        - action: print
-          values:
-            payload: bye    
-    on_message:
-      - actions:
-        - action: print    
-
-  - platform: plugins.gpio
-    id: gpio
-    factory: rpigpio
 
   - platform: plugins.console
     id: console
 
+  - platform: plugins.web
+    id: web
+    port: 8888
+    exports:
+      - id: fakeGpio
+        expose_state: state.is_high
+
+  - platform: plugins.hass
+    id: hass
+    connection: mqtt
+    exports:
+      - id: fakeGpio
+        type: switch
+        expose_state: state.is_high
+
+  - platform: plugins.gpio
+    id: gpio
+    type: mock
+
+
 actions:
+  - id: log
+    platform: web
+    type: UpdateAction
+
   - id: print
     platform: console
     type: PrintAction
+
+  - id: fakeGpio
+    platform: gpio
+    type: BinaryAction
+    pin: 0
+    debug: true
 
 sensors:
   - id: availability

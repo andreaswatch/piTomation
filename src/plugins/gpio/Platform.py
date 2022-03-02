@@ -9,7 +9,7 @@ class GpioPlatformConfiguration(PlatformConfiguration):
     '''The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
     Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.'''
 
-    factory: str = "pigpio"
+    factory: str = "mock" #"pigpio"
     '''gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html'''
 
     @validator('platform')

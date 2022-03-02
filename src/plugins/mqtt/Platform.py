@@ -116,7 +116,7 @@ class Platform(BasePlatform):
             try:
                 payload = json.loads(payload)
             except:
-                pass
+                payload = str(payload)
 
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack()) \
