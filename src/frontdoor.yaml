@@ -13,10 +13,11 @@ variables:
 
 platforms:
 - platform: plugins.mqtt
+  debug: true
   id: mqtt
   variables:
     base_topic: "home/{{id(app).variables.name}}"
-  host: home
+  host: 192.168.178.10
   port: 1883
   availability:
     topic: "{{id(mqtt).variables.base_topic}}/connected"
@@ -92,7 +93,7 @@ platforms:
       - action: shellCommand
         values:       
           topic: "aplay"
-          payload: "/app/assets/audio/cell-phone-1-nr3.wav"
+          payload: "/app/assets/audio/cell-phone-1-nr3_vol05.wav"
       - action: led
         values: 
           topic: set_color
@@ -111,7 +112,7 @@ platforms:
         values:
           command: "aplay"
           topic: "aplay"
-          payload: "/app/assets/audio/cell-phone-1-nr3.wav"
+          payload: "/app/assets/audio/cell-phone-1-nr3_vol05.wav"
       - action: led
         values: 
           topic: set_color

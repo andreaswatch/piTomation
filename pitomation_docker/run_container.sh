@@ -1,16 +1,10 @@
-# --name piTomation \
-
-#docker run -it \
-# -v "$PWD":/home/pi/piTomation \
-# --mount type=bind,source="$(pwd)"/../,target=/app \
-# --mount type=bind,source="$(pwd)"/home/pi/piTomation/src/frontdoor.yaml,target=/app/config.yaml \
-# -w /home/pi/piTomation awatch/pitomation:1.0.2 python\
-# /app/__main__.py /app/config.yaml
-
 docker run -it \
+  --name piTomation \
   --mount type=bind,source=/home/pi/piTomation,target=/app \
   --mount type=bind,source=/home/pi/frontdoor.yaml,target=/config.yaml \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -p 2200:22 \
   --device /dev/snd:/dev/snd \
   --privileged \
-  awatch/pitomation:1.0.3 python \
+  awatch/pitomation:1.0.8 python \
   /app/__main__.py /config.yaml
