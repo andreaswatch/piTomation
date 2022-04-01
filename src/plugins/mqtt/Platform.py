@@ -183,6 +183,9 @@ class Platform(BasePlatform):
     def publish(self, topic: str, payload: Any, retain: bool = False):
         if type(payload) is dict:
             payload = json.dumps(payload)
+        else:
+            #unexpected type, just send it as string
+            payload = str(payload)
 
         self.client.publish(topic, payload, qos = 1, retain = retain)
 

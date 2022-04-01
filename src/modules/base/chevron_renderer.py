@@ -1,6 +1,7 @@
 import chevron
 from modules.base.CallStack import CallStack
 from modules.base.Instances import Logging
+import json
 
 
 def init_renderer(app):
@@ -51,6 +52,11 @@ def init_renderer(app):
                 if act is None:
                     return_act = False
                     break
+                if (path_element == "asJson"):
+                    if len(str(act).strip() == 0):
+                        break
+                    else:
+                        act = json.loads(act.replace("'", '"'))  
                 if hasattr(act, path_element):
                     return_act = True
                     act = getattr(act, path_element)
