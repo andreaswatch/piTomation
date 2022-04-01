@@ -14,6 +14,7 @@ RUN pip install colorzero gpiozero pigpio RPi.GPIO pydantic PyYAML pywebio chevr
     
 RUN apt -y install alsa-utils
 RUN apt -y install openssh-server
+RUN apt -y install curl
 
 #ADD ssh /usr/local/bin/ssh
 #RUN chmod +x /usr/local/bin/ssh && mkdir -p /root/.ssh
