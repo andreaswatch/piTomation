@@ -33,8 +33,13 @@ from plugins.hass.Configurations import *
 
 class HassType(Enum):
     TRIGGER = &#34;trigger&#34;
+    &#39;&#39;&#39;HomeAssistant&#39;s triggers are only to invoke HA Automations, not visible in Lovelace.&#39;&#39;&#39;
+
     SENSOR = &#34;binary_sensor&#34;
-    ACTION = &#34;switch&#34;
+    &#39;&#39;&#39;Use this type to use the state of a piTomation entity in HA.&#39;&#39;&#39;
+
+    SWITCH = &#34;switch&#34;
+    &#39;&#39;&#39;Allows to toggle a piTomation state from HA.&#39;&#39;&#39;
 
 
 class HassEntityAutomation(Stackable, Disposeable, Logging):
@@ -59,35 +64,34 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         self.hass_type = HassType.SENSOR
         auto_discovery_temp = str(self.hass_type.value)
 
-
         if type(config) is HassBinarySensorEntityConfiguration:
             self.hass_type = HassType.SENSOR
             auto_discovery_temp = str(self.hass_type.value)
             if config.state_topic is None:
-                config.state_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/state&#34;
+                config.state_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/state&#34;
             
         elif type(config) is HassActionEntityConfiguration:
-            self.hass_type = HassType.ACTION
+            self.hass_type = HassType.SWITCH
             if config.state_topic is None:
-                config.state_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/state&#34;
+                config.state_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/state&#34;
             if config.command_topic is None:
-                config.command_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/command&#34;
+                config.command_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/command&#34;
 
             self.on_command_automations = Automation.create_automations(self, config.on_command)
             self.off_command_automations = Automation.create_automations(self, config.off_command)
             auto_discovery_temp = str(self.hass_type.value)
 
-
         elif type(config) is HassTriggerEntityConfiguration:
             self.hass_type = HassType.TRIGGER
             if config.command_topic is None: #type: ignore
-                config.command_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/command&#34;
+                config.command_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/command&#34;
             auto_discovery_temp = &#34;device_automation&#34;
             
+
         self.auto_discovery_topic = self.platform.configuration.auto_discovery_topic \
             + &#34;/&#34; + auto_discovery_temp \
             + &#34;/&#34; + self.platform.hass_device[&#34;name&#34;] \
-            + &#34;/&#34; + config.name \
+            + &#34;/&#34; + config.id \
             + &#34;/config&#34;
             
 
@@ -98,7 +102,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             return self.platform.communication #type: ignore
         self.mqtt = get_mqtt_platform()
 
-        state_topic = self.base_topic + &#34;/&#34; + str(self.configuration.name) + &#34;/state&#34;
+        state_topic = self.base_topic + &#34;/&#34; + str(self.configuration.id) + &#34;/state&#34;
         wrapped_id = self.app.get_id(self.configuration.id)
 
         entity = {}
@@ -109,12 +113,46 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity[&#34;icon&#34;] = self.configuration.icon
 
         def get_unique_id():
+            &#39;&#39;&#39;Creates a unique id for HA.&#39;&#39;&#39;
             return &#34;&#34; \
                 + str(call_stack.get(self.app.device.configuration.name)) \
                 + &#34;_&#34; \
                 + str(call_stack.get(str(self.hass_type.value))) \
                 + &#34;_&#34; \
-                + str(call_stack.get(self.configuration.name))
+                + str(call_stack.get(self.configuration.id))
+
+
+        def get_state():
+            &#39;&#39;&#39;Returns the internal state of the exposed entity.&#39;&#39;&#39;
+
+            exp_state = str(self.configuration.expose_state) #type: ignore
+            if exp_state == &#34;OFF&#34;:
+                return False
+            else:
+                path = exp_state.split(&#39;.&#39;) #type: ignore
+                act = wrapped_id
+                for path_element in path:
+                    act = getattr(act, path_element)    
+
+                act_state = str(act).lower()
+
+                if act_state == &#34;true&#34; or act_state == &#34;on&#34;:
+                    return entity[&#34;payload_on&#34;]
+                    
+                if act_state == &#34;false&#34; or act_state == &#34;off&#34;:
+                    return entity[&#34;payload_off&#34;]
+
+                return act
+
+        class UpdateHassState(Automation):
+            &#39;&#39;&#39;Updates the state in HA.&#39;&#39;&#39;
+
+            def invoke(_, call_stack: CallStack): #type: ignore
+                act_state = get_state()
+                self.mqtt.publish(state_topic, act_state)
+
+
+        wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
 
 
         if self.hass_type == HassType.TRIGGER and type(self.configuration) is HassTriggerEntityConfiguration:
@@ -123,10 +161,14 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity[&#34;type&#34;] = &#34;button_short_press&#34;
             entity[&#34;subtype&#34;] = self.configuration.name
             entity[&#34;topic&#34;] = self.configuration.command_topic  
-                      
             
             def OnCommand(call_stack: CallStack):
                 payload = call_stack.get(&#34;{{{payload}}}&#34;)
+
+                if isinstance(wrapped_id, BaseAction):
+                    &#39;&#39;&#39;Update local state and call the automations of the entity.&#39;&#39;&#39;
+                    wrapped_id.invoke(call_stack)
+
                 if payload == entity[&#34;payload_on&#34;]:
                     if self.on_command_automations:
                         for automation in self.on_command_automations:
@@ -140,13 +182,13 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
         
 
-        elif self.hass_type == HassType.ACTION and type(self.configuration) is HassActionEntityConfiguration:
+        elif self.hass_type == HassType.SWITCH and type(self.configuration) is HassActionEntityConfiguration:
             entity[&#34;name&#34;] = self.configuration.name
             entity[&#34;unique_id&#34;] = get_unique_id()
             if self.mqtt.configuration.availability:
                 entity[&#34;availability_topic&#34;] = call_stack.get(self.mqtt.configuration.availability.topic)
-            entity[&#34;payload_off&#34;] = &#34;on&#34;
-            entity[&#34;payload_on&#34;] = &#34;off&#34;
+            entity[&#34;payload_off&#34;] = &#34;off&#34;
+            entity[&#34;payload_on&#34;] = &#34;on&#34;
             #entity[&#34;optimistic&#34;] = False
             entity[&#34;state_topic&#34;] = state_topic
             entity[&#34;command_topic&#34;] = self.configuration.command_topic     
@@ -155,9 +197,20 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                 entity[&#34;payload_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_on)
                 entity[&#34;payload_not_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
 
-
             def OnCommand(call_stack: CallStack):
                 payload = call_stack.get(&#34;{{{payload}}}&#34;)
+                boolean_payload = False
+                if payload == entity[&#34;payload_on&#34;]: 
+                    boolean_payload = True
+                elif payload == entity[&#34;payload_off&#34;]: 
+                    boolean_payload = False
+
+                call_stack = call_stack.with_key(&#34;payload&#34;, boolean_payload)
+
+                if isinstance(wrapped_id, BaseAction):
+                    &#39;&#39;&#39;Update local state and call the automations of the entity.&#39;&#39;&#39;
+                    wrapped_id.invoke(call_stack)
+
                 if payload == entity[&#34;payload_on&#34;]:
                     if self.on_command_automations:
                         for automation in self.on_command_automations:
@@ -182,25 +235,9 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                 entity[&#34;payload_not_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
 
 
-        def get_state():
-            path = str(self.configuration.expose_state).split(&#39;.&#39;) #type: ignore
-            act = wrapped_id
-            for path_element in path:
-                act = getattr(act, path_element)
-            return act
-
-        if self.hass_type == HassType.SENSOR or self.hass_type == HassType.ACTION:
-            class UpdateHassState(Automation):
-                def invoke(_, call_stack: CallStack): #type: ignore
-                    act_state = get_state()
-                    if act_state:
-                        self.mqtt.publish(state_topic, entity[&#34;payload_on&#34;])
-                    else:
-                        self.mqtt.publish(state_topic, entity[&#34;payload_off&#34;])
-
-            wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
-
-            UpdateHassState(self, AutomationConfiguration()).invoke(call_stack)         
+        if self.hass_type == HassType.SENSOR or self.hass_type == HassType.SWITCH:
+            &#39;&#39;&#39;Report actual state back to HA&#39;&#39;&#39;
+            UpdateHassState(self, AutomationConfiguration()).invoke(call_stack) 
 
         self.mqtt.publish(self.auto_discovery_topic, entity, retain = True)</code></pre>
 </details>
@@ -246,35 +283,34 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         self.hass_type = HassType.SENSOR
         auto_discovery_temp = str(self.hass_type.value)
 
-
         if type(config) is HassBinarySensorEntityConfiguration:
             self.hass_type = HassType.SENSOR
             auto_discovery_temp = str(self.hass_type.value)
             if config.state_topic is None:
-                config.state_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/state&#34;
+                config.state_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/state&#34;
             
         elif type(config) is HassActionEntityConfiguration:
-            self.hass_type = HassType.ACTION
+            self.hass_type = HassType.SWITCH
             if config.state_topic is None:
-                config.state_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/state&#34;
+                config.state_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/state&#34;
             if config.command_topic is None:
-                config.command_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/command&#34;
+                config.command_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/command&#34;
 
             self.on_command_automations = Automation.create_automations(self, config.on_command)
             self.off_command_automations = Automation.create_automations(self, config.off_command)
             auto_discovery_temp = str(self.hass_type.value)
 
-
         elif type(config) is HassTriggerEntityConfiguration:
             self.hass_type = HassType.TRIGGER
             if config.command_topic is None: #type: ignore
-                config.command_topic = self.base_topic + &#34;/&#34; + config.name + &#34;/command&#34;
+                config.command_topic = self.base_topic + &#34;/&#34; + config.id + &#34;/command&#34;
             auto_discovery_temp = &#34;device_automation&#34;
             
+
         self.auto_discovery_topic = self.platform.configuration.auto_discovery_topic \
             + &#34;/&#34; + auto_discovery_temp \
             + &#34;/&#34; + self.platform.hass_device[&#34;name&#34;] \
-            + &#34;/&#34; + config.name \
+            + &#34;/&#34; + config.id \
             + &#34;/config&#34;
             
 
@@ -285,7 +321,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             return self.platform.communication #type: ignore
         self.mqtt = get_mqtt_platform()
 
-        state_topic = self.base_topic + &#34;/&#34; + str(self.configuration.name) + &#34;/state&#34;
+        state_topic = self.base_topic + &#34;/&#34; + str(self.configuration.id) + &#34;/state&#34;
         wrapped_id = self.app.get_id(self.configuration.id)
 
         entity = {}
@@ -296,12 +332,46 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity[&#34;icon&#34;] = self.configuration.icon
 
         def get_unique_id():
+            &#39;&#39;&#39;Creates a unique id for HA.&#39;&#39;&#39;
             return &#34;&#34; \
                 + str(call_stack.get(self.app.device.configuration.name)) \
                 + &#34;_&#34; \
                 + str(call_stack.get(str(self.hass_type.value))) \
                 + &#34;_&#34; \
-                + str(call_stack.get(self.configuration.name))
+                + str(call_stack.get(self.configuration.id))
+
+
+        def get_state():
+            &#39;&#39;&#39;Returns the internal state of the exposed entity.&#39;&#39;&#39;
+
+            exp_state = str(self.configuration.expose_state) #type: ignore
+            if exp_state == &#34;OFF&#34;:
+                return False
+            else:
+                path = exp_state.split(&#39;.&#39;) #type: ignore
+                act = wrapped_id
+                for path_element in path:
+                    act = getattr(act, path_element)    
+
+                act_state = str(act).lower()
+
+                if act_state == &#34;true&#34; or act_state == &#34;on&#34;:
+                    return entity[&#34;payload_on&#34;]
+                    
+                if act_state == &#34;false&#34; or act_state == &#34;off&#34;:
+                    return entity[&#34;payload_off&#34;]
+
+                return act
+
+        class UpdateHassState(Automation):
+            &#39;&#39;&#39;Updates the state in HA.&#39;&#39;&#39;
+
+            def invoke(_, call_stack: CallStack): #type: ignore
+                act_state = get_state()
+                self.mqtt.publish(state_topic, act_state)
+
+
+        wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
 
 
         if self.hass_type == HassType.TRIGGER and type(self.configuration) is HassTriggerEntityConfiguration:
@@ -310,10 +380,14 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity[&#34;type&#34;] = &#34;button_short_press&#34;
             entity[&#34;subtype&#34;] = self.configuration.name
             entity[&#34;topic&#34;] = self.configuration.command_topic  
-                      
             
             def OnCommand(call_stack: CallStack):
                 payload = call_stack.get(&#34;{{{payload}}}&#34;)
+
+                if isinstance(wrapped_id, BaseAction):
+                    &#39;&#39;&#39;Update local state and call the automations of the entity.&#39;&#39;&#39;
+                    wrapped_id.invoke(call_stack)
+
                 if payload == entity[&#34;payload_on&#34;]:
                     if self.on_command_automations:
                         for automation in self.on_command_automations:
@@ -327,13 +401,13 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
         
 
-        elif self.hass_type == HassType.ACTION and type(self.configuration) is HassActionEntityConfiguration:
+        elif self.hass_type == HassType.SWITCH and type(self.configuration) is HassActionEntityConfiguration:
             entity[&#34;name&#34;] = self.configuration.name
             entity[&#34;unique_id&#34;] = get_unique_id()
             if self.mqtt.configuration.availability:
                 entity[&#34;availability_topic&#34;] = call_stack.get(self.mqtt.configuration.availability.topic)
-            entity[&#34;payload_off&#34;] = &#34;on&#34;
-            entity[&#34;payload_on&#34;] = &#34;off&#34;
+            entity[&#34;payload_off&#34;] = &#34;off&#34;
+            entity[&#34;payload_on&#34;] = &#34;on&#34;
             #entity[&#34;optimistic&#34;] = False
             entity[&#34;state_topic&#34;] = state_topic
             entity[&#34;command_topic&#34;] = self.configuration.command_topic     
@@ -342,9 +416,20 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                 entity[&#34;payload_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_on)
                 entity[&#34;payload_not_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
 
-
             def OnCommand(call_stack: CallStack):
                 payload = call_stack.get(&#34;{{{payload}}}&#34;)
+                boolean_payload = False
+                if payload == entity[&#34;payload_on&#34;]: 
+                    boolean_payload = True
+                elif payload == entity[&#34;payload_off&#34;]: 
+                    boolean_payload = False
+
+                call_stack = call_stack.with_key(&#34;payload&#34;, boolean_payload)
+
+                if isinstance(wrapped_id, BaseAction):
+                    &#39;&#39;&#39;Update local state and call the automations of the entity.&#39;&#39;&#39;
+                    wrapped_id.invoke(call_stack)
+
                 if payload == entity[&#34;payload_on&#34;]:
                     if self.on_command_automations:
                         for automation in self.on_command_automations:
@@ -369,25 +454,9 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                 entity[&#34;payload_not_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
 
 
-        def get_state():
-            path = str(self.configuration.expose_state).split(&#39;.&#39;) #type: ignore
-            act = wrapped_id
-            for path_element in path:
-                act = getattr(act, path_element)
-            return act
-
-        if self.hass_type == HassType.SENSOR or self.hass_type == HassType.ACTION:
-            class UpdateHassState(Automation):
-                def invoke(_, call_stack: CallStack): #type: ignore
-                    act_state = get_state()
-                    if act_state:
-                        self.mqtt.publish(state_topic, entity[&#34;payload_on&#34;])
-                    else:
-                        self.mqtt.publish(state_topic, entity[&#34;payload_off&#34;])
-
-            wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
-
-            UpdateHassState(self, AutomationConfiguration()).invoke(call_stack)         
+        if self.hass_type == HassType.SENSOR or self.hass_type == HassType.SWITCH:
+            &#39;&#39;&#39;Report actual state back to HA&#39;&#39;&#39;
+            UpdateHassState(self, AutomationConfiguration()).invoke(call_stack) 
 
         self.mqtt.publish(self.auto_discovery_topic, entity, retain = True)</code></pre>
 </details>
@@ -415,7 +484,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         return self.platform.communication #type: ignore
     self.mqtt = get_mqtt_platform()
 
-    state_topic = self.base_topic + &#34;/&#34; + str(self.configuration.name) + &#34;/state&#34;
+    state_topic = self.base_topic + &#34;/&#34; + str(self.configuration.id) + &#34;/state&#34;
     wrapped_id = self.app.get_id(self.configuration.id)
 
     entity = {}
@@ -426,12 +495,46 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         entity[&#34;icon&#34;] = self.configuration.icon
 
     def get_unique_id():
+        &#39;&#39;&#39;Creates a unique id for HA.&#39;&#39;&#39;
         return &#34;&#34; \
             + str(call_stack.get(self.app.device.configuration.name)) \
             + &#34;_&#34; \
             + str(call_stack.get(str(self.hass_type.value))) \
             + &#34;_&#34; \
-            + str(call_stack.get(self.configuration.name))
+            + str(call_stack.get(self.configuration.id))
+
+
+    def get_state():
+        &#39;&#39;&#39;Returns the internal state of the exposed entity.&#39;&#39;&#39;
+
+        exp_state = str(self.configuration.expose_state) #type: ignore
+        if exp_state == &#34;OFF&#34;:
+            return False
+        else:
+            path = exp_state.split(&#39;.&#39;) #type: ignore
+            act = wrapped_id
+            for path_element in path:
+                act = getattr(act, path_element)    
+
+            act_state = str(act).lower()
+
+            if act_state == &#34;true&#34; or act_state == &#34;on&#34;:
+                return entity[&#34;payload_on&#34;]
+                
+            if act_state == &#34;false&#34; or act_state == &#34;off&#34;:
+                return entity[&#34;payload_off&#34;]
+
+            return act
+
+    class UpdateHassState(Automation):
+        &#39;&#39;&#39;Updates the state in HA.&#39;&#39;&#39;
+
+        def invoke(_, call_stack: CallStack): #type: ignore
+            act_state = get_state()
+            self.mqtt.publish(state_topic, act_state)
+
+
+    wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
 
 
     if self.hass_type == HassType.TRIGGER and type(self.configuration) is HassTriggerEntityConfiguration:
@@ -440,10 +543,14 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         entity[&#34;type&#34;] = &#34;button_short_press&#34;
         entity[&#34;subtype&#34;] = self.configuration.name
         entity[&#34;topic&#34;] = self.configuration.command_topic  
-                  
         
         def OnCommand(call_stack: CallStack):
             payload = call_stack.get(&#34;{{{payload}}}&#34;)
+
+            if isinstance(wrapped_id, BaseAction):
+                &#39;&#39;&#39;Update local state and call the automations of the entity.&#39;&#39;&#39;
+                wrapped_id.invoke(call_stack)
+
             if payload == entity[&#34;payload_on&#34;]:
                 if self.on_command_automations:
                     for automation in self.on_command_automations:
@@ -457,13 +564,13 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
     
 
-    elif self.hass_type == HassType.ACTION and type(self.configuration) is HassActionEntityConfiguration:
+    elif self.hass_type == HassType.SWITCH and type(self.configuration) is HassActionEntityConfiguration:
         entity[&#34;name&#34;] = self.configuration.name
         entity[&#34;unique_id&#34;] = get_unique_id()
         if self.mqtt.configuration.availability:
             entity[&#34;availability_topic&#34;] = call_stack.get(self.mqtt.configuration.availability.topic)
-        entity[&#34;payload_off&#34;] = &#34;on&#34;
-        entity[&#34;payload_on&#34;] = &#34;off&#34;
+        entity[&#34;payload_off&#34;] = &#34;off&#34;
+        entity[&#34;payload_on&#34;] = &#34;on&#34;
         #entity[&#34;optimistic&#34;] = False
         entity[&#34;state_topic&#34;] = state_topic
         entity[&#34;command_topic&#34;] = self.configuration.command_topic     
@@ -472,9 +579,20 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity[&#34;payload_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_on)
             entity[&#34;payload_not_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
 
-
         def OnCommand(call_stack: CallStack):
             payload = call_stack.get(&#34;{{{payload}}}&#34;)
+            boolean_payload = False
+            if payload == entity[&#34;payload_on&#34;]: 
+                boolean_payload = True
+            elif payload == entity[&#34;payload_off&#34;]: 
+                boolean_payload = False
+
+            call_stack = call_stack.with_key(&#34;payload&#34;, boolean_payload)
+
+            if isinstance(wrapped_id, BaseAction):
+                &#39;&#39;&#39;Update local state and call the automations of the entity.&#39;&#39;&#39;
+                wrapped_id.invoke(call_stack)
+
             if payload == entity[&#34;payload_on&#34;]:
                 if self.on_command_automations:
                     for automation in self.on_command_automations:
@@ -499,25 +617,9 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity[&#34;payload_not_available&#34;] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
 
 
-    def get_state():
-        path = str(self.configuration.expose_state).split(&#39;.&#39;) #type: ignore
-        act = wrapped_id
-        for path_element in path:
-            act = getattr(act, path_element)
-        return act
-
-    if self.hass_type == HassType.SENSOR or self.hass_type == HassType.ACTION:
-        class UpdateHassState(Automation):
-            def invoke(_, call_stack: CallStack): #type: ignore
-                act_state = get_state()
-                if act_state:
-                    self.mqtt.publish(state_topic, entity[&#34;payload_on&#34;])
-                else:
-                    self.mqtt.publish(state_topic, entity[&#34;payload_off&#34;])
-
-        wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
-
-        UpdateHassState(self, AutomationConfiguration()).invoke(call_stack)         
+    if self.hass_type == HassType.SENSOR or self.hass_type == HassType.SWITCH:
+        &#39;&#39;&#39;Report actual state back to HA&#39;&#39;&#39;
+        UpdateHassState(self, AutomationConfiguration()).invoke(call_stack) 
 
     self.mqtt.publish(self.auto_discovery_topic, entity, retain = True)</code></pre>
 </details>
@@ -546,8 +648,13 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 </summary>
 <pre><code class="python">class HassType(Enum):
     TRIGGER = &#34;trigger&#34;
+    &#39;&#39;&#39;HomeAssistant&#39;s triggers are only to invoke HA Automations, not visible in Lovelace.&#39;&#39;&#39;
+
     SENSOR = &#34;binary_sensor&#34;
-    ACTION = &#34;switch&#34;</code></pre>
+    &#39;&#39;&#39;Use this type to use the state of a piTomation entity in HA.&#39;&#39;&#39;
+
+    SWITCH = &#34;switch&#34;
+    &#39;&#39;&#39;Allows to toggle a piTomation state from HA.&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -555,17 +662,17 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="plugins.hass.HassEntityAutomation.HassType.ACTION"><code class="name">var <span class="ident">ACTION</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="plugins.hass.HassEntityAutomation.HassType.SENSOR"><code class="name">var <span class="ident">SENSOR</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Use this type to use the state of a piTomation entity in HA.</p></div>
+</dd>
+<dt id="plugins.hass.HassEntityAutomation.HassType.SWITCH"><code class="name">var <span class="ident">SWITCH</span></code></dt>
+<dd>
+<div class="desc"><p>Allows to toggle a piTomation state from HA.</p></div>
 </dd>
 <dt id="plugins.hass.HassEntityAutomation.HassType.TRIGGER"><code class="name">var <span class="ident">TRIGGER</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>HomeAssistant's triggers are only to invoke HA Automations, not visible in Lovelace.</p></div>
 </dd>
 </dl>
 </dd>
@@ -594,8 +701,8 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 <li>
 <h4><code><a title="plugins.hass.HassEntityAutomation.HassType" href="#plugins.hass.HassEntityAutomation.HassType">HassType</a></code></h4>
 <ul class="">
-<li><code><a title="plugins.hass.HassEntityAutomation.HassType.ACTION" href="#plugins.hass.HassEntityAutomation.HassType.ACTION">ACTION</a></code></li>
 <li><code><a title="plugins.hass.HassEntityAutomation.HassType.SENSOR" href="#plugins.hass.HassEntityAutomation.HassType.SENSOR">SENSOR</a></code></li>
+<li><code><a title="plugins.hass.HassEntityAutomation.HassType.SWITCH" href="#plugins.hass.HassEntityAutomation.HassType.SWITCH">SWITCH</a></code></li>
 <li><code><a title="plugins.hass.HassEntityAutomation.HassType.TRIGGER" href="#plugins.hass.HassEntityAutomation.HassType.TRIGGER">TRIGGER</a></code></li>
 </ul>
 </li>

@@ -37,7 +37,7 @@ class GpioPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
     Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.&#39;&#39;&#39;
 
-    factory: str = &#34;pigpio&#34;
+    factory: str = &#34;mock&#34; #&#34;pigpio&#34;
     &#39;&#39;&#39;gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
@@ -134,7 +134,7 @@ class GpioPlatformConfiguration(PlatformConfiguration):
     &#39;&#39;&#39;The GPIO platform is based on gpiozero, which is a wrapper for different GPIO libraries.
     Most of the libraries are untested in piTomation, please file an issue if you find a problem with one of the factories.&#39;&#39;&#39;
 
-    factory: str = &#34;pigpio&#34;
+    factory: str = &#34;mock&#34; #&#34;pigpio&#34;
     &#39;&#39;&#39;gpio zero factory name, please see https://gpiozero.readthedocs.io/en/stable/api_pins.html&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)

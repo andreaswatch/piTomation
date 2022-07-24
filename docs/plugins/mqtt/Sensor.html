@@ -50,10 +50,10 @@ class MqttSensorConfiguration(SensorConfiguration):
 class MqttSensorState(BaseState):
     &#39;&#39;&#39;Represents the state of the GPIO pin&#39;&#39;&#39;
 
-    topic: str
+    topic: str = &#34;&#34;
     &#39;&#39;&#39;Last received topic&#39;&#39;&#39;
 
-    payload: Union[str, dict]
+    payload: Union[str, dict] = &#34;&#34;
     &#39;&#39;&#39;Last received payload&#39;&#39;&#39;
 
 
@@ -195,10 +195,10 @@ def check_platform(cls, v):
 <pre><code class="python">class MqttSensorState(BaseState):
     &#39;&#39;&#39;Represents the state of the GPIO pin&#39;&#39;&#39;
 
-    topic: str
+    topic: str = &#34;&#34;
     &#39;&#39;&#39;Last received topic&#39;&#39;&#39;
 
-    payload: Union[str, dict]
+    payload: Union[str, dict] = &#34;&#34;
     &#39;&#39;&#39;Last received payload&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>

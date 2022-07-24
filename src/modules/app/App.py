@@ -12,7 +12,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 from modules.base.chevron_renderer import *
 
-VERSION = "2021.11.21"
+VERSION = "2022.07.23"
 
 class App(BaseApp, Logging, Debuggable):
     ''' '''

@@ -41,7 +41,7 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 from modules.base.chevron_renderer import *
 
-VERSION = &#34;2021.11.21&#34;
+VERSION = &#34;2022.07.23&#34;
 
 class App(BaseApp, Logging, Debuggable):
     &#39;&#39;&#39; &#39;&#39;&#39;
@@ -99,7 +99,7 @@ class App(BaseApp, Logging, Debuggable):
 
         config_filename = &#34;&#34;
         if len(sys.argv) == 1:
-            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.yaml&#34;
+            config_filename = os.getcwd() + os.sep + &#34;src&#34; + os.sep + socket.gethostname() + &#34;.yaml&#34;
             self.log_info(&#34;No configuration file given, fallback to &#39;&#34; + config_filename + &#34;&#39;&#34;)
         else:
             config_filename = sys.argv[-1]
@@ -251,7 +251,7 @@ class App(BaseApp, Logging, Debuggable):
 
         config_filename = &#34;&#34;
         if len(sys.argv) == 1:
-            config_filename = os.getcwd() + &#34;/&#34; + socket.gethostname() + &#34;.yaml&#34;
+            config_filename = os.getcwd() + os.sep + &#34;src&#34; + os.sep + socket.gethostname() + &#34;.yaml&#34;
             self.log_info(&#34;No configuration file given, fallback to &#39;&#34; + config_filename + &#34;&#39;&#34;)
         else:
             config_filename = sys.argv[-1]

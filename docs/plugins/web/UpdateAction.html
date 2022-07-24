@@ -44,10 +44,10 @@ class UpdateActionConfiguration(ActionConfiguration):
 class UpdateActionState(BaseState):
     &#39;&#39;&#39;Represents the state of the Update Action&#39;&#39;&#39;
 
-    topic: str
+    topic: str = &#34;&#34;
     &#39;&#39;&#39;Last updated topic&#39;&#39;&#39;
 
-    payload: str
+    payload: str = &#34;&#34;
     &#39;&#39;&#39;Last payload&#39;&#39;&#39;
 
 
@@ -220,10 +220,10 @@ def check_platform(cls, v):
 <pre><code class="python">class UpdateActionState(BaseState):
     &#39;&#39;&#39;Represents the state of the Update Action&#39;&#39;&#39;
 
-    topic: str
+    topic: str = &#34;&#34;
     &#39;&#39;&#39;Last updated topic&#39;&#39;&#39;
 
-    payload: str
+    payload: str = &#34;&#34;
     &#39;&#39;&#39;Last payload&#39;&#39;&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>

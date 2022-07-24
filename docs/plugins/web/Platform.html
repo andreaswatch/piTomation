@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from sys import platform
+from traceback import format_exc
 from pydantic.class_validators import validator
 import pywebio.input as IN
 import pywebio.output as OUT
@@ -37,8 +38,20 @@ from modules.base.Configuration import *
 from modules.base.Instances import *
 
 @configuration
+class WebActionEntityConfiguration(Configuration):
+
+    id: str
+
+    expose_state: str
+
+    payload_on: Optional[str] = &#34;on&#34;
+
+    payload_off: Optional[str] = &#34;off&#34;
+
+
+@configuration
 class WebPlatformConfiguration(PlatformConfiguration):
-    &#39;&#39;&#39;Configuration setting for the pywebio Dashboard&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration setting for the pywebio Dashboard.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform(cls, v):
@@ -46,17 +59,85 @@ class WebPlatformConfiguration(PlatformConfiguration):
             raise ValueError(&#34;wrong platform: plugins.web, is: &#34; + v)
         return v
 
+    port: int
+    &#39;&#39;&#39;NYI&#39;&#39;&#39;
+
+    exports: list[WebActionEntityConfiguration]
+    &#39;&#39;&#39;Scripts to display in the pywebio Dashboard.&#39;&#39;&#39;        
+
+
+class WebActionEntity(Stackable, Disposeable, Logging):
+
+    def __init__(self, parent: Stackable, config: WebActionEntityConfiguration) -&gt; None:
+        from plugins.web.Platform import Platform
+        super().__init__(parent)
+        
+        self.platform: Platform 
+        if type(parent) is Platform:
+            self.platform = parent 
+
+        self.configuration = config
+        self.app = parent.get_app()
+
+        self.wrapped_id = self.app.get_id(self.configuration.id)
+
+    def on_updated(self):
+        pass
+
+    def get_state(self):
+        &#39;&#39;&#39;Returns the internal state of the exposed entity.&#39;&#39;&#39;
+
+        exp_state = str(self.configuration.expose_state) #type: ignore
+        path = exp_state.split(&#39;.&#39;) #type: ignore
+        act = self.wrapped_id
+        for path_element in path:
+            act = getattr(act, path_element)
+        return act        
+    
+    def start(self, call_stack: CallStack):
+        class update(Automation):
+            def invoke(_, call_stack: CallStack): #type: ignore
+                act_state = self.get_state()
+                self.platform.has_been_updated = True
+                self.on_updated()
+
+        self.wrapped_id.on_state_changed_automations.append(update(self, AutomationConfiguration())) #type: ignore    
+
+    def toggle(self):
+        if isinstance(self.wrapped_id, BaseAction):
+            call_stack = CallStack()
+            
+            act_state = self.get_state()
+
+            if (act_state == True):
+                act_state = self.configuration.payload_on
+            elif (act_state == False):
+                act_state = self.configuration.payload_off
+
+            if act_state == self.configuration.payload_on:
+                call_stack = call_stack.with_key(&#34;payload&#34;, self.configuration.payload_off)
+            elif act_state == self.configuration.payload_off:
+                call_stack = call_stack.with_key(&#34;payload&#34;, self.configuration.payload_on)
+
+            self.wrapped_id.invoke(call_stack)
 
 class Platform(BasePlatform):
     &#39;&#39;&#39;Web Dashboard based on pywebio.&#39;&#39;&#39;
 
-    def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
+    def __init__(self, parent: Stackable, config: WebPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         
+        self.configuration = config
         self.logs = [[&#34;Logs&#34;]]
         self.table = [[&#34;Topic&#34;, &#34;Payload&#34;]]
+        self.entities = [[&#34;Platform&#34;, &#34;Id&#34;, {}]]
+        self.entities[0][2] = &#34;Payload&#34;
+
         self.has_been_updated = True
         self.has_started = False
+
+        self.exports: list[WebActionEntity] = []
+    
 
 
     def update(self, topic, payload):
@@ -67,11 +148,9 @@ class Platform(BasePlatform):
             if line[0] == topic:
                 line[1] = payload
                 self.has_been_updated = True
-                return
+                return           
 
-        self.table.append([topic, payload])        
         self.has_been_updated = True
-
 
     def add_log(self, text):
         while not self.has_started:
@@ -82,6 +161,34 @@ class Platform(BasePlatform):
 
 
     def start(self, call_stack: CallStack):
+        for entity_configuration in self.configuration.exports:
+            web_action_entity = WebActionEntity(self, entity_configuration)
+            web_action_entity.start(call_stack)
+            id = entity_configuration.id
+            state = web_action_entity.get_state()
+
+            def get_color():
+                if state == True:
+                    return &#34;success&#34;
+                elif state == False:
+                    return &#34;warning&#34;
+                else:
+                    return &#34;brown&#34;
+
+            self.entities.append([&#34;___&#34;, id, OUT.put_button(str(state), onclick=lambda: web_action_entity.toggle(), color=get_color(), outline=True)])      
+
+            def update():
+                for entity in self.entities:
+                    if entity[1] == entity_configuration.id:
+                        id = web_action_entity.configuration.id
+                        state = web_action_entity.get_state()
+                        #entity[1] = id
+                        entity[2] = OUT.put_button(str(state), onclick=lambda: web_action_entity.toggle(), color=get_color(), outline=True)
+
+            web_action_entity.on_updated = update
+            self.exports.append(web_action_entity)    
+       
+
         def loop():
             OUT.set_scope(&#39;result&#39;)
             while True:
@@ -92,6 +199,9 @@ class Platform(BasePlatform):
                         OUT.put_table(self.table)
                         OUT.put_markdown(&#34; ## Logs&#34;)
                         OUT.put_table(self.logs)
+                        OUT.put_markdown(&#34; ## Entities&#34;)
+                        OUT.put_table(self.entities)
+
                 time.sleep(0.2)
                 
         
@@ -112,7 +222,7 @@ class Platform(BasePlatform):
 <dl>
 <dt id="plugins.web.Platform.Platform"><code class="flex name class">
 <span>class <span class="ident">Platform</span></span>
-<span>(</span><span>parent: <a title="modules.base.Instances.Stackable" href="../../modules/base/Instances.html#modules.base.Instances.Stackable">Stackable</a>, config: <a title="modules.base.Configuration.PlatformConfiguration" href="../../modules/base/Configuration.html#modules.base.Configuration.PlatformConfiguration">PlatformConfiguration</a>)</span>
+<span>(</span><span>parent: <a title="modules.base.Instances.Stackable" href="../../modules/base/Instances.html#modules.base.Instances.Stackable">Stackable</a>, config: <a title="plugins.web.Platform.WebPlatformConfiguration" href="#plugins.web.Platform.WebPlatformConfiguration">WebPlatformConfiguration</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Web Dashboard based on pywebio.</p></div>
@@ -123,13 +233,20 @@ class Platform(BasePlatform):
 <pre><code class="python">class Platform(BasePlatform):
     &#39;&#39;&#39;Web Dashboard based on pywebio.&#39;&#39;&#39;
 
-    def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
+    def __init__(self, parent: Stackable, config: WebPlatformConfiguration) -&gt; None:
         super().__init__(parent, config)
         
+        self.configuration = config
         self.logs = [[&#34;Logs&#34;]]
         self.table = [[&#34;Topic&#34;, &#34;Payload&#34;]]
+        self.entities = [[&#34;Platform&#34;, &#34;Id&#34;, {}]]
+        self.entities[0][2] = &#34;Payload&#34;
+
         self.has_been_updated = True
         self.has_started = False
+
+        self.exports: list[WebActionEntity] = []
+    
 
 
     def update(self, topic, payload):
@@ -140,11 +257,9 @@ class Platform(BasePlatform):
             if line[0] == topic:
                 line[1] = payload
                 self.has_been_updated = True
-                return
+                return           
 
-        self.table.append([topic, payload])        
         self.has_been_updated = True
-
 
     def add_log(self, text):
         while not self.has_started:
@@ -155,6 +270,34 @@ class Platform(BasePlatform):
 
 
     def start(self, call_stack: CallStack):
+        for entity_configuration in self.configuration.exports:
+            web_action_entity = WebActionEntity(self, entity_configuration)
+            web_action_entity.start(call_stack)
+            id = entity_configuration.id
+            state = web_action_entity.get_state()
+
+            def get_color():
+                if state == True:
+                    return &#34;success&#34;
+                elif state == False:
+                    return &#34;warning&#34;
+                else:
+                    return &#34;brown&#34;
+
+            self.entities.append([&#34;___&#34;, id, OUT.put_button(str(state), onclick=lambda: web_action_entity.toggle(), color=get_color(), outline=True)])      
+
+            def update():
+                for entity in self.entities:
+                    if entity[1] == entity_configuration.id:
+                        id = web_action_entity.configuration.id
+                        state = web_action_entity.get_state()
+                        #entity[1] = id
+                        entity[2] = OUT.put_button(str(state), onclick=lambda: web_action_entity.toggle(), color=get_color(), outline=True)
+
+            web_action_entity.on_updated = update
+            self.exports.append(web_action_entity)    
+       
+
         def loop():
             OUT.set_scope(&#39;result&#39;)
             while True:
@@ -165,6 +308,9 @@ class Platform(BasePlatform):
                         OUT.put_table(self.table)
                         OUT.put_markdown(&#34; ## Logs&#34;)
                         OUT.put_table(self.logs)
+                        OUT.put_markdown(&#34; ## Entities&#34;)
+                        OUT.put_table(self.entities)
+
                 time.sleep(0.2)
                 
         
@@ -216,9 +362,8 @@ class Platform(BasePlatform):
         if line[0] == topic:
             line[1] = payload
             self.has_been_updated = True
-            return
+            return           
 
-    self.table.append([topic, payload])        
     self.has_been_updated = True</code></pre>
 </details>
 </dd>
@@ -232,12 +377,234 @@ class Platform(BasePlatform):
 </li>
 </ul>
 </dd>
+<dt id="plugins.web.Platform.WebActionEntity"><code class="flex name class">
+<span>class <span class="ident">WebActionEntity</span></span>
+<span>(</span><span>parent: <a title="modules.base.Instances.Stackable" href="../../modules/base/Instances.html#modules.base.Instances.Stackable">Stackable</a>, config: <a title="plugins.web.Platform.WebActionEntityConfiguration" href="#plugins.web.Platform.WebActionEntityConfiguration">WebActionEntityConfiguration</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Classes that want to log should be based on this class</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class WebActionEntity(Stackable, Disposeable, Logging):
+
+    def __init__(self, parent: Stackable, config: WebActionEntityConfiguration) -&gt; None:
+        from plugins.web.Platform import Platform
+        super().__init__(parent)
+        
+        self.platform: Platform 
+        if type(parent) is Platform:
+            self.platform = parent 
+
+        self.configuration = config
+        self.app = parent.get_app()
+
+        self.wrapped_id = self.app.get_id(self.configuration.id)
+
+    def on_updated(self):
+        pass
+
+    def get_state(self):
+        &#39;&#39;&#39;Returns the internal state of the exposed entity.&#39;&#39;&#39;
+
+        exp_state = str(self.configuration.expose_state) #type: ignore
+        path = exp_state.split(&#39;.&#39;) #type: ignore
+        act = self.wrapped_id
+        for path_element in path:
+            act = getattr(act, path_element)
+        return act        
+    
+    def start(self, call_stack: CallStack):
+        class update(Automation):
+            def invoke(_, call_stack: CallStack): #type: ignore
+                act_state = self.get_state()
+                self.platform.has_been_updated = True
+                self.on_updated()
+
+        self.wrapped_id.on_state_changed_automations.append(update(self, AutomationConfiguration())) #type: ignore    
+
+    def toggle(self):
+        if isinstance(self.wrapped_id, BaseAction):
+            call_stack = CallStack()
+            
+            act_state = self.get_state()
+
+            if (act_state == True):
+                act_state = self.configuration.payload_on
+            elif (act_state == False):
+                act_state = self.configuration.payload_off
+
+            if act_state == self.configuration.payload_on:
+                call_stack = call_stack.with_key(&#34;payload&#34;, self.configuration.payload_off)
+            elif act_state == self.configuration.payload_off:
+                call_stack = call_stack.with_key(&#34;payload&#34;, self.configuration.payload_on)
+
+            self.wrapped_id.invoke(call_stack)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="modules.base.Instances.Stackable" href="../../modules/base/Instances.html#modules.base.Instances.Stackable">Stackable</a></li>
+<li><a title="modules.base.Instances.Disposeable" href="../../modules/base/Instances.html#modules.base.Instances.Disposeable">Disposeable</a></li>
+<li><a title="modules.base.Instances.Logging" href="../../modules/base/Instances.html#modules.base.Instances.Logging">Logging</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="plugins.web.Platform.WebActionEntity.get_state"><code class="name flex">
+<span>def <span class="ident">get_state</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the internal state of the exposed entity.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_state(self):
+    &#39;&#39;&#39;Returns the internal state of the exposed entity.&#39;&#39;&#39;
+
+    exp_state = str(self.configuration.expose_state) #type: ignore
+    path = exp_state.split(&#39;.&#39;) #type: ignore
+    act = self.wrapped_id
+    for path_element in path:
+        act = getattr(act, path_element)
+    return act        </code></pre>
+</details>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntity.on_updated"><code class="name flex">
+<span>def <span class="ident">on_updated</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_updated(self):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntity.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self, call_stack: <a title="modules.base.CallStack.CallStack" href="../../modules/base/CallStack.html#modules.base.CallStack.CallStack">CallStack</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self, call_stack: CallStack):
+    class update(Automation):
+        def invoke(_, call_stack: CallStack): #type: ignore
+            act_state = self.get_state()
+            self.platform.has_been_updated = True
+            self.on_updated()
+
+    self.wrapped_id.on_state_changed_automations.append(update(self, AutomationConfiguration())) #type: ignore    </code></pre>
+</details>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntity.toggle"><code class="name flex">
+<span>def <span class="ident">toggle</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toggle(self):
+    if isinstance(self.wrapped_id, BaseAction):
+        call_stack = CallStack()
+        
+        act_state = self.get_state()
+
+        if (act_state == True):
+            act_state = self.configuration.payload_on
+        elif (act_state == False):
+            act_state = self.configuration.payload_off
+
+        if act_state == self.configuration.payload_on:
+            call_stack = call_stack.with_key(&#34;payload&#34;, self.configuration.payload_off)
+        elif act_state == self.configuration.payload_off:
+            call_stack = call_stack.with_key(&#34;payload&#34;, self.configuration.payload_on)
+
+        self.wrapped_id.invoke(call_stack)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="modules.base.Instances.Logging" href="../../modules/base/Instances.html#modules.base.Instances.Logging">Logging</a></b></code>:
+<ul class="hlist">
+<li><code><a title="modules.base.Instances.Logging.log_error" href="../../modules/base/Instances.html#modules.base.Instances.Logging.log_error">log_error</a></code></li>
+<li><code><a title="modules.base.Instances.Logging.log_info" href="../../modules/base/Instances.html#modules.base.Instances.Logging.log_info">log_info</a></code></li>
+<li><code><a title="modules.base.Instances.Logging.log_warning" href="../../modules/base/Instances.html#modules.base.Instances.Logging.log_warning">log_warning</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntityConfiguration"><code class="flex name class">
+<span>class <span class="ident">WebActionEntityConfiguration</span></span>
+<span>(</span><span>**data: Any)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all configuration classes</p>
+<p>YAML configuration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@configuration
+class WebActionEntityConfiguration(Configuration):
+
+    id: str
+
+    expose_state: str
+
+    payload_on: Optional[str] = &#34;on&#34;
+
+    payload_off: Optional[str] = &#34;off&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></li>
+<li>pydantic.main.BaseModel</li>
+<li>pydantic.utils.Representation</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="plugins.web.Platform.WebActionEntityConfiguration.expose_state"><code class="name">var <span class="ident">expose_state</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntityConfiguration.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntityConfiguration.payload_off"><code class="name">var <span class="ident">payload_off</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="plugins.web.Platform.WebActionEntityConfiguration.payload_on"><code class="name">var <span class="ident">payload_on</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="modules.base.Configuration.Configuration" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration">Configuration</a></b></code>:
+<ul class="hlist">
+<li><code><a title="modules.base.Configuration.Configuration.comment" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.comment">comment</a></code></li>
+<li><code><a title="modules.base.Configuration.Configuration.debug" href="../../modules/base/Configuration.html#modules.base.Configuration.Configuration.debug">debug</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="plugins.web.Platform.WebPlatformConfiguration"><code class="flex name class">
 <span>class <span class="ident">WebPlatformConfiguration</span></span>
 <span>(</span><span>**data: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configuration setting for the pywebio Dashboard</p>
+<div class="desc"><p>Configuration setting for the pywebio Dashboard.</p>
 <p>YAML configuration</p></div>
 <details class="source">
 <summary>
@@ -245,13 +612,19 @@ class Platform(BasePlatform):
 </summary>
 <pre><code class="python">@configuration
 class WebPlatformConfiguration(PlatformConfiguration):
-    &#39;&#39;&#39;Configuration setting for the pywebio Dashboard&#39;&#39;&#39;
+    &#39;&#39;&#39;Configuration setting for the pywebio Dashboard.&#39;&#39;&#39;
 
     @validator(&#39;platform&#39;)
     def check_platform(cls, v):
         if &#34;plugins.web&#34; not in v:
             raise ValueError(&#34;wrong platform: plugins.web, is: &#34; + v)
-        return v</code></pre>
+        return v
+
+    port: int
+    &#39;&#39;&#39;NYI&#39;&#39;&#39;
+
+    exports: list[WebActionEntityConfiguration]
+    &#39;&#39;&#39;Scripts to display in the pywebio Dashboard.&#39;&#39;&#39;        </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -263,6 +636,17 @@ class WebPlatformConfiguration(PlatformConfiguration):
 <li>pydantic.main.BaseModel</li>
 <li>pydantic.utils.Representation</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="plugins.web.Platform.WebPlatformConfiguration.exports"><code class="name">var <span class="ident">exports</span> : list</code></dt>
+<dd>
+<div class="desc"><p>Scripts to display in the pywebio Dashboard.</p></div>
+</dd>
+<dt id="plugins.web.Platform.WebPlatformConfiguration.port"><code class="name">var <span class="ident">port</span> : int</code></dt>
+<dd>
+<div class="desc"><p>NYI</p></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="plugins.web.Platform.WebPlatformConfiguration.check_platform"><code class="name flex">
@@ -321,9 +705,29 @@ def check_platform(cls, v):
 </ul>
 </li>
 <li>
+<h4><code><a title="plugins.web.Platform.WebActionEntity" href="#plugins.web.Platform.WebActionEntity">WebActionEntity</a></code></h4>
+<ul class="">
+<li><code><a title="plugins.web.Platform.WebActionEntity.get_state" href="#plugins.web.Platform.WebActionEntity.get_state">get_state</a></code></li>
+<li><code><a title="plugins.web.Platform.WebActionEntity.on_updated" href="#plugins.web.Platform.WebActionEntity.on_updated">on_updated</a></code></li>
+<li><code><a title="plugins.web.Platform.WebActionEntity.start" href="#plugins.web.Platform.WebActionEntity.start">start</a></code></li>
+<li><code><a title="plugins.web.Platform.WebActionEntity.toggle" href="#plugins.web.Platform.WebActionEntity.toggle">toggle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="plugins.web.Platform.WebActionEntityConfiguration" href="#plugins.web.Platform.WebActionEntityConfiguration">WebActionEntityConfiguration</a></code></h4>
+<ul class="">
+<li><code><a title="plugins.web.Platform.WebActionEntityConfiguration.expose_state" href="#plugins.web.Platform.WebActionEntityConfiguration.expose_state">expose_state</a></code></li>
+<li><code><a title="plugins.web.Platform.WebActionEntityConfiguration.id" href="#plugins.web.Platform.WebActionEntityConfiguration.id">id</a></code></li>
+<li><code><a title="plugins.web.Platform.WebActionEntityConfiguration.payload_off" href="#plugins.web.Platform.WebActionEntityConfiguration.payload_off">payload_off</a></code></li>
+<li><code><a title="plugins.web.Platform.WebActionEntityConfiguration.payload_on" href="#plugins.web.Platform.WebActionEntityConfiguration.payload_on">payload_on</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="plugins.web.Platform.WebPlatformConfiguration" href="#plugins.web.Platform.WebPlatformConfiguration">WebPlatformConfiguration</a></code></h4>
 <ul class="">
 <li><code><a title="plugins.web.Platform.WebPlatformConfiguration.check_platform" href="#plugins.web.Platform.WebPlatformConfiguration.check_platform">check_platform</a></code></li>
+<li><code><a title="plugins.web.Platform.WebPlatformConfiguration.exports" href="#plugins.web.Platform.WebPlatformConfiguration.exports">exports</a></code></li>
+<li><code><a title="plugins.web.Platform.WebPlatformConfiguration.port" href="#plugins.web.Platform.WebPlatformConfiguration.port">port</a></code></li>
 </ul>
 </li>
 </ul>

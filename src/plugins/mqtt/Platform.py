@@ -60,22 +60,14 @@ class Platform(BasePlatform):
         super().__init__(parent, config)
         self.app = parent.get_app()
         self.configuration = config
+        self.initialized = False
 
         self.callbacks = []
 
-    def start(self, call_stack: CallStack):
+    def publish_available(self, call_stack):
         def render(var):
             '''this is only to avoid typing errors'''
             return str(call_stack.get(var))
-
-        app_id = str(self.app.get_variable_value("id"))
-
-        self.client = mqtt.Client(app_id + "_" + render(self.app.get_id("device").configuration.name)) #type: ignore
-        self.client.on_connect = self.__init_on_connect()
-        self.client.on_disconnect = self.__init_on_disconnect()
-        self.client.on_message = self.__init_on_message()
-
-        self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
 
         if self.configuration.availability:
             av = self.configuration.availability
@@ -88,8 +80,36 @@ class Platform(BasePlatform):
             self.client.subscribe(av_topic)
 
             av = self.configuration.availability
-            self.publish(av_topic, av_payload_on, retain = True)
+            self.publish(av_topic, av_payload_on, retain = True)        
 
+    def connect(self, call_stack):
+        if not self.initialized:
+            print("MQTT Client not initialized, cancel 'connect'")
+            return
+
+        def render(var):
+            '''this is only to avoid typing errors'''
+            return str(call_stack.get(var))
+
+        self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
+
+        self.publish_available(call_stack)
+
+
+    def start(self, call_stack: CallStack):
+        def render(var):
+            '''this is only to avoid typing errors'''
+            return str(call_stack.get(var))
+
+        app_id = "PiTomation_" + str(self.app.get_variable_value("id"))
+        client_name = app_id + "_" + render(self.app.get_id("device").configuration.name)
+        print("MQTT Client Name: " + app_id)
+        self.client = mqtt.Client(client_name, clean_session = True) #type: ignore
+        self.client.on_connect = self.__init_on_connect()
+        self.client.on_disconnect = self.__init_on_disconnect()
+        self.client.on_message = self.__init_on_message()
+        self.initialized = True
+        self.connect(call_stack)
 
         def loop():
             self.client.loop_start()
@@ -144,6 +164,8 @@ class Platform(BasePlatform):
                 self.on_disconnect_actions.append(Automation(self, automation))
 
         def method(client, userdata, flags):
+            print("MQTT disconnected!")
+            
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack()) \
                 .with_key("flags", flags)
@@ -160,9 +182,17 @@ class Platform(BasePlatform):
                 self.on_connected_actions.append(Automation(self, automationConfig))
 
         def method(client, userdata, flags, rc):
+            print("MQTT connection state: " + str(rc))
+            print("  if rc=0, the client is connected.")
+            
+            #TODO:TEST if (rc is not 0):
+            #TODO:TEST     sys.exit(0)
+
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack()) \
                 .with_key("return_code", rc)
+
+            self.publish_available(call_stack)
 
             for callback in self.callbacks:
                 self.client.subscribe(callback["topic"])

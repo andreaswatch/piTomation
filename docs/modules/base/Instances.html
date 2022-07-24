@@ -259,6 +259,9 @@ class BaseAction(BaseScript):
         &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
         self.on_state_changed(call_stack) 
 
+    def toggle(self, call_stack: CallStack):
+        self.on_state_changed(call_stack) 
+
 
 class BasePlatform(Stackable, Identifyable, Disposeable):
     def __init__(self, parent: Stackable, config: PlatformConfiguration) -&gt; None:
@@ -316,7 +319,8 @@ class Automation(Stackable):
             for action_conf in conf:
                 automations.append(Automation(parent, action_conf))
 
-        return automations            
+        return automations       
+ 
 
 
 class Condition(Stackable, Logging):
@@ -374,7 +378,11 @@ class ActionTrigger(Stackable, Logging):
         if self.configuration.values:
             call_stack = call_stack.with_keys(self.configuration.values)
 
-        id.invoke(call_stack)</code></pre>
+        id.invoke(call_stack)
+
+
+    def __repr__(self) -&gt; str:
+        return &#34;ActionTrigger: &#34; + self.configuration.action</code></pre>
 </details>
 </section>
 <section>
@@ -416,7 +424,11 @@ class ActionTrigger(Stackable, Logging):
         if self.configuration.values:
             call_stack = call_stack.with_keys(self.configuration.values)
 
-        id.invoke(call_stack)</code></pre>
+        id.invoke(call_stack)
+
+
+    def __repr__(self) -&gt; str:
+        return &#34;ActionTrigger: &#34; + self.configuration.action</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -513,7 +525,7 @@ class ActionTrigger(Stackable, Logging):
             for action_conf in conf:
                 automations.append(Automation(parent, action_conf))
 
-        return automations            </code></pre>
+        return automations       </code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -540,7 +552,7 @@ def create_automations(parent: Stackable, conf: Optional[list[AutomationConfigur
         for action_conf in conf:
             automations.append(Automation(parent, action_conf))
 
-    return automations            </code></pre>
+    return automations       </code></pre>
 </details>
 </dd>
 </dl>
@@ -623,6 +635,9 @@ def create_automations(parent: Stackable, conf: Optional[list[AutomationConfigur
 
     def invoke(self, call_stack: CallStack):
         &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
+        self.on_state_changed(call_stack) 
+
+    def toggle(self, call_stack: CallStack):
         self.on_state_changed(call_stack) </code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -640,8 +655,10 @@ def create_automations(parent: Stackable, conf: Optional[list[AutomationConfigur
 <li><a title="plugins.gpio.BinaryAction.BinaryAction" href="../../plugins/gpio/BinaryAction.html#plugins.gpio.BinaryAction.BinaryAction">BinaryAction</a></li>
 <li><a title="plugins.gpio.RgbLedAction.RgbLedAction" href="../../plugins/gpio/RgbLedAction.html#plugins.gpio.RgbLedAction.RgbLedAction">RgbLedAction</a></li>
 <li><a title="plugins.mqtt.Action.Action" href="../../plugins/mqtt/Action.html#plugins.mqtt.Action.Action">Action</a></li>
+<li><a title="plugins.rfcomm_client.Action.Action" href="../../plugins/rfcomm_client/Action.html#plugins.rfcomm_client.Action.Action">Action</a></li>
 <li><a title="plugins.system.DelayAction.DelayAction" href="../../plugins/system/DelayAction.html#plugins.system.DelayAction.DelayAction">DelayAction</a></li>
 <li><a title="plugins.system.SetVariableAction.SetVariableAction" href="../../plugins/system/SetVariableAction.html#plugins.system.SetVariableAction.SetVariableAction">SetVariableAction</a></li>
+<li><a title="plugins.system.ShellCommandAction.ShellCommandAction" href="../../plugins/system/ShellCommandAction.html#plugins.system.ShellCommandAction.ShellCommandAction">ShellCommandAction</a></li>
 <li><a title="plugins.web.LogAction.LogAction" href="../../plugins/web/LogAction.html#plugins.web.LogAction.LogAction">LogAction</a></li>
 <li><a title="plugins.web.UpdateAction.UpdateAction" href="../../plugins/web/UpdateAction.html#plugins.web.UpdateAction.UpdateAction">UpdateAction</a></li>
 </ul>
@@ -658,6 +675,19 @@ def create_automations(parent: Stackable, conf: Optional[list[AutomationConfigur
 </summary>
 <pre><code class="python">def invoke(self, call_stack: CallStack):
     &#39;&#39;&#39;must get called whenever the action has been invoked&#39;&#39;&#39;
+    self.on_state_changed(call_stack) </code></pre>
+</details>
+</dd>
+<dt id="modules.base.Instances.BaseAction.toggle"><code class="name flex">
+<span>def <span class="ident">toggle</span></span>(<span>self, call_stack: <a title="modules.base.CallStack.CallStack" href="CallStack.html#modules.base.CallStack.CallStack">CallStack</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def toggle(self, call_stack: CallStack):
     self.on_state_changed(call_stack) </code></pre>
 </details>
 </dd>
@@ -848,6 +878,8 @@ def create_automations(parent: Stackable, conf: Optional[list[AutomationConfigur
 <li><a title="plugins.gpio.Platform.Platform" href="../../plugins/gpio/Platform.html#plugins.gpio.Platform.Platform">Platform</a></li>
 <li><a title="plugins.hass.Platform.Platform" href="../../plugins/hass/Platform.html#plugins.hass.Platform.Platform">Platform</a></li>
 <li><a title="plugins.mqtt.Platform.Platform" href="../../plugins/mqtt/Platform.html#plugins.mqtt.Platform.Platform">Platform</a></li>
+<li><a title="plugins.rfcomm_client.Platform.Platform" href="../../plugins/rfcomm_client/Platform.html#plugins.rfcomm_client.Platform.Platform">Platform</a></li>
+<li><a title="plugins.rfcomm_server.Platform.Platform" href="../../plugins/rfcomm_server/Platform.html#plugins.rfcomm_server.Platform.Platform">Platform</a></li>
 <li><a title="plugins.system.Platform.Platform" href="../../plugins/system/Platform.html#plugins.system.Platform.Platform">Platform</a></li>
 <li><a title="plugins.web.Platform.Platform" href="../../plugins/web/Platform.html#plugins.web.Platform.Platform">Platform</a></li>
 </ul>
@@ -980,6 +1012,7 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="plugins.gpio.BinarySensor.BinarySensor" href="../../plugins/gpio/BinarySensor.html#plugins.gpio.BinarySensor.BinarySensor">BinarySensor</a></li>
 <li><a title="plugins.gpio.ButtonSensor.ButtonSensor" href="../../plugins/gpio/ButtonSensor.html#plugins.gpio.ButtonSensor.ButtonSensor">ButtonSensor</a></li>
 <li><a title="plugins.mqtt.Sensor.Sensor" href="../../plugins/mqtt/Sensor.html#plugins.mqtt.Sensor.Sensor">Sensor</a></li>
+<li><a title="plugins.rfcomm_server.Sensor.Sensor" href="../../plugins/rfcomm_server/Sensor.html#plugins.rfcomm_server.Sensor.Sensor">Sensor</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1013,8 +1046,11 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="plugins.gpio.RgbLedAction.RbgLedState" href="../../plugins/gpio/RgbLedAction.html#plugins.gpio.RgbLedAction.RbgLedState">RbgLedState</a></li>
 <li><a title="plugins.mqtt.Action.MqttActionState" href="../../plugins/mqtt/Action.html#plugins.mqtt.Action.MqttActionState">MqttActionState</a></li>
 <li><a title="plugins.mqtt.Sensor.MqttSensorState" href="../../plugins/mqtt/Sensor.html#plugins.mqtt.Sensor.MqttSensorState">MqttSensorState</a></li>
+<li><a title="plugins.rfcomm_client.Action.RfcommActionState" href="../../plugins/rfcomm_client/Action.html#plugins.rfcomm_client.Action.RfcommActionState">RfcommActionState</a></li>
+<li><a title="plugins.rfcomm_server.Sensor.RfCommSensorState" href="../../plugins/rfcomm_server/Sensor.html#plugins.rfcomm_server.Sensor.RfCommSensorState">RfCommSensorState</a></li>
 <li><a title="plugins.system.DelayAction.DelayActionState" href="../../plugins/system/DelayAction.html#plugins.system.DelayAction.DelayActionState">DelayActionState</a></li>
 <li><a title="plugins.system.SetVariableAction.SetVariableActionState" href="../../plugins/system/SetVariableAction.html#plugins.system.SetVariableAction.SetVariableActionState">SetVariableActionState</a></li>
+<li><a title="plugins.system.ShellCommandAction.ShellCommandActionState" href="../../plugins/system/ShellCommandAction.html#plugins.system.ShellCommandAction.ShellCommandActionState">ShellCommandActionState</a></li>
 <li><a title="plugins.web.LogAction.LogActionState" href="../../plugins/web/LogAction.html#plugins.web.LogAction.LogActionState">LogActionState</a></li>
 <li><a title="plugins.web.UpdateAction.UpdateActionState" href="../../plugins/web/UpdateAction.html#plugins.web.UpdateAction.UpdateActionState">UpdateActionState</a></li>
 </ul>
@@ -1166,7 +1202,10 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="plugins.gpio.RgbLedAction.RgbLedAction" href="../../plugins/gpio/RgbLedAction.html#plugins.gpio.RgbLedAction.RgbLedAction">RgbLedAction</a></li>
 <li><a title="plugins.mqtt.Action.Action" href="../../plugins/mqtt/Action.html#plugins.mqtt.Action.Action">Action</a></li>
 <li><a title="plugins.mqtt.Sensor.Sensor" href="../../plugins/mqtt/Sensor.html#plugins.mqtt.Sensor.Sensor">Sensor</a></li>
+<li><a title="plugins.rfcomm_client.Action.Action" href="../../plugins/rfcomm_client/Action.html#plugins.rfcomm_client.Action.Action">Action</a></li>
+<li><a title="plugins.rfcomm_server.Sensor.Sensor" href="../../plugins/rfcomm_server/Sensor.html#plugins.rfcomm_server.Sensor.Sensor">Sensor</a></li>
 <li><a title="plugins.system.SetVariableAction.SetVariableAction" href="../../plugins/system/SetVariableAction.html#plugins.system.SetVariableAction.SetVariableAction">SetVariableAction</a></li>
+<li><a title="plugins.system.ShellCommandAction.ShellCommandAction" href="../../plugins/system/ShellCommandAction.html#plugins.system.ShellCommandAction.ShellCommandAction">ShellCommandAction</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1252,6 +1291,7 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="modules.base.Instances.BasePlatform" href="#modules.base.Instances.BasePlatform">BasePlatform</a></li>
 <li><a title="modules.base.Instances.BaseScript" href="#modules.base.Instances.BaseScript">BaseScript</a></li>
 <li><a title="plugins.hass.HassEntityAutomation.HassEntityAutomation" href="../../plugins/hass/HassEntityAutomation.html#plugins.hass.HassEntityAutomation.HassEntityAutomation">HassEntityAutomation</a></li>
+<li><a title="plugins.web.Platform.WebActionEntity" href="../../plugins/web/Platform.html#plugins.web.Platform.WebActionEntity">WebActionEntity</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1333,6 +1373,7 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="plugins.gpio.Platform.Platform" href="../../plugins/gpio/Platform.html#plugins.gpio.Platform.Platform">Platform</a></li>
 <li><a title="plugins.gpio.RgbLedAction.RgbLedAction" href="../../plugins/gpio/RgbLedAction.html#plugins.gpio.RgbLedAction.RgbLedAction">RgbLedAction</a></li>
 <li><a title="plugins.hass.HassEntityAutomation.HassEntityAutomation" href="../../plugins/hass/HassEntityAutomation.html#plugins.hass.HassEntityAutomation.HassEntityAutomation">HassEntityAutomation</a></li>
+<li><a title="plugins.web.Platform.WebActionEntity" href="../../plugins/web/Platform.html#plugins.web.Platform.WebActionEntity">WebActionEntity</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1430,6 +1471,7 @@ Here is where we initialize and load stuff</p></div>
 <li><a title="modules.base.Instances.Condition" href="#modules.base.Instances.Condition">Condition</a></li>
 <li><a title="modules.base.Instances.Device" href="#modules.base.Instances.Device">Device</a></li>
 <li><a title="plugins.hass.HassEntityAutomation.HassEntityAutomation" href="../../plugins/hass/HassEntityAutomation.html#plugins.hass.HassEntityAutomation.HassEntityAutomation">HassEntityAutomation</a></li>
+<li><a title="plugins.web.Platform.WebActionEntity" href="../../plugins/web/Platform.html#plugins.web.Platform.WebActionEntity">WebActionEntity</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1569,6 +1611,7 @@ Here is where we initialize and load stuff</p></div>
 <h4><code><a title="modules.base.Instances.BaseAction" href="#modules.base.Instances.BaseAction">BaseAction</a></code></h4>
 <ul class="">
 <li><code><a title="modules.base.Instances.BaseAction.invoke" href="#modules.base.Instances.BaseAction.invoke">invoke</a></code></li>
+<li><code><a title="modules.base.Instances.BaseAction.toggle" href="#modules.base.Instances.BaseAction.toggle">toggle</a></code></li>
 </ul>
 </li>
 <li>
