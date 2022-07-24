@@ -11,12 +11,9 @@ RUN apt-get update && apt-get -y install \
     pigpio-tools \
     build-essential \
     python3-pillow \
-    python3-bluez
+    python3-bluez \
+    curl
 
 RUN pip install colorzero gpiozero pigpio RPi.GPIO \
     pydantic PyYAML pywebio chevron paho-mqtt pillow
     
-#ADD ssh /usr/local/bin/ssh
-#RUN chmod +x /usr/local/bin/ssh && mkdir -p /root/.ssh
-#ENTRYPOINT ["/usr/local/bin/ssh"]
-#CMD []

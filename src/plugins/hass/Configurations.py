@@ -11,15 +11,14 @@ class HassEntityConfiguration(Configuration):
     id: str
     '''Script id to export'''
 
-    name: Optional[str]
-    '''friendly name in HomeAssistant'''
+    name: str
+    '''Name in HomeAssistant'''
 
     type: str
     '''HomeAssistant type''' 
 
     icon: Optional[str]
     '''Icon to show in HomeAssistant'''
-
 
 @configuration
 class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
@@ -31,9 +30,15 @@ class HassBinarySensorEntityConfiguration(HassEntityConfiguration):
     state_topic: Optional[str]
     '''Where Homeassistant can get the state'''    
 
+    type: Optional[str] = "binary_sensor"
+    '''[binary_sensor, sensor]'''
+
+    friendly_name: Optional[str]
+    '''Friendly Name in HomeAssistant'''
+
     @validator('type')
     def check_type(cls, v):
-        if "sensor" not in v:
+        if "sensor" not in v and "binary_sensor" not in v:
             raise ValueError("wrong type: sensor, is: " + v)
         return v          
 
@@ -72,7 +77,7 @@ class HassActionEntityConfiguration(HassBinarySensorEntityConfiguration):
     def check_type(cls, v):
         if "switch" not in v:
             raise ValueError("wrong type: switch, is: " + v)
-        return v          
+        return v    
 
 
 @configuration
