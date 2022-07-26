@@ -64,7 +64,7 @@ class Platform(BasePlatform):
 
         self.callbacks = []
 
-    def publish_available(self, call_stack):
+    def __publish_available(self, call_stack):
         def render(var):
             '''this is only to avoid typing errors'''
             return str(call_stack.get(var))
@@ -82,7 +82,7 @@ class Platform(BasePlatform):
             av = self.configuration.availability
             self.publish(av_topic, av_payload_on, retain = True)        
 
-    def connect(self, call_stack):
+    def __connect(self, call_stack):
         if not self.initialized:
             print("MQTT Client not initialized, cancel 'connect'")
             return
@@ -93,7 +93,7 @@ class Platform(BasePlatform):
 
         self.client.connect(self.configuration.host, self.configuration.port, self.configuration.keep_alive)
 
-        self.publish_available(call_stack)
+        self.__publish_available(call_stack)
 
 
     def start(self, call_stack: CallStack):
@@ -101,15 +101,14 @@ class Platform(BasePlatform):
             '''this is only to avoid typing errors'''
             return str(call_stack.get(var))
 
-        app_id = "PiTomation_" + str(self.app.get_variable_value("id"))
-        client_name = app_id + "_" + render(self.app.get_id("device").configuration.name)
-        print("MQTT Client Name: " + app_id)
+        client_name = "PiTomation" + "_" + self.app.device.configuration.name
+        print("MQTT Client Name: " + client_name)
         self.client = mqtt.Client(client_name, clean_session = True) #type: ignore
         self.client.on_connect = self.__init_on_connect()
         self.client.on_disconnect = self.__init_on_disconnect()
         self.client.on_message = self.__init_on_message()
         self.initialized = True
-        self.connect(call_stack)
+        self.__connect(call_stack)
 
         def loop():
             self.client.loop_start()
@@ -192,7 +191,7 @@ class Platform(BasePlatform):
                 .with_stack(self.get_full_stack()) \
                 .with_key("return_code", rc)
 
-            self.publish_available(call_stack)
+            self.__publish_available(call_stack)
 
             for callback in self.callbacks:
                 self.client.subscribe(callback["topic"])

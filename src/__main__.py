@@ -22,7 +22,11 @@ def import_plugins():
             '''only import the top level plugin directory, so that potential submodules are 
             only imported if they are imported by the plugins.'''
             print(" > " + path)
-            importlib.import_module(path)
+            try:
+                importlib.import_module(path)
+            except Exception as e:
+                print("Can not load " + str(path) + ", expect problems using this platform.")
+                print(e)
 
 print("Import plugins ..")
 import_plugins()
