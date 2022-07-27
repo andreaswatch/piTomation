@@ -68,10 +68,10 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
     def start(self, call_stack: CallStack):
 
-        from plugins.mqtt.Platform import Platform as mqtt_platform
-        def get_mqtt_platform() -> mqtt_platform:
+        #from plugins.mqtt.Platform import Platform as mqtt_platform
+        def get_mqtt_platform():# -> mqtt_platform:
             return self.platform.communication #type: ignore
-        self.mqtt = get_mqtt_platform()
+        self.communication_platform = get_mqtt_platform()
 
         state_topic = self.base_topic + "/" + str(self.configuration.name) + "/state"
         wrapped_id = self.app.get_id(self.configuration.id)
@@ -133,7 +133,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
 
             def invoke(_, call_stack: CallStack): #type: ignore
                 act_state = get_state()
-                self.mqtt.publish(state_topic, act_state)
+                self.communication_platform.publish(state_topic, act_state)
 
 
         wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
@@ -162,23 +162,23 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                         for automation in self.off_command_automations:
                             automation.invoke(call_stack)                            
 
-            self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
+            self.communication_platform.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
         
 
         elif self.type == HassType.SWITCH and type(self.configuration) is HassActionEntityConfiguration:
             entity["name"] = self.configuration.friendly_name
             entity["unique_id"] = get_unique_id()
-            if self.mqtt.configuration.availability:
-                entity["availability_topic"] = call_stack.get(self.mqtt.configuration.availability.topic)
+            if self.communication_platform.configuration.availability:
+                entity["availability_topic"] = call_stack.get(self.communication_platform.configuration.availability.topic)
             entity["payload_off"] = "off"
             entity["payload_on"] = "on"
             #entity["optimistic"] = False
             entity["state_topic"] = state_topic
             entity["command_topic"] = self.configuration.command_topic     
-            if self.mqtt.configuration.availability:
-                entity["availability_topic"] = call_stack.get(self.mqtt.configuration.availability.topic)
-                entity["payload_available"] = call_stack.get(self.mqtt.configuration.availability.payload_on)
-                entity["payload_not_available"] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
+            if self.communication_platform.configuration.availability:
+                entity["availability_topic"] = call_stack.get(self.communication_platform.configuration.availability.topic)
+                entity["payload_available"] = call_stack.get(self.communication_platform.configuration.availability.payload_on)
+                entity["payload_not_available"] = call_stack.get(self.communication_platform.configuration.availability.payload_off)                 
 
             def OnCommand(call_stack: CallStack):
                 payload = call_stack.get("{{{payload}}}")
@@ -204,7 +204,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                         for automation in self.off_command_automations:
                             automation.invoke(call_stack)                            
 
-            self.mqtt.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
+            self.communication_platform.subscribe(self.configuration.command_topic, callback=OnCommand) #type: ignore
         
         elif (self.type == HassType.BINARY_SENSOR or self.type == HassType.TEXT_SENSOR) and type(self.configuration) is HassBinarySensorEntityConfiguration:
             entity["name"] = self.configuration.friendly_name
@@ -212,15 +212,15 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             entity["state_topic"] = call_stack.get(state_topic)
             entity["payload_on"] = "on"
             entity["payload_off"] = "off"
-            if self.mqtt.configuration.availability:
-                entity["availability_topic"] = call_stack.get(self.mqtt.configuration.availability.topic)
-                entity["payload_available"] = call_stack.get(self.mqtt.configuration.availability.payload_on)
-                entity["payload_not_available"] = call_stack.get(self.mqtt.configuration.availability.payload_off)                 
+            if self.communication_platform.configuration.availability:
+                entity["availability_topic"] = call_stack.get(self.communication_platform.configuration.availability.topic)
+                entity["payload_available"] = call_stack.get(self.communication_platform.configuration.availability.payload_on)
+                entity["payload_not_available"] = call_stack.get(self.communication_platform.configuration.availability.payload_off)                 
 
 
         if self.type == HassType.BINARY_SENSOR or self.type == HassType.TEXT_SENSOR or self.type == HassType.SWITCH:
             '''Report actual state back to HA'''
             UpdateHassState(self, AutomationConfiguration()).invoke(call_stack) 
 
-        self.mqtt.publish(self.auto_discovery_topic, entity, retain = True)
+        self.communication_platform.publish(self.auto_discovery_topic, entity, retain = True)
 
