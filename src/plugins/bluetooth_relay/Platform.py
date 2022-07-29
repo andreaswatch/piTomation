@@ -3,6 +3,7 @@ from sys import platform
 import socket
 import queue
 import threading
+import time
 from typing import Any, Optional
 from pydantic.class_validators import validator
 
@@ -65,6 +66,7 @@ class Platform(BasePlatform):
     def start(self, call_stack: CallStack):
         backlog = 1
         size = 1024
+        lock = threading.Lock()
 
         self.socket = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 
@@ -74,57 +76,87 @@ class Platform(BasePlatform):
 
             def loop():
                 client, address = self.socket.accept()
+                socket_readfile = client.makefile(mode='r')
+                socket_writefile = client.makefile(mode='w')
+
                 print("BT Connection established.")
+
+                def read():
+                    while(True):
+                        try:
+                            lock.acquire()
+                            line = socket_readfile.readline()
+                            self.on_message(line)
+                        except:
+                            pass
+                        finally:
+                            lock.release()
+                            time.sleep(1.07)
+
+                def write():
+                    while(True):
+                        try:
+                            lock.acquire()
+                            line = self.send_queue.get()
+                            socket_writefile.write(line + "\n")
+                            socket_writefile.flush()
+                        except:
+                            pass
+                        finally:
+                            lock.release()
+                            time.sleep(1.13)
+
+                threading.Thread(target=read).start()
+                threading.Thread(target=write).start()
+
                 self.__publish_available(call_stack)
                 self.on_connect()
-
-                while(True):
-
-                    received = client.recv(size)
-                    if(received):
-                        print("BT got message")
-                        self.on_message(client, received)
-
-                    try:
-                        while(True):
-                            item = self.send_queue.get()
-                            print("BT send message")
-                            self.socket.sendall(bytes(
-                                item, 
-                                encoding="utf-8")
-                                )
-                    except:
-                        pass
                         
             thread = threading.Thread(target=loop)
             thread.start()
 
         else:
-            self.socket.connect((self.configuration.mac_address, self.configuration.port))
-            print("BT connected")
+
+            def loop():
+                self.socket.connect((self.configuration.mac_address, self.configuration.port))
+                socket_readfile = self.socket.makefile(mode='r')
+                socket_writefile = self.socket.makefile(mode='w')
+
+                print("BT connected")
+
+                def read():
+                    while(True):
+                        try:
+                            lock.acquire()
+                            line = socket_readfile.readline()
+                            self.on_message(line)
+                        except:
+                            pass
+                        finally:
+                            lock.release()
+                            time.sleep(1.07)
+
+                def write():
+                    while(True):
+                        try:
+                            lock.acquire()
+                            line = self.send_queue.get()
+                            socket_writefile.write(line + "\n")
+                            socket_writefile.flush()
+                        except:
+                            pass
+                        finally:
+                            lock.release()
+                            time.sleep(1.13)
+
+                threading.Thread(target=read).start()
+                threading.Thread(target=write).start()
+
+            thread = threading.Thread(target=loop)
+            thread.start()           
+
             self.__publish_available(call_stack)
             self.on_connect()
-
-            def client_loop():
-                while(True):
-
-                    try:
-                        item = self.send_queue.get()
-                        print("BT send message")
-                        self.socket.sendall(bytes(
-                            item, 
-                            encoding="utf-8")
-                            )                    
-                    except:
-                        pass
-                            
-                    received = self.socket.recv(size)
-                    if(received):
-                        print("BT got message")
-                        self.on_message(self.socket, received)
-                        
-            thread = threading.Thread(target=client_loop)
-            thread.start()           
 
         super().start(call_stack)
 
@@ -152,17 +184,18 @@ class Platform(BasePlatform):
 
 
     def publish(self, topic: str, payload: Any, retain: bool = False):
+        if type(payload) is dict:
+            payload = json.dumps(payload)
+        else:
+            #unexpected type, just send it as string
+            payload = str(payload)        
+        
         data = {
             "topic": topic,
             "payload": payload,
             "retain": retain
         }
-        json_data = json.dumps(data)
-
-        print("BT add to send queue: ")
-        print(" - topic: " + topic)
-        #print(" data: " + data)
-
+        json_data = json.dumps(data) 
         self.send_queue.put(json_data)
 
 
@@ -172,15 +205,15 @@ class Platform(BasePlatform):
             for automation in self.configuration.on_message:
                 self.on_message_automations.append(Automation(self, automation))
 
-        def method(client, msg):
-            jsonstring = msg.decode("utf-8")
-            data = json.loads(jsonstring)
+        def method(msg):
+            data = json.loads(msg)
 
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack()) \
                 .with_keys({
                     "payload": data["payload"],
-                    "topic": data["topic"]
+                    "topic": data["topic"],
+                    "retain": data["retain"]
                 })
 
             for callback in self.callbacks:
@@ -204,9 +237,6 @@ class Platform(BasePlatform):
 
         def method():
             print("BT on_connected")
-            
-            #TODO:TEST if (rc is not 0):
-            #TODO:TEST     sys.exit(0)
 
             call_stack = CallStack()\
                 .with_stack(self.get_full_stack())

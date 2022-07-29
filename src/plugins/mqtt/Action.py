@@ -52,30 +52,31 @@ class Action(BaseAction, Debuggable):
     def invoke(self, call_stack: CallStack):
         call_stack = call_stack.with_element(self)
 
+        self.log_debug("MQTT send message:")
         if self.configuration.topic:
             self.state.topic = self.configuration.topic
-            self.log_debug("Topic from configuration: " + self.state.topic)
+            self.log_debug("- Topic from configuration: " + self.state.topic)
         else:
             self.state.topic = str(call_stack.get("{{topic}}"))
-            self.log_debug("Topic from values: " + self.state.topic)
+            self.log_debug("- Topic from call stack: " + self.state.topic)
         
         if self.configuration.payload:
             self.state.payload = self.configuration.payload
-            self.log_debug("Payload from configuration: " + str(self.state.payload))
+            self.log_debug("- Payload from configuration: " + str(self.state.payload))
         else:
             self.state.payload = str(call_stack.get("{{{payload}}}"))
-            self.log_debug("Payload from configuration: " + str(self.state.payload))
+            self.log_debug("- Payload from call stack: " + str(self.state.payload))
 
-        if hasattr(self.configuration, 'retain'):
+        if hasattr(self.configuration, 'retain') and self.configuration.retain is not None:
             self.state.retain = self.configuration.retain
-            self.log_debug("Retain from configuration: " + str(self.state.retain))
+            self.log_debug("- Retain from configuration: " + str(self.state.retain))
         else:
             retain = call_stack.get("{{retain}}", optional=True)
             if retain == "1" or retain == "True" or retain == "true":
                 self.state.retain = True
             if retain is None:
                 self.state.retain = False
-            self.log_debug("Retain from configuration: " + str(self.state.retain))
+            self.log_debug("- Retain from call stack: " + str(self.state.retain))
 
         self.platform.publish(self.state.topic, self.state.payload, retain = (self.state.retain == True))
 

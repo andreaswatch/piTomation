@@ -34,7 +34,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         
         if config.name is None:
             config.name = config.id
-
+ 
         if config.friendly_name is None:
             config.friendly_name = config.name            
 
@@ -45,24 +45,24 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         auto_discovery_temp = str(self.type.value)
 
         if config.state_topic is None:
-            config.state_topic = self.base_topic + "/" + config.name + "/state"
+            config.state_topic = self.base_topic + "/" + config.id + "/state"
             
         if type(config) is HassActionEntityConfiguration:
             if config.command_topic is None:
-                config.command_topic = self.base_topic + "/" + config.name + "/command"
+                config.command_topic = self.base_topic + "/" + config.id + "/command"
 
             self.on_command_automations = Automation.create_automations(self, config.on_command)
             self.off_command_automations = Automation.create_automations(self, config.off_command)
 
         elif type(config) is HassTriggerEntityConfiguration:
             if config.command_topic is None: #type: ignore
-                config.command_topic = self.base_topic + "/" + config.name + "/command"
+                config.command_topic = self.base_topic + "/" + config.id + "/command"
             auto_discovery_temp = "device_automation"
 
         self.auto_discovery_topic = self.platform.configuration.auto_discovery_topic \
             + "/" + auto_discovery_temp \
             + "/" + self.platform.hass_device["name"] \
-            + "/" + config.name \
+            + "/" + config.id \
             + "/config"
             
 
@@ -73,7 +73,7 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             return self.platform.communication #type: ignore
         self.communication_platform = get_mqtt_platform()
 
-        state_topic = self.base_topic + "/" + str(self.configuration.name) + "/state"
+        state_topic = self.base_topic + "/" + str(self.configuration.id) + "/state"
         wrapped_id = self.app.get_id(self.configuration.id)
 
         entity = {}
@@ -91,8 +91,8 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
                 + str(call_stack.get(str(self.type.value))) \
                 + "_" \
                 + str(call_stack.get(self.configuration.id)) \
-                + "_" \
-                + str(call_stack.get(self.configuration.name)) 
+               # + "_" \
+               # + str(call_stack.get(self.configuration.name)) 
             return result
 
         def get_state():
@@ -131,9 +131,9 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
         class UpdateHassState(Automation):
             '''Updates the state in HA.'''
 
-            def invoke(_, call_stack: CallStack): #type: ignore
+            def invoke(_, call_stack: CallStack, retain = False): #type: ignore
                 act_state = get_state()
-                self.communication_platform.publish(state_topic, act_state)
+                self.communication_platform.publish(state_topic, act_state, retain)
 
 
         wrapped_id.on_state_changed_automations.append(UpdateHassState(self, AutomationConfiguration())) #type: ignore    
@@ -223,4 +223,6 @@ class HassEntityAutomation(Stackable, Disposeable, Logging):
             UpdateHassState(self, AutomationConfiguration()).invoke(call_stack) 
 
         self.communication_platform.publish(self.auto_discovery_topic, entity, retain = True)
+
+        UpdateHassState(self, AutomationConfiguration()).invoke(call_stack, retain = True)
 
