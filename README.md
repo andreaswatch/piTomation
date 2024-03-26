@@ -26,8 +26,8 @@ Option 1) Docker
 ```
 cd ~
 git clone --recurse-submodules http://github.com/andreasWatch/piTomation
-cd piTomation
-copy frontdoor.yaml ~/frontdoor.yaml #create your custom config file..
+cd piTomation/src
+cp frontdoor.yaml ~/frontdoor.yaml #create your custom config file..
 cd pitomation_docker
 ./build_container.sh 
 ./run_container.sh
