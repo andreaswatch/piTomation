@@ -30,7 +30,7 @@ cd piTomation/src
 cp frontdoor.yaml ~/frontdoor.yaml #create your custom config file..
 cd pitomation_docker
 ./build_container.sh 
-./run_container.sh
+./run_container.sh #edit the script to reflect your environment
 ```
 
 ---
